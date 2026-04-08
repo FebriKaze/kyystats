@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Send } from 'lucide-react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import ImpactSnapshot from './components/ImpactSnapshot';
@@ -137,6 +138,8 @@ export default function App() {
         <span className="text-sm font-bold tracking-tight">Let's Collaborate</span>
         <Send size={18} className="group-hover:translate-x-1 transition-transform" />
       </motion.button>
+      
+      <SpeedInsights />
     </div>
   );
 }
