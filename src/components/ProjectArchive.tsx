@@ -7,45 +7,11 @@ import projectPengangguran from './img/Pengangguran Indonesia 2025.jpg';
 import projectTrackRecord from './img/TrackRecord MG.jpg';
 
 interface ProjectArchiveProps {
+  projects: Project[];
   onProjectClick: (project: Project) => void;
 }
 
-const ProjectArchive: React.FC<ProjectArchiveProps> = ({ onProjectClick }) => {
-  const projects: Project[] = [
-    {
-      category: 'KEMISKINAN',
-      title: 'Papua jadi Provinsi dengan Kemiskinan Tertinggi',
-      description: 'Papua Tengah mencatatkan persentase kemiskinan tertinggi',
-      image: project1,
-      details: {
-        challenge: "Data terbaru menunjukkan tantangan besar bagi wilayah Timur Indonesia. Berdasarkan angka BPS, Papua Tengah mencatatkan persentase kemiskinan tertinggi mencapai 29,5%. Disusul oleh Papua Pegunungan dan Papua Selatan.",
-        solution: "Implemented a Recency, Frequency, and Monetary (RFM) analysis pipeline using Python. Developed a K-means clustering model to segment customers into actionable groups.",
-        result: "Targeted marketing campaigns based on these segments resulted in a 12% increase in customer retention and a 15% boost in average order value."
-      }
-    },
-    {
-      category: 'PREDICTIVE TECH',
-      title: 'Server Load Forecasting',
-      description: 'Leveraged LSTM neural networks to predict server demand spikes 48 hours in advance.',
-      image: projectPengangguran,
-      details: {
-        challenge: "Frequent server outages during peak traffic periods were causing significant revenue loss and damaging user trust.",
-        solution: "Built a time-series forecasting model using Long Short-Term Memory (LSTM) networks. Integrated real-time traffic data and historical patterns to predict load spikes.",
-        result: "The model achieved 94% accuracy in predicting spikes 48 hours ahead, allowing for proactive resource scaling and reducing downtime by 80%."
-      }
-    },
-    {
-      category: 'FINANCE',
-      title: 'Track Record MG dalam Mengawal IPO',
-      description: 'Real-time transaction monitoring system identifying anomalies with 99.4% accuracy.',
-      image: projectTrackRecord,
-      details: {
-        challenge: "Legacy fraud detection systems were too slow and produced too many false positives, frustrating legitimate customers.",
-        solution: "Developed a real-time anomaly detection pipeline using Isolation Forests and Gradient Boosting Machines. Optimized for low-latency inference on AWS Lambda.",
-        result: "Reduced false positives by 40% while maintaining a 99.4% detection rate for fraudulent transactions, saving the client an estimated $1.2M annually."
-      }
-    },
-  ];
+const ProjectArchive: React.FC<ProjectArchiveProps> = ({ projects, onProjectClick }) => {
 
   return (
     <section className="py-24 px-6" id="projects">
@@ -60,7 +26,7 @@ const ProjectArchive: React.FC<ProjectArchiveProps> = ({ onProjectClick }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {projects.map((project, idx) => (
             <motion.div
-              key={idx}
+              key={project.id || idx}
               whileHover={{ y: -10 }}
               className="group bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300"
             >
