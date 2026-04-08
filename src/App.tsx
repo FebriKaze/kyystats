@@ -9,6 +9,7 @@ import ContactModal from './components/ContactModal';
 import CaseStudyModal from './components/CaseStudyModal';
 import Portfolio from './components/Portfolio';
 import Footer from './components/Footer';
+import { SpeedInsights } from "@vercel/speed-insights/react"
 import { Project, FeaturedProject } from './types';
 import { fetchPortfolios, fetchFeaturedProjects } from './services/portfolioService';
 import project1 from './components/img/1.jpg';
@@ -119,6 +120,7 @@ export default function App() {
       </main>
 
       <Footer />
+      <SpeedInsights />
       
       <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
       <CaseStudyModal 
