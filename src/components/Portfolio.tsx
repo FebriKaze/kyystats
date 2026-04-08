@@ -170,9 +170,9 @@ const Portfolio: React.FC<PortfolioProps> = ({ projects, onProjectClick, onBackT
                       </div>
                       
                       <div className="p-8">
-                        <h4 className="text-xl font-black tracking-tight mb-4 dark:text-white group-hover:text-primary transition-colors">
+                        <h3 className="text-xl font-black tracking-tight mb-4 dark:text-white group-hover:text-primary transition-colors">
                           {project.title}
-                        </h4>
+                        </h3>
                         <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-8 line-clamp-3">
                           {project.description}
                         </p>
@@ -196,6 +196,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ projects, onProjectClick, onBackT
                         setCurrentPage(prev => Math.max(1, prev - 1));
                         window.scrollTo({ top: 300, behavior: 'smooth' });
                       }}
+                      aria-label="Previous page"
                       className={`p-3 rounded-xl border border-slate-200 dark:border-slate-800 transition-all ${
                         currentPage === 1 
                         ? 'opacity-30 cursor-not-allowed' 
@@ -213,6 +214,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ projects, onProjectClick, onBackT
                             setCurrentPage(i + 1);
                             window.scrollTo({ top: 300, behavior: 'smooth' });
                           }}
+                          aria-label={`Go to page ${i + 1}`}
                           className={`w-12 h-12 rounded-xl text-sm font-black transition-all ${
                             currentPage === i + 1
                             ? 'bg-primary text-white shadow-lg shadow-primary/20'
@@ -230,6 +232,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ projects, onProjectClick, onBackT
                         setCurrentPage(prev => Math.min(totalPages, prev + 1));
                         window.scrollTo({ top: 300, behavior: 'smooth' });
                       }}
+                      aria-label="Next page"
                       className={`p-3 rounded-xl border border-slate-200 dark:border-slate-800 transition-all ${
                         currentPage === totalPages 
                         ? 'opacity-30 cursor-not-allowed' 

@@ -57,6 +57,7 @@ const ImpactSnapshot: React.FC<ImpactSnapshotProps> = ({ projects }) => {
             <div className="flex items-center gap-4 bg-white dark:bg-slate-900 p-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
               <button 
                 onClick={() => { prevSlide(); setIsAutoPlaying(false); }}
+                aria-label="Previous slide"
                 className="p-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-primary transition-all"
               >
                 <ChevronLeft size={20} />
@@ -66,14 +67,18 @@ const ImpactSnapshot: React.FC<ImpactSnapshotProps> = ({ projects }) => {
                   <button
                     key={i}
                     onClick={() => { setCurrentIndex(i); setIsAutoPlaying(false); }}
-                    className={`h-2 rounded-full transition-all ${
-                      currentIndex === i ? 'w-8 bg-primary' : 'w-2 bg-slate-200 dark:bg-slate-700'
+                    aria-label={`Go to slide ${i + 1}`}
+                    className={`h-3 rounded-full transition-all flex items-center justify-center p-1 ${
+                      currentIndex === i ? 'w-8 bg-primary' : 'w-3 bg-slate-200 dark:bg-slate-700'
                     }`}
-                  />
+                  >
+                    <span className="sr-only">Slide {i + 1}</span>
+                  </button>
                 ))}
               </div>
               <button 
                 onClick={() => { nextSlide(); setIsAutoPlaying(false); }}
+                aria-label="Next slide"
                 className="p-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-primary transition-all"
               >
                 <ChevronRight size={20} />

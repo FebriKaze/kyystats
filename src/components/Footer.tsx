@@ -1,5 +1,5 @@
 import React from 'react';
-import { Linkedin, Github, Twitter, Mail } from 'lucide-react';
+import { Linkedin, Github, BookOpen, Mail } from 'lucide-react';
 import logoLight from './img/ky_stat_logo-removebg-preview.png';
 import logoDark from './img/logo dark.png';
 
@@ -10,24 +10,25 @@ const Footer: React.FC = () => {
         <div className="flex flex-col items-center md:items-start text-center md:text-left">
           <img src={logoLight} alt="KY Stat" className="h-10 w-auto mb-2 dark:hidden" />
           <img src={logoDark} alt="KY Stat" className="h-10 w-auto mb-2 hidden dark:block" />
-          <p className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
             © 2026 KYY STATS. PRECISION THROUGH DATA.
           </p>
         </div>
         
         <div className="flex items-center gap-6">
           {[
-            { icon: <Linkedin size={20} />, href: 'https://www.linkedin.com/in/febrikaze/' },
-            { icon: <Github size={20} />, href: 'https://github.com/FebriKaze' },
-            { icon: <Twitter size={20} />, href: '#' },
-            { icon: <Mail size={20} />, href: '#' },
+            { icon: <Linkedin size={20} />, href: 'https://www.linkedin.com/in/febrikaze/', label: 'LinkedIn' },
+            { icon: <Github size={20} />, href: 'https://github.com/FebriKaze', label: 'GitHub' },
+            { icon: <BookOpen size={20} />, href: 'https://medium.com/@jakartahero58', label: 'Medium' },
+            { icon: <Mail size={20} />, href: 'mailto:jakartahero58@gmail.com', label: 'Email' },
           ].map((social, i) => (
             <a 
               key={i} 
               href={social.href} 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="text-slate-400 hover:text-primary transition-colors"
+              aria-label={social.label}
+              className="text-slate-400 hover:text-primary transition-colors p-2"
             >
               {social.icon}
             </a>

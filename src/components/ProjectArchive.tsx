@@ -40,7 +40,7 @@ const ProjectArchive: React.FC<ProjectArchiveProps> = ({ projects, onProjectClic
               </div>
               <div className="p-8">
                 <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-primary mb-3 block">{project.category}</span>
-                <h4 className="text-xl font-black tracking-tight mb-4 dark:text-white">{project.title}</h4>
+                <h3 className="text-xl font-black tracking-tight mb-4 dark:text-white">{project.title}</h3>
                 <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6">{project.description}</p>
                 <button 
                   onClick={(e) => {

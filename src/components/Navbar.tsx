@@ -82,7 +82,11 @@ const Navbar: React.FC<NavbarProps> = ({ onContactClick, onNavigate, currentPage
         {/* Mobile Toggle */}
         <div className="flex items-center space-x-2 md:hidden">
           <ThemeToggle />
-          <button className="p-2 text-slate-600 dark:text-slate-300" onClick={() => setIsOpen(!isOpen)}>
+          <button 
+            className="p-2 text-slate-600 dark:text-slate-300" 
+            onClick={() => setIsOpen(!isOpen)}
+            aria-label={isOpen ? "Close menu" : "Open menu"}
+          >
             {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
