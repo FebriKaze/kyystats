@@ -9,8 +9,8 @@ import ContactModal from './components/ContactModal';
 import CaseStudyModal from './components/CaseStudyModal';
 import Portfolio from './components/Portfolio';
 import Footer from './components/Footer';
-import { Project } from './types';
-import { fetchPortfolios } from './services/portfolioService';
+import { Project, FeaturedProject } from './types';
+import { fetchPortfolios, fetchFeaturedProjects } from './services/portfolioService';
 import project1 from './components/img/1.jpg';
 import projectPengangguran from './components/img/Pengangguran Indonesia 2025.jpg';
 import projectTrackRecord from './components/img/TrackRecord MG.jpg';
@@ -57,10 +57,16 @@ export default function App() {
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [featuredProjects, setFeaturedProjects] = useState<FeaturedProject[]>([]);
 
   useEffect(() => {
-    const loadProjects = async () => {
-      const dbProjects = await fetchPortfolios();
+    const loadData = async () => {
+      const [dbProjects, dbFeatured] = await Promise.all([
+        fetchPortfolios(),
+        fetchFeaturedProjects()
+      ]);
+      
+      setFeaturedProjects(dbFeatured);
       
       // Map local images to DB projects if image_url is missing
       const projectsWithImages = dbProjects.map(p => {
@@ -77,7 +83,7 @@ export default function App() {
       const allProjects = [...projectsWithImages, ...LOCAL_FALLBACK_PROJECTS].slice(0, 6);
       setProjects(allProjects);
     };
-    loadProjects();
+    loadData();
   }, []);
 
   const handleNavigate = (page: string) => {
@@ -97,7 +103,7 @@ export default function App() {
         {currentPage === 'home' ? (
           <>
             <Hero />
-            <ImpactSnapshot />
+            <ImpactSnapshot projects={featuredProjects} />
             <ProjectArchive 
               projects={projects.slice(0, 3)} 
               onProjectClick={(project) => setSelectedProject(project)} 
