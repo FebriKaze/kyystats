@@ -53,6 +53,10 @@
     @apply font-sans antialiased min-h-screen;
     transition: background-color 0.3s ease, color 0.3s ease;
   }
+
+  button, a {
+    cursor: pointer;
+  }
 }
 
 .bg-grid-pattern {

@@ -2,7 +2,7 @@
 
 This repository contains my personal data analysis portfolio. It's designed to showcase case studies, impact metrics, and analytical projects where I transform raw datasets into actionable business growth.
 
-![Portfolio Banner](https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6)
+![Portfolio Banner](./src/components/img/banner.png)
 
 ## About the Project
 
