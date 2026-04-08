@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Send } from 'lucide-react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import ImpactSnapshot from './components/ImpactSnapshot';
@@ -94,6 +95,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen text-foreground transition-colors duration-300">
+      <SpeedInsights />
       <Navbar 
         onContactClick={() => setIsContactOpen(true)} 
         onNavigate={handleNavigate}
