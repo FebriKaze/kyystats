@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Statistic, Article } from '../../types';
 import ArticleSidebar from '../Articles/ArticleSidebar';
+import { useMeta } from '../../hooks/useMeta';
 
 interface StatistikDetailProps {
   item: Statistic;
@@ -24,6 +25,10 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
   onSearchChange,
   searchQuery
 }) => {
+  useMeta({ 
+    title: item?.title, 
+    description: item?.summary 
+  });
   if (!item) return null;
 
   // Map to Article for sidebar compatibility

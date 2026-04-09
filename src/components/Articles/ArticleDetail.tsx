@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Article } from '../../types';
 import ArticleSidebar from './ArticleSidebar';
+import { useMeta } from '../../hooks/useMeta';
 
 interface ArticleDetailProps {
   article: Article;
@@ -25,6 +26,11 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({
   onSearchChange,
   searchQuery
 }) => {
+  useMeta({ 
+    title: article?.title, 
+    description: article?.summary 
+  });
+
   const wordCount = article?.content?.split(/\s+/).length || 0;
   const readingTime = Math.ceil(wordCount / 200);
 
