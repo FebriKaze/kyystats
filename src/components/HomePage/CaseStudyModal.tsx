@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, TrendingUp } from 'lucide-react';
-import { Project } from '../types';
+import { Project } from '../../types';
 
 interface CaseStudyModalProps {
   project: Project | null;
@@ -54,6 +54,11 @@ const CaseStudyModal: React.FC<CaseStudyModalProps> = ({ project, isOpen, onClos
             </div>
 
             <div className="p-8 md:p-12 space-y-10">
+              {/* Lead Text Style */}
+              <div className="text-xl font-black text-slate-700 dark:text-slate-300 leading-relaxed italic border-l-4 border-primary pl-6 py-4 bg-slate-50 dark:bg-slate-900/50 rounded-r-2xl mb-10">
+                {project.description}
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="md:col-span-2 space-y-8">
                   <section>

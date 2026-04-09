@@ -1,19 +1,21 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Send } from 'lucide-react';
-import Navbar from './components/Navbar';
-import Hero from './components/Hero';
-import ImpactSnapshot from './components/ImpactSnapshot';
-import ProjectArchive from './components/ProjectArchive';
-import ContactModal from './components/ContactModal';
-import CaseStudyModal from './components/CaseStudyModal';
-import Portfolio from './components/Portfolio';
-import Footer from './components/Footer';
+import Navbar from './components/HomePage/Navbar';
+import Hero from './components/HomePage/Hero';
+import ImpactSnapshot from './components/HomePage/ImpactSnapshot';
+import ProjectArchive from './components/HomePage/ProjectArchive';
+import ContactModal from './components/HomePage/ContactModal';
+import CaseStudyModal from './components/HomePage/CaseStudyModal';
+import Portfolio from './components/HomePage/Portfolio';
+import Footer from './components/HomePage/Footer';
 import ArticleList from './components/Articles/ArticleList';
 import ArticleDetail from './components/Articles/ArticleDetail';
+import StatistikPage from './components/Statistik/StatistikPage';
+import StatistikDetail from './components/Statistik/StatistikDetail';
 import { SpeedInsights } from "@vercel/speed-insights/react"
 import { Project, FeaturedProject, Article } from './types';
-import { fetchPortfolios, fetchFeaturedProjects, fetchArticles } from './services/portfolioService';
+import { fetchPortfolios, fetchFeaturedProjects, fetchArticles, fetchStatistics } from './services/portfolioService';
 import Login from './components/Admin/Login';
 import AdminDashboard from './components/Admin/AdminDashboard';
 import { supabase } from './lib/supabase';
@@ -58,14 +60,18 @@ const LOCAL_FALLBACK_PROJECTS: Project[] = [
   }
 ];
 
+type Page = 'home' | 'portfolio' | 'articles' | 'article-detail' | 'statistik' | 'statistik-detail' | 'admin';
+
 export default function App() {
-  const [currentPage, setCurrentPage] = useState('home');
+  const [currentPage, setCurrentPage] = useState<Page>('home');
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+  const [selectedStat, setSelectedStat] = useState<any | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [featuredProjects, setFeaturedProjects] = useState<FeaturedProject[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
+  const [statistics, setStatistics] = useState<any[]>([]);
   const [articleFilter, setArticleFilter] = useState('All');
   const [articleSearchQuery, setArticleSearchQuery] = useState('');
   const [session, setSession] = useState<any>(null);
@@ -84,17 +90,24 @@ export default function App() {
 
   useEffect(() => {
     const handleHashChange = () => {
-      const fullHash = window.location.hash; // e.g. #experience or #article-detail/slug
+      const fullHash = window.location.hash;
       const hash = fullHash.replace('#', '');
       
       if (hash === 'admin') {
         setCurrentPage('admin');
       } else if (hash.startsWith('article-detail/')) {
+        const slug = hash.replace('article-detail/', '');
+        const found = articles.find(a => a.slug === slug);
+        if (found) setSelectedArticle(found);
         setCurrentPage('article-detail');
-      } else if (hash === 'portfolio' || hash === 'articles') {
-        setCurrentPage(hash);
+      } else if (hash.startsWith('statistik-detail/')) {
+        const id = hash.replace('statistik-detail/', '');
+        const found = statistics.find(s => s.id === id);
+        if (found) setSelectedStat(found);
+        setCurrentPage('statistik-detail');
+      } else if (hash === 'portfolio' || hash === 'articles' || hash === 'statistik') {
+        setCurrentPage(hash as Page);
       } else {
-        // Fallback for home or anchor links (#experience, #contact, etc)
         setCurrentPage('home');
       }
     };
@@ -103,24 +116,30 @@ export default function App() {
     handleHashChange();
 
     return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
+  }, [articles, statistics]);
 
   useEffect(() => {
     const loadData = async () => {
-      const [dbProjects, dbFeatured, dbArticles] = await Promise.all([
+      const [dbProjects, dbFeatured, dbArticles, dbStats] = await Promise.all([
         fetchPortfolios(),
         fetchFeaturedProjects(),
-        fetchArticles()
+        fetchArticles(),
+        fetchStatistics()
       ]);
       
       setFeaturedProjects(dbFeatured);
       setArticles(dbArticles);
+      setStatistics(dbStats);
       
       const hash = window.location.hash.replace('#', '');
       if (hash.startsWith('article-detail/')) {
         const slug = hash.replace('article-detail/', '');
         const article = dbArticles.find(a => a.slug === slug);
         if (article) setSelectedArticle(article);
+      } else if (hash.startsWith('statistik-detail/')) {
+        const id = hash.replace('statistik-detail/', '');
+        const stat = dbStats.find(s => s.id === id);
+        if (stat) setSelectedStat(stat);
       }
 
       const projectsWithImages = dbProjects.map(p => {
@@ -140,24 +159,25 @@ export default function App() {
   }, []);
 
   const handleNavigate = (page: string) => {
-    // If navigating to home or an anchor, just update hash
     if (page === 'home' || page.startsWith('#')) {
       window.location.hash = page === 'home' ? '' : page;
       setCurrentPage('home');
     } else {
       window.location.hash = page;
-      setCurrentPage(page);
+      setCurrentPage(page as Page);
     }
     
     if (page !== 'article-detail') setSelectedArticle(null);
+    if (page !== 'statistik-detail') setSelectedStat(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleArticleClick = (article: Article) => {
-    setSelectedArticle(article);
-    setCurrentPage('article-detail');
     window.location.hash = `article-detail/${article.slug}`;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleStatClick = (stat: any) => {
+    window.location.hash = `statistik-detail/${stat.id}`;
   };
 
   return (
@@ -186,30 +206,39 @@ export default function App() {
             onProjectClick={(project) => setSelectedProject(project)} 
             onBackToHome={() => handleNavigate('home')}
           />
+        ) : currentPage === 'statistik' ? (
+          <StatistikPage 
+            statistik={statistics} 
+            onStatClick={handleStatClick}
+          />
+        ) : currentPage === 'statistik-detail' ? (
+          <StatistikDetail 
+            item={selectedStat}
+            allStats={statistics}
+            onBack={() => handleNavigate('statistik')}
+            onStatClick={handleStatClick}
+            onFilterChange={() => {}}
+            onSearchChange={() => {}}
+            searchQuery=""
+          />
         ) : currentPage === 'articles' ? (
           <ArticleList 
             articles={articles}
+            onArticleClick={handleArticleClick}
             activeFilter={articleFilter}
             onFilterChange={setArticleFilter}
             searchQuery={articleSearchQuery}
             onSearchChange={setArticleSearchQuery}
-            onArticleClick={handleArticleClick}
           />
-        ) : currentPage === 'article-detail' && selectedArticle ? (
+        ) : currentPage === 'article-detail' ? (
           <ArticleDetail 
-            article={selectedArticle}
+            article={selectedArticle!} 
             articles={articles}
             onBack={() => handleNavigate('articles')}
             onArticleClick={handleArticleClick}
-            onFilterChange={(cat) => {
-              setArticleFilter(cat);
-              handleNavigate('articles');
-            }}
-            onSearchChange={(query) => {
-              setArticleSearchQuery(query);
-              handleNavigate('articles');
-            }}
-            searchQuery={articleSearchQuery}
+            onFilterChange={() => {}}
+            onSearchChange={() => {}}
+            searchQuery=""
           />
         ) : currentPage === 'admin' ? (
           session ? (

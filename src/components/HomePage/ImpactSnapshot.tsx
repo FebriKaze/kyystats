@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Terminal, Database, Palette, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react';
-import { FeaturedProject } from '../types';
-import taxImage from './img/Pendapatan Pajak Negara.jpg';
+import { FeaturedProject } from '../../types';
+import taxImage from '../img/Pendapatan Pajak Negara.jpg';
 
 interface ImpactSnapshotProps {
   projects: FeaturedProject[];

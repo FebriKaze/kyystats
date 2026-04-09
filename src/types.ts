@@ -36,3 +36,16 @@ export interface Article {
   author: string;
   is_published: boolean;
 }
+
+export interface Statistic {
+  id: string;
+  created_at: string;
+  title: string;
+  category: string;
+  author: string;
+  image_url: string;
+  summary: string;
+  content: string;
+  views: number;
+  is_published: boolean;
+}

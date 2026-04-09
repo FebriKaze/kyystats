@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
-import { cn } from '../lib/utils';
-import logoLight from './img/ky_stat_logo-removebg-preview.png';
-import logoDark from './img/logo dark.png';
+import { cn } from '../../lib/utils';
+import logoLight from '../img/ky_stat_logo-removebg-preview.png';
+import logoDark from '../img/logo dark.png';
 import { ThemeToggle } from './ThemeToggle';
 
 interface NavbarProps {
@@ -23,11 +23,11 @@ const Navbar: React.FC<NavbarProps> = ({ onContactClick, onNavigate, currentPage
   }, []);
 
   const navLinks = [
-    { name: 'Home', href: 'home' },
+    { name: 'Beranda', href: 'home' },
     { name: 'Portfolio', href: 'portfolio' },
-    { name: 'Articles', href: 'articles' },
-    { name: 'Experience', href: '#experience' },
-    { name: 'Contact', href: '#contact' },
+    { name: 'Artikel', href: 'articles' },
+    { name: 'Statistik', href: 'statistik' },
+    { name: 'Kontak', href: '#contact' },
   ];
 
   return (
@@ -74,7 +74,7 @@ const Navbar: React.FC<NavbarProps> = ({ onContactClick, onNavigate, currentPage
               onClick={onContactClick}
               className="bg-primary text-white px-6 py-2.5 rounded-full font-semibold text-sm hover:opacity-90 transition-all active:scale-95 shadow-lg shadow-primary/20"
             >
-              Get in Touch
+              Hubungi Saya
             </button>
           </div>
         </div>
@@ -131,7 +131,7 @@ const Navbar: React.FC<NavbarProps> = ({ onContactClick, onNavigate, currentPage
               onClick={() => { onContactClick(); setIsOpen(false); }}
               className="bg-primary text-white px-6 py-3 rounded-full font-semibold text-center mt-2 shadow-lg shadow-primary/20"
             >
-              Get in Touch
+              Hubungi Saya
             </button>
           </motion.div>
         )}

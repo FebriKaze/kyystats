@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Search, Filter, Edit3, Trash2, Eye, ChevronLeft, ChevronRight, Plus, Image as ImageIcon } from 'lucide-react';
 
 interface AdminContentListProps {
-  type: 'articles' | 'portfolio' | 'featured';
+  type: 'articles' | 'portfolio' | 'featured' | 'statistics';
   data: any[];
   onEdit: (item: any) => void;
   onDelete: (id: string) => void;
@@ -16,7 +16,7 @@ const AdminContentList: React.FC<AdminContentListProps> = ({ type, data, onEdit,
     item.title?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const title = type === 'articles' ? 'Manajemen Artikel' : type === 'portfolio' ? 'Manajemen Portfolio' : 'Manajemen Featured Content';
+  const title = type === 'articles' ? 'Manajemen Artikel' : type === 'portfolio' ? 'Manajemen Portfolio' : type === 'statistics' ? 'Manajemen Statistik' : 'Manajemen Featured Content';
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">

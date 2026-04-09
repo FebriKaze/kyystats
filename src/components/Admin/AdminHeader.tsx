@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase';
 
 import logoLight from '../img/ky_stat_logo-removebg-preview.png';
 import logoDark from '../img/logo dark.png';
-import { ThemeToggle } from '../ThemeToggle';
+import { ThemeToggle } from '../HomePage/ThemeToggle';
 
 interface AdminHeaderProps {
   onNavigate: (view: any) => void;
@@ -70,7 +70,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onNavigate, activeView }) => 
                 >
                   <button onClick={() => { onNavigate('manage-articles'); setIsKontenOpen(false); }} className="w-full text-left px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary transition-all">Artikel</button>
                   <button onClick={() => { onNavigate('manage-portfolio'); setIsKontenOpen(false); }} className="w-full text-left px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary transition-all">Portfolio</button>
-                  <button onClick={() => { onNavigate('manage-featured'); setIsKontenOpen(false); }} className="w-full text-left px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary transition-all">Featured Analysis</button>
+                  <button onClick={() => { onNavigate('manage-statistics'); setIsKontenOpen(false); }} className="w-full text-left px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary transition-all">Statistik</button>
                 </div>
               )}
             </div>

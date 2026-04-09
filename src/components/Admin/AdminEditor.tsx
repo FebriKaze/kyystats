@@ -1,9 +1,17 @@
-import React, { useState } from 'react';
-import { Save, X, Eye, Image as ImageIcon, Check, Loader2, ArrowLeft } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { 
+  Save, X, Eye, Image as ImageIcon, Check, Loader2, ArrowLeft, 
+  Bold, Italic, List, ListOrdered, Link as LinkIcon, 
+  Type, Heading1, Heading2, Heading3, 
+  Instagram, Twitter, Youtube, Facebook,
+  FileImage, Upload
+} from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { supabase } from '../../lib/supabase';
 
 interface AdminEditorProps {
-  type: 'articles' | 'portfolio' | 'featured';
+  type: 'articles' | 'portfolio' | 'statistics';
   item: any;
   onSave: (item: any) => void;
   onCancel: () => void;
@@ -13,6 +21,10 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
   const [formData, setFormData] = useState({...item});
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [inlineUploading, setInlineUploading] = useState(false);
+  const [isPreview, setIsPreview] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const contentFileRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,21 +36,71 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
     }
   };
 
-  const uploadImage = async (event: any) => {
+  const insertMarkdown = (before: string, after: string = '') => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = type === 'portfolio' ? formData.details?.challenge : formData.content || '';
+    const selected = text.substring(start, end);
+    const newVal = text.substring(0, start) + before + selected + after + text.substring(end);
+
+    if (type === 'portfolio') {
+      setFormData({...formData, details: {...formData.details, challenge: newVal}});
+    } else {
+      setFormData({...formData, content: newVal});
+    }
+
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + before.length, end + before.length);
+    }, 0);
+  };
+
+  const handleInlineImageUpload = async (event: any) => {
     try {
-      setUploading(true);
-      if (!event.target.files || event.target.files.length === 0) {
-        throw new Error('You must select an image to upload.');
-      }
+      setInlineUploading(true);
+      if (!event.target.files || event.target.files.length === 0) return;
 
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
+      const fileName = `inline-${Math.random()}.${fileExt}`;
+      const filePath = `inline/${fileName}`;
+
+      const bucketName = type === 'portfolio' ? 'portfolio-images' : 'article-images';
+
+      const { error: uploadError } = await supabase.storage
+        .from(bucketName)
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(filePath);
+
+      insertMarkdown(`\n![Image](${publicUrl})\n`, '');
+      
+    } catch (error: any) {
+      alert('Gagal mengupload gambar: ' + error.message);
+    } finally {
+      setInlineUploading(false);
+      if (contentFileRef.current) contentFileRef.current.value = '';
+    }
+  };
+
+  const uploadCoverImage = async (event: any) => {
+    try {
+      setUploading(true);
+      if (!event.target.files || event.target.files.length === 0) return;
+
+      const file = event.target.files[0];
+      const fileExt = file.name.split('.').pop();
+      const fileName = `cover-${Math.random()}.${fileExt}`;
       const filePath = `covers/${fileName}`;
 
-      let bucketName = 'project-images'; // Default for 'featured'
-      if (type === 'articles') bucketName = 'article-images';
-      else if (type === 'portfolio') bucketName = 'portfolio-images';
+      const bucketName = type === 'portfolio' ? 'portfolio-images' : 'article-images';
 
       const { error: uploadError } = await supabase.storage
         .from(bucketName)
@@ -55,178 +117,213 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
       else setFormData({...formData, image_url: publicUrl});
       
     } catch (error: any) {
-      alert('Gagal mengunggah gambar: ' + error.message);
+      alert('Gagal mengupload gambar sampul: ' + error.message);
     } finally {
       setUploading(false);
     }
   };
 
-  const title = item.id ? `Edit ${type.slice(0, -1)}` : `Tambah ${type.slice(0, -1)} Baru`;
+  const title = item.id ? `Edit ${type === 'articles' ? 'Artikel' : type === 'portfolio' ? 'Portfolio' : 'Statistik'}` : `Tambah ${type === 'articles' ? 'Artikel' : type === 'portfolio' ? 'Portfolio' : 'Statistik'} Baru`;
+
+  const ToolbarButton = ({ icon: Icon, onClick, title, active, loading }: any) => (
+    <button 
+      type="button"
+      onClick={onClick}
+      title={title}
+      disabled={loading}
+      className={`p-2 rounded-xl transition-all flex items-center justify-center ${active ? 'bg-primary text-white shadow-md' : 'text-slate-500 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+    >
+      {loading ? <Loader2 size={16} className="animate-spin text-primary" /> : <Icon size={18} />}
+    </button>
+  );
 
   return (
-    <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500 pb-20">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button onClick={onCancel} className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+          <button onClick={onCancel} className="p-2.5 rounded-2xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all border border-transparent hover:border-slate-200">
             <ArrowLeft size={24} />
           </button>
           <div>
-            <h1 className="text-3xl font-black tracking-tighter dark:text-white">{title}</h1>
-            <p className="text-slate-500 dark:text-slate-400">Manajemen {type.slice(0, -1)} - Beranda - {type === 'articles' ? 'Artikel' : 'Statistik'} - Baru</p>
+            <h1 className="text-3xl font-black tracking-tighter dark:text-white uppercase">{title}</h1>
+            <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Dashboard / Konten / {type}</p>
           </div>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Editor Area */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white dark:bg-slate-900 p-8 rounded-4xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-6">
-             <div className="space-y-2">
-                <label className="text-xs font-black uppercase tracking-widest text-slate-400">Judul <span className="text-red-500">*</span></label>
+          <div className="bg-white dark:bg-slate-900 p-10 rounded-4xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-8">
+             <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Judul Konten <span className="text-primary">*</span></label>
                 <input 
                   required
                   value={formData.title || ''} 
                   onChange={(e) => setFormData({...formData, title: e.target.value})}
-                  placeholder="Masukkan judul Konten"
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-4 px-6 text-sm dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                  placeholder="Masukkan judul konten yang menarik..."
+                  className="w-full bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 dark:border-slate-900 rounded-2xl py-5 px-8 text-base dark:text-white focus:outline-none focus:border-primary/50 transition-all font-bold placeholder:text-slate-300"
                 />
              </div>
 
              {type === 'articles' && (
-               <div className="space-y-2">
-                  <label className="text-xs font-black uppercase tracking-widest text-slate-400">Slug <span className="text-red-500">*</span></label>
+               <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Slug Otomatis <span className="text-primary">*</span></label>
                   <input 
                     required
                     value={formData.slug || ''} 
                     onChange={(e) => setFormData({...formData, slug: e.target.value})}
-                    placeholder="slug-artikel-anda"
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-3 px-6 text-sm dark:text-white"
+                    placeholder="judul-artikel-ini"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-4 px-8 text-sm dark:text-white font-mono"
                   />
                </div>
              )}
 
-             <div className="space-y-2">
-                <label className="text-xs font-black uppercase tracking-widest text-slate-400">Konten <span className="text-red-500">*</span></label>
-                <div className="border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden bg-slate-50 dark:bg-slate-950">
-                  <div className="px-6 py-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center gap-4">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Markdown Editor</span>
+             <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Badan Konten <span className="text-primary">*</span></label>
+                <div className="border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden bg-white dark:bg-slate-950 shadow-inner">
+                  {/* Toolbar */}
+                  <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-wrap items-center gap-2">
+                    <ToolbarButton icon={Heading1} onClick={() => insertMarkdown('# ', '')} title="Judul Utama" />
+                    <ToolbarButton icon={Heading2} onClick={() => insertMarkdown('## ', '')} title="Sub Judul" />
+                    <ToolbarButton icon={Heading3} onClick={() => insertMarkdown('### ', '')} title="Poin Penting" />
+                    <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 mx-1" />
+                    <ToolbarButton icon={Bold} onClick={() => insertMarkdown('**', '**')} title="Teks Tebal" />
+                    <ToolbarButton icon={Italic} onClick={() => insertMarkdown('_', '_')} title="Teks Miring" />
+                    <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 mx-1" />
+                    <ToolbarButton icon={List} onClick={() => insertMarkdown('- ', '')} title="Daftar Poin" />
+                    <ToolbarButton icon={ListOrdered} onClick={() => insertMarkdown('1. ', '')} title="Daftar Nomor" />
+                    <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 mx-1" />
+                    <ToolbarButton icon={LinkIcon} onClick={() => insertMarkdown('[', '](https://)')} title="Sisipkan Link" />
+                    
+                    {/* Inline Image Upload Trigger */}
+                    <div className="relative">
+                      <ToolbarButton 
+                        icon={Upload} 
+                        loading={inlineUploading}
+                        onClick={() => contentFileRef.current?.click()} 
+                        title="Upload Gambar ke Konten" 
+                      />
+                      <input 
+                        type="file" 
+                        ref={contentFileRef} 
+                        onChange={handleInlineImageUpload} 
+                        className="hidden" 
+                        accept="image/*" 
+                      />
+                    </div>
+
+                    <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 mx-1" />
+                    <ToolbarButton icon={Youtube} onClick={() => insertMarkdown('\n<iframe width="100%" height="400" src="https://www.youtube.com/embed/VIDEO_ID"></iframe>\n', '')} title="Embed Youtube" />
                     <div className="flex-1"></div>
-                    <button type="button" className="text-slate-400 hover:text-primary"><Eye size={18} /></button>
+                    <button 
+                      type="button" 
+                      onClick={() => setIsPreview(!isPreview)}
+                      className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-[10px] font-black tracking-widest transition-all shadow-sm border ${isPreview ? 'bg-primary text-white border-primary' : 'bg-white dark:bg-slate-900 dark:text-white border-slate-200 dark:border-slate-800 hover:text-primary active:scale-95'}`}
+                    >
+                      {isPreview ? <Save size={14} /> : <Eye size={14} />} {isPreview ? 'KEMBALI KE EDITOR' : 'LIHAT PRATINJAU'}
+                    </button>
                   </div>
-                  <textarea 
-                    required
-                    rows={15}
-                    placeholder="Tuliskan konten anda di sini menggunakan format Markdown..."
-                    value={type === 'portfolio' ? formData.details?.challenge : formData.content || ''} 
-                    onChange={(e) => {
-                      if (type === 'portfolio') {
-                        setFormData({...formData, details: {...formData.details, challenge: e.target.value}});
-                      } else {
-                        setFormData({...formData, content: e.target.value});
-                      }
-                    }}
-                    className="w-full bg-transparent py-6 px-8 text-sm dark:text-white focus:outline-none font-mono leading-relaxed"
-                  />
+
+                  {isPreview ? (
+                    <div className="w-full min-h-[500px] bg-white dark:bg-slate-950 py-12 px-14 prose prose-slate dark:prose-invert max-w-none prose-sm md:prose-base overflow-y-auto selection:bg-primary/20">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {type === 'portfolio' ? formData.details?.challenge : formData.content || '*Konten masih kosong...*'}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    <textarea 
+                      ref={textareaRef}
+                      required
+                      rows={20}
+                      placeholder="Mulai menulis cerita Anda di sini..."
+                      value={type === 'portfolio' ? formData.details?.challenge : formData.content || ''} 
+                      onChange={(e) => {
+                        if (type === 'portfolio') {
+                          setFormData({...formData, details: {...formData.details, challenge: e.target.value}});
+                        } else {
+                          setFormData({...formData, content: e.target.value});
+                        }
+                      }}
+                      className="w-full bg-transparent py-10 px-12 text-sm dark:text-white focus:outline-none font-mono leading-relaxed resize-y min-h-[400px]"
+                    />
+                  )}
                 </div>
-                <p className="text-[10px] text-slate-400 italic">Tips: Gunakan format Gambar Markdown `![deskripsi](url-gambar)` untuk menyematkan gambar di mana saja di dalam artikel.</p>
+                {!isPreview && <p className="text-[10px] text-slate-400 font-medium">✨ Gunakan tombol **Upload (Ikon Panah Atas)** untuk langsung memasukkan gambar dari galeri Anda ke dalam tulisan.</p>}
              </div>
 
-             <div className="space-y-2">
-                <label className="text-xs font-black uppercase tracking-widest text-slate-400">Ringkasan / Deskripsi Singkat</label>
+             <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Ringkasan Eksekutif</label>
                 <textarea 
                   rows={3}
-                  placeholder="Tuliskan deskripsi singkat..."
-                  value={formData.summary || formData.description || ''} 
-                  onChange={(e) => setFormData({...formData, [type === 'articles' ? 'summary' : 'description']: e.target.value})}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-4 px-6 text-sm dark:text-white resize-none"
+                  placeholder="Ringkasan singkat untuk tampilan kartu di beranda..."
+                  value={type === 'portfolio' ? formData.description : formData.summary || ''} 
+                  onChange={(e) => setFormData({...formData, [type === 'portfolio' ? 'description' : 'summary']: e.target.value})}
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-5 px-8 text-sm dark:text-white resize-none"
                 />
              </div>
-
-             {type === 'portfolio' && (
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-                  <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">Solution</label>
-                    <textarea value={formData.details?.solution || ''} onChange={(e) => setFormData({...formData, details: {...formData.details, solution: e.target.value}})} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-3 px-6 text-sm dark:text-white" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">Result</label>
-                    <textarea value={formData.details?.result || ''} onChange={(e) => setFormData({...formData, details: {...formData.details, result: e.target.value}})} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-3 px-6 text-sm dark:text-white" />
-                  </div>
-               </div>
-             )}
           </div>
         </div>
 
-        {/* Sidebar Settings */}
         <div className="space-y-8">
-          <div className="bg-white dark:bg-slate-900 p-8 rounded-4xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-8">
-             <div className="space-y-2">
-                <label className="text-xs font-black uppercase tracking-widest text-slate-400">Topik <span className="text-red-500">*</span></label>
+          <div className="bg-white dark:bg-slate-900 p-8 rounded-4xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-8 sticky top-24">
+             <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Kategori / Topik</label>
                 <input 
-                  value={formData.category || (formData.tags?.[0] || '')} 
-                  onChange={(e) => setFormData({...formData, category: e.target.value, tags: [e.target.value]})}
-                  placeholder="Pilih Topik"
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-3 px-6 text-sm dark:text-white"
+                  value={formData.category || ''} 
+                  onChange={(e) => setFormData({...formData, category: e.target.value})}
+                  placeholder="Ekonomi, Sosial, dsb."
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-4 px-6 text-sm dark:text-white font-bold"
                 />
              </div>
 
-             <div className="space-y-2">
-                <label className="text-xs font-black uppercase tracking-widest text-slate-400">Status <span className="text-red-500">*</span></label>
+             <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Status Publikasi</label>
                 <select 
                   value={formData.is_published ? 'Published' : 'Draft'}
                   onChange={(e) => setFormData({...formData, is_published: e.target.value === 'Published'})}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-3 px-6 text-sm dark:text-white font-bold"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 dark:border-slate-800 rounded-2xl py-4 px-6 text-sm dark:text-white font-black"
                 >
-                  <option value="Draft">Draft</option>
-                  <option value="Published">Diterbitkan</option>
+                  <option value="Draft">Simpan Draft</option>
+                  <option value="Published">Diterbitkan Publik</option>
                 </select>
              </div>
 
              <div className="space-y-4">
-                <label className="text-xs font-black uppercase tracking-widest text-slate-400">Gambar Sampul <span className="text-red-500">*</span></label>
-                <div className="aspect-video rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center gap-3 overflow-hidden group relative transition-all hover:bg-slate-100 dark:hover:bg-slate-900">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Gambar Sampul Utama</label>
+                <div className="aspect-16/10 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center gap-3 overflow-hidden group relative transition-all hover:bg-slate-100 dark:hover:bg-slate-900">
                    {(formData.thumbnail_url || formData.image || formData.image_url) ? (
                      <>
                         <img src={formData.thumbnail_url || formData.image || formData.image_url} alt="" className="w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                           <button type="button" className="p-3 bg-white rounded-2xl text-primary font-black text-[10px] uppercase shadow-xl transition-transform active:scale-95">Ganti Gambar</button>
+                           <input type="file" accept="image/*" onChange={uploadCoverImage} className="absolute inset-0 opacity-0 cursor-pointer" />
+                           <button type="button" className="p-4 bg-white rounded-2xl text-primary font-black text-[10px] uppercase shadow-2xl transition-transform active:scale-90">Ganti Gambar</button>
                         </div>
                      </>
                    ) : (
-                     <>
-                        <ImageIcon size={32} className="text-slate-300" />
-                        <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Input Image URL</p>
-                     </>
+                     <div className="relative w-full h-full flex flex-col items-center justify-center">
+                        <input type="file" accept="image/*" onChange={uploadCoverImage} className="absolute inset-0 opacity-0 cursor-pointer" />
+                        <ImageIcon size={40} className="text-slate-300 mb-2" />
+                        <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">{uploading ? 'MEMPROSES...' : 'UPLOAD SAMPUL'}</p>
+                     </div>
                    )}
                 </div>
-                <input 
-                  value={formData.thumbnail_url || formData.image || formData.image_url || ''} 
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (type === 'articles') setFormData({...formData, thumbnail_url: val});
-                    else if (type === 'portfolio') setFormData({...formData, image: val});
-                    else setFormData({...formData, image_url: val});
-                  }}
-                  placeholder="https://example.com/image.jpg"
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-3 px-6 text-[10px] font-mono dark:text-white"
-                />
              </div>
 
              <div className="pt-8 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-3">
                 <button 
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-primary text-white py-4 rounded-2xl font-black text-sm shadow-xl shadow-primary/20 flex items-center justify-center gap-3 hover:scale-105 transition-transform"
+                  className="w-full bg-primary text-white py-5 rounded-2xl font-black text-xs tracking-widest uppercase shadow-xl shadow-primary/30 flex items-center justify-center gap-3 hover:translate-y-[-2px] hover:shadow-2xl transition-all active:scale-95"
                 >
-                  {loading ? <Loader2 className="animate-spin" size={20} /> : <Check size={20} />}
-                  KIRIM KONTEN
+                  {loading ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
+                  DITERBITKAN SEKARANG
                 </button>
                 <button 
                   type="button" 
                   onClick={onCancel}
-                  className="w-full bg-slate-50 dark:bg-slate-800 text-slate-500 py-4 rounded-2xl font-black text-sm transition-all"
+                  className="w-full bg-slate-100 dark:bg-slate-800 text-slate-500 py-5 rounded-2xl font-black text-xs tracking-widest uppercase transition-all hover:bg-slate-200 dark:hover:bg-slate-700"
                 >
-                  RESET ULANG
+                  BATALKAN
                 </button>
              </div>
           </div>

@@ -80,7 +80,7 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({
               </div>
 
               <div className="prose prose-slate dark:prose-invert max-w-none prose-headings:font-black prose-headings:tracking-tighter prose-p:text-slate-600 dark:prose-p:text-slate-400 prose-p:leading-relaxed prose-p:text-lg prose-img:rounded-3xl prose-img:shadow-xl prose-img:border prose-img:border-slate-100 dark:prose-img:border-slate-800">
-                <div className="text-xl md:text-2xl font-medium text-slate-700 dark:text-slate-300 leading-relaxed mb-12 italic border-l-4 border-primary pl-6 py-2 bg-slate-50 dark:bg-slate-900/50 rounded-r-2xl">
+                <div className="text-xl md:text-2xl font-black text-slate-700 dark:text-slate-300 leading-relaxed mb-12 italic border-l-4 border-primary pl-6 py-4 bg-slate-50 dark:bg-slate-900/50 rounded-r-2xl">
                   {article.summary}
                 </div>
                 

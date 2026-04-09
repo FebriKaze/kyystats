@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { Project, FeaturedProject, Article } from '../types';
+import { Project, FeaturedProject, Article, Statistic } from '../types';
 
 export const fetchPortfolios = async (): Promise<Project[]> => {
   const { data, error } = await supabase
@@ -164,6 +164,49 @@ export const deleteFeaturedProject = async (id: string): Promise<boolean> => {
   const { error } = await supabase.from('featured_project').delete().eq('id', id);
   if (error) {
     console.error('Error deleting featured:', error);
+    return false;
+  }
+  return true;
+};
+
+// --- STATISTICS CRUD ---
+export const fetchStatistics = async (): Promise<Statistic[]> => {
+  const { data, error } = await supabase
+    .from('statistics')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching statistics:', error);
+    return [];
+  }
+  return data.map((row: any) => ({
+    ...row,
+    summary: row.short_desc || ''
+  })) as Statistic[];
+};
+
+export const saveStatistic = async (stat: Partial<Statistic>): Promise<Statistic | null> => {
+  const isNew = !stat.id;
+  // Map summary back to short_desc
+  const { summary, ...rest } = stat;
+  const dbData = { ...rest, short_desc: summary };
+
+  const { data, error } = isNew
+    ? await supabase.from('statistics').insert([dbData]).select().single()
+    : await supabase.from('statistics').update(dbData).eq('id', stat.id).select().single();
+
+  if (error) {
+    console.error('Error saving statistic:', error);
+    throw error;
+  }
+  return data as Statistic;
+};
+
+export const deleteStatistic = async (id: string): Promise<boolean> => {
+  const { error } = await supabase.from('statistics').delete().eq('id', id);
+  if (error) {
+    console.error('Error deleting statistic:', error);
     return false;
   }
   return true;

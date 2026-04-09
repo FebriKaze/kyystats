@@ -13,12 +13,13 @@ import {
   savePortfolio, 
   deletePortfolio,
   fetchFeaturedProjects,
-  saveFeaturedProject,
-  deleteFeaturedProject
+  fetchStatistics,
+  saveStatistic,
+  deleteStatistic
 } from '../../services/portfolioService';
-import { Article, Project, FeaturedProject } from '../../types';
+import { Article, Project, FeaturedProject, Statistic } from '../../types';
 
-type AdminView = 'home' | 'manage-articles' | 'manage-portfolio' | 'manage-featured' | 'edit' | 'create' | 'profile' | 'settings';
+type AdminView = 'home' | 'manage-articles' | 'manage-portfolio' | 'manage-statistics' | 'edit' | 'create' | 'profile' | 'settings';
 
 const AdminDashboard: React.FC = () => {
   const [activeView, setActiveView] = useState<AdminView>('home');
@@ -28,11 +29,12 @@ const AdminDashboard: React.FC = () => {
   // Data lists
   const [articles, setArticles] = useState<Article[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [featured, setFeatured] = useState<FeaturedProject[]>([]);
+  const [featuredCount, setFeaturedCount] = useState(0);
+  const [statistics, setStatistics] = useState<Statistic[]>([]);
   
   // Editorial State
   const [editingItem, setEditingItem] = useState<any>(null);
-  const [contentType, setContentType] = useState<'articles' | 'portfolio' | 'featured'>('articles');
+  const [contentType, setContentType] = useState<'articles' | 'portfolio' | 'statistics'>('articles');
 
   useEffect(() => {
     loadAllData();
@@ -40,14 +42,16 @@ const AdminDashboard: React.FC = () => {
 
   const loadAllData = async () => {
     setLoading(true);
-    const [a, p, f] = await Promise.all([
+    const [a, p, s, f] = await Promise.all([
       fetchArticles(),
       fetchPortfolios(),
+      fetchStatistics(),
       fetchFeaturedProjects()
     ]);
     setArticles(a);
     setProjects(p);
-    setFeatured(f);
+    setStatistics(s);
+    setFeaturedCount(f.length);
     setLoading(false);
   };
 
@@ -56,19 +60,19 @@ const AdminDashboard: React.FC = () => {
     if (view !== 'edit' && view !== 'create') setLastView(view);
   };
 
-  const handleEdit = (type: 'articles' | 'portfolio' | 'featured', item: any) => {
+  const handleEdit = (type: 'articles' | 'portfolio' | 'statistics', item: any) => {
     setContentType(type);
     setEditingItem(item);
     navigateTo('edit');
   };
 
-  const handleCreate = (type: 'articles' | 'portfolio' | 'featured') => {
+  const handleCreate = (type: 'articles' | 'portfolio' | 'statistics') => {
     setContentType(type);
     const defaultData = type === 'articles' 
       ? { is_published: true, author: 'KyyStats', content: '', summary: '' } 
       : type === 'portfolio' 
         ? { category: '', title: '', description: '', details: { challenge: '', solution: '', result: '' } } 
-        : { tags: [] };
+        : { is_published: true, author: 'KyyStats', content: '', category: 'Ekonomi' };
     setEditingItem(defaultData);
     navigateTo('create');
   };
@@ -77,7 +81,7 @@ const AdminDashboard: React.FC = () => {
     try {
       if (contentType === 'articles') await saveArticle(item);
       if (contentType === 'portfolio') await savePortfolio(item);
-      if (contentType === 'featured') await saveFeaturedProject(item);
+      if (contentType === 'statistics') await saveStatistic(item);
       
       alert('Konten berhasil disimpan!');
       loadAllData();
@@ -88,13 +92,13 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleDelete = async (type: 'articles' | 'portfolio' | 'featured', id: string) => {
+  const handleDelete = async (type: 'articles' | 'portfolio' | 'statistics', id: string) => {
     if (!window.confirm('Hapus konten ini?')) return;
     
     let success = false;
     if (type === 'articles') success = await deleteArticle(id);
     if (type === 'portfolio') success = await deletePortfolio(id);
-    if (type === 'featured') success = await deleteFeaturedProject(id);
+    if (type === 'statistics') success = await deleteStatistic(id);
     
     if (success) {
       alert('Berhasil dihapus');
@@ -112,7 +116,7 @@ const AdminDashboard: React.FC = () => {
             stats={{
               articles: articles.length,
               portfolio: projects.length,
-              featured: featured.length
+              featured: featuredCount
             }} 
             popularArticles={articles.slice(0, 5)}
           />
@@ -138,13 +142,13 @@ const AdminDashboard: React.FC = () => {
           />
         )}
 
-        {activeView === 'manage-featured' && (
+        {activeView === 'manage-statistics' && (
           <AdminContentList 
-            type="featured" 
-            data={featured} 
-            onEdit={(item) => handleEdit('featured', item)}
-            onDelete={(id) => handleDelete('featured', id)}
-            onCreate={() => handleCreate('featured')}
+            type="statistics" 
+            data={statistics} 
+            onEdit={(item) => handleEdit('statistics', item)}
+            onDelete={(id) => handleDelete('statistics', id)}
+            onCreate={() => handleCreate('statistics')}
           />
         )}
 
