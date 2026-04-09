@@ -14,6 +14,9 @@ import ArticleDetail from './components/Articles/ArticleDetail';
 import { SpeedInsights } from "@vercel/speed-insights/react"
 import { Project, FeaturedProject, Article } from './types';
 import { fetchPortfolios, fetchFeaturedProjects, fetchArticles } from './services/portfolioService';
+import Login from './components/Admin/Login';
+import AdminDashboard from './components/Admin/AdminDashboard';
+import { supabase } from './lib/supabase';
 import project1 from './components/img/1.jpg';
 import projectPengangguran from './components/img/Pengangguran Indonesia 2025.jpg';
 import projectTrackRecord from './components/img/TrackRecord MG.jpg';
@@ -65,13 +68,28 @@ export default function App() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [articleFilter, setArticleFilter] = useState('All');
   const [articleSearchQuery, setArticleSearchQuery] = useState('');
+  const [session, setSession] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     const handleHashChange = () => {
       const fullHash = window.location.hash; // e.g. #experience or #article-detail/slug
       const hash = fullHash.replace('#', '');
       
-      if (hash.startsWith('article-detail/')) {
+      if (hash === 'admin') {
+        setCurrentPage('admin');
+      } else if (hash.startsWith('article-detail/')) {
         setCurrentPage('article-detail');
       } else if (hash === 'portfolio' || hash === 'articles') {
         setCurrentPage(hash);
@@ -144,11 +162,13 @@ export default function App() {
 
   return (
     <div className="min-h-screen text-foreground transition-colors duration-300">
-      <Navbar 
-        onContactClick={() => setIsContactOpen(true)} 
-        onNavigate={handleNavigate}
-        currentPage={currentPage}
-      />
+      {currentPage !== 'admin' && (
+        <Navbar 
+          onContactClick={() => setIsContactOpen(true)} 
+          onNavigate={handleNavigate}
+          currentPage={currentPage}
+        />
+      )}
       
       <main>
         {currentPage === 'home' ? (
@@ -191,12 +211,18 @@ export default function App() {
             }}
             searchQuery={articleSearchQuery}
           />
+        ) : currentPage === 'admin' ? (
+          session ? (
+            <AdminDashboard />
+          ) : (
+            <Login onLoginSuccess={(session) => setSession(session)} />
+          )
         ) : (
           <div className="pt-32 text-center text-slate-500">Page not found</div>
         )}
       </main>
 
-      <Footer />
+      {currentPage !== 'admin' && <Footer />}
       <SpeedInsights />
       
       <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
