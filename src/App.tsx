@@ -193,7 +193,9 @@ export default function App() {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsContactOpen(true)}
-        className="fixed bottom-8 right-8 z-40 bg-primary text-white pl-6 pr-5 py-4 rounded-full shadow-2xl shadow-primary/40 flex items-center gap-3 group"
+        className={`fixed bottom-8 right-8 z-40 bg-primary text-white pl-6 pr-5 py-4 rounded-full shadow-2xl shadow-primary/40 flex items-center gap-3 group transition-all ${
+          (currentPage === 'portfolio' || currentPage === 'article-detail') ? 'hidden md:flex' : 'flex'
+        }`}
       >
         <span className="text-sm font-bold tracking-tight">Let's Collaborate</span>
         <Send size={18} className="group-hover:translate-x-1 transition-transform" />
