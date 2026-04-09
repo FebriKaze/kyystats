@@ -122,7 +122,14 @@ export default function App() {
 
   const handleNavigate = (page: string) => {
     setCurrentPage(page);
-    window.location.hash = page;
+    
+    // If it's an anchor link (starts with #), we stay on home layout
+    if (page.startsWith('#')) {
+      window.location.hash = page;
+    } else {
+      window.location.hash = page;
+    }
+    
     if (page !== 'article-detail') setSelectedArticle(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -143,7 +150,7 @@ export default function App() {
       />
       
       <main>
-        {currentPage === 'home' || currentPage === '' ? (
+        {currentPage === 'home' || currentPage === '' || currentPage.startsWith('#') ? (
           <>
             <Hero />
             <ImpactSnapshot projects={featuredProjects} />
