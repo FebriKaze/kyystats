@@ -64,23 +64,23 @@ export default function App() {
   const [featuredProjects, setFeaturedProjects] = useState<FeaturedProject[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
 
-  // Hash-based Routing Persistence
   useEffect(() => {
     const handleHashChange = () => {
-      const hash = window.location.hash.replace('#', '');
+      const fullHash = window.location.hash; // e.g. #experience or #article-detail/slug
+      const hash = fullHash.replace('#', '');
+      
       if (hash.startsWith('article-detail/')) {
-        const slug = hash.replace('article-detail/', '');
         setCurrentPage('article-detail');
-        // We'll find the article in the articles array once it's loaded
-      } else if (hash) {
+      } else if (hash === 'portfolio' || hash === 'articles') {
         setCurrentPage(hash);
       } else {
+        // Fallback for home or anchor links (#experience, #contact, etc)
         setCurrentPage('home');
       }
     };
 
     window.addEventListener('hashchange', handleHashChange);
-    handleHashChange(); // Run on initial load
+    handleHashChange();
 
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
@@ -96,7 +96,6 @@ export default function App() {
       setFeaturedProjects(dbFeatured);
       setArticles(dbArticles);
       
-      // Handle initial load of article-detail from hash
       const hash = window.location.hash.replace('#', '');
       if (hash.startsWith('article-detail/')) {
         const slug = hash.replace('article-detail/', '');
@@ -121,13 +120,13 @@ export default function App() {
   }, []);
 
   const handleNavigate = (page: string) => {
-    setCurrentPage(page);
-    
-    // If it's an anchor link (starts with #), we stay on home layout
-    if (page.startsWith('#')) {
-      window.location.hash = page;
+    // If navigating to home or an anchor, just update hash
+    if (page === 'home' || page.startsWith('#')) {
+      window.location.hash = page === 'home' ? '' : page;
+      setCurrentPage('home');
     } else {
       window.location.hash = page;
+      setCurrentPage(page);
     }
     
     if (page !== 'article-detail') setSelectedArticle(null);
@@ -150,7 +149,7 @@ export default function App() {
       />
       
       <main>
-        {currentPage === 'home' || currentPage === '' || currentPage.startsWith('#') ? (
+        {currentPage === 'home' ? (
           <>
             <Hero />
             <ImpactSnapshot projects={featuredProjects} />
@@ -175,7 +174,9 @@ export default function App() {
             article={selectedArticle}
             onBack={() => handleNavigate('articles')}
           />
-        ) : null}
+        ) : (
+          <div className="pt-32 text-center text-slate-500">Page not found</div>
+        )}
       </main>
 
       <Footer />
