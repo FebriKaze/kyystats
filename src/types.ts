@@ -23,3 +23,16 @@ export interface FeaturedProject {
   hightlight_desc: string;
   image_label: string;
 }
+
+export interface Article {
+  id: string;
+  created_at: string;
+  title: string;
+  slug: string;
+  summary: string;
+  content: string;
+  category: string;
+  thumbnail_url: string;
+  author: string;
+  is_published: boolean;
+}

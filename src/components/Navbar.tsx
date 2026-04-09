@@ -25,8 +25,8 @@ const Navbar: React.FC<NavbarProps> = ({ onContactClick, onNavigate, currentPage
   const navLinks = [
     { name: 'Home', href: 'home' },
     { name: 'Portfolio', href: 'portfolio' },
+    { name: 'Articles', href: 'articles' },
     { name: 'Experience', href: '#experience' },
-    { name: 'Tech Stack', href: '#stack' },
     { name: 'Contact', href: '#contact' },
   ];
 
