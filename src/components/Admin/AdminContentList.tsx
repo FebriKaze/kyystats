@@ -29,7 +29,7 @@ const AdminContentList: React.FC<AdminContentListProps> = ({ type, data, onEdit,
           onClick={onCreate}
           className="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-2xl font-black text-sm shadow-xl shadow-primary/20 hover:scale-105 transition-transform"
         >
-          <Plus size={20} /> Tambah {type.slice(0, -1)} Baru
+          <Plus size={20} /> Tambah {type === 'articles' ? 'Artikel' : type === 'portfolio' ? 'Portfolio' : 'Statistik'} Baru
         </button>
       </div>
 
@@ -84,7 +84,7 @@ const AdminContentList: React.FC<AdminContentListProps> = ({ type, data, onEdit,
                     </div>
                   </td>
                   <td className="px-8 py-6">
-                    <span className="px-3 py-1 bg-primary/10 text-primary text-[10px] font-black uppercase rounded-lg">
+                    <span className="inline-block whitespace-nowrap px-3 py-1 bg-primary/10 text-primary text-[10px] font-black uppercase rounded-lg">
                       {item.category || item.tags?.[0] || 'Umum'}
                     </span>
                   </td>
@@ -93,9 +93,11 @@ const AdminContentList: React.FC<AdminContentListProps> = ({ type, data, onEdit,
                   </td>
                   <td className="px-8 py-6">
                     <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">
-                      {new Date(item.created_at || Date.now()).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      {item.created_at ? new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
                     </p>
-                    <p className="text-[10px] text-slate-400 uppercase font-black">{new Date(item.created_at || Date.now()).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</p>
+                    <p className="text-[10px] text-slate-400 uppercase font-black">
+                      {item.created_at ? new Date(item.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : 'BELUM DITERBITKAN'}
+                    </p>
                   </td>
                   <td className="px-8 py-6">
                     <span className="text-sm font-bold dark:text-white">0</span>

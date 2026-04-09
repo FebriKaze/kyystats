@@ -114,6 +114,7 @@ const AdminDashboard: React.FC = () => {
               portfolio: projects.length,
               featured: featured.length
             }} 
+            popularArticles={articles.slice(0, 5)}
           />
         )}
 

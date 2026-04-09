@@ -15,6 +15,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onNavigate, activeView }) => 
   const [isKontenOpen, setIsKontenOpen] = useState(false);
   const [isPengaturanOpen, setIsPengaturanOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
@@ -98,10 +99,30 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onNavigate, activeView }) => 
         <div className="flex items-center gap-6">
           <ThemeToggle />
           
-          <button className="text-slate-400 hover:text-primary transition-colors relative">
-            <Bell size={20} />
-            <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
-          </button>
+          <div className="relative">
+            <button 
+              onClick={() => setIsNotifOpen(!isNotifOpen)}
+              className="text-slate-400 hover:text-primary transition-colors relative"
+            >
+              <Bell size={20} />
+              <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+            </button>
+            {isNotifOpen && (
+              <div 
+                className="absolute top-full right-[-50px] mt-3 w-64 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-2xl py-3 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2"
+                onMouseLeave={() => setIsNotifOpen(false)}
+              >
+                <div className="px-4 py-2 border-b border-slate-50 dark:border-slate-800 mb-2">
+                  <p className="text-xs font-black dark:text-white">Notifikasi</p>
+                </div>
+                <div className="px-4 py-4 text-center">
+                  <Bell size={24} className="mx-auto text-slate-300 mb-2" />
+                  <p className="text-xs text-slate-500 font-medium">Belum ada notifikasi baru.</p>
+                  <p className="text-[10px] text-slate-400 mt-2 leading-relaxed">Saran: Menu ini bisa dihubungkan untuk notifikasi komentar, pesan contact, atau alert sistem.</p>
+                </div>
+              </div>
+            )}
+          </div>
           
           <div className="relative">
             <div 
