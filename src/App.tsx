@@ -63,6 +63,8 @@ export default function App() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [featuredProjects, setFeaturedProjects] = useState<FeaturedProject[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
+  const [articleFilter, setArticleFilter] = useState('All');
+  const [articleSearchQuery, setArticleSearchQuery] = useState('');
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -167,12 +169,27 @@ export default function App() {
         ) : currentPage === 'articles' ? (
           <ArticleList 
             articles={articles}
+            activeFilter={articleFilter}
+            onFilterChange={setArticleFilter}
+            searchQuery={articleSearchQuery}
+            onSearchChange={setArticleSearchQuery}
             onArticleClick={handleArticleClick}
           />
         ) : currentPage === 'article-detail' && selectedArticle ? (
           <ArticleDetail 
             article={selectedArticle}
+            articles={articles}
             onBack={() => handleNavigate('articles')}
+            onArticleClick={handleArticleClick}
+            onFilterChange={(cat) => {
+              setArticleFilter(cat);
+              handleNavigate('articles');
+            }}
+            onSearchChange={(query) => {
+              setArticleSearchQuery(query);
+              handleNavigate('articles');
+            }}
+            searchQuery={articleSearchQuery}
           />
         ) : (
           <div className="pt-32 text-center text-slate-500">Page not found</div>
