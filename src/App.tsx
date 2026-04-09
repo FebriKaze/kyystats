@@ -64,6 +64,27 @@ export default function App() {
   const [featuredProjects, setFeaturedProjects] = useState<FeaturedProject[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
 
+  // Hash-based Routing Persistence
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash.startsWith('article-detail/')) {
+        const slug = hash.replace('article-detail/', '');
+        setCurrentPage('article-detail');
+        // We'll find the article in the articles array once it's loaded
+      } else if (hash) {
+        setCurrentPage(hash);
+      } else {
+        setCurrentPage('home');
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    handleHashChange(); // Run on initial load
+
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
   useEffect(() => {
     const loadData = async () => {
       const [dbProjects, dbFeatured, dbArticles] = await Promise.all([
@@ -75,6 +96,14 @@ export default function App() {
       setFeaturedProjects(dbFeatured);
       setArticles(dbArticles);
       
+      // Handle initial load of article-detail from hash
+      const hash = window.location.hash.replace('#', '');
+      if (hash.startsWith('article-detail/')) {
+        const slug = hash.replace('article-detail/', '');
+        const article = dbArticles.find(a => a.slug === slug);
+        if (article) setSelectedArticle(article);
+      }
+
       const projectsWithImages = dbProjects.map(p => {
         if (!p.image) {
           if (p.title.includes('Papua')) return { ...p, image: project1 };
@@ -93,6 +122,7 @@ export default function App() {
 
   const handleNavigate = (page: string) => {
     setCurrentPage(page);
+    window.location.hash = page;
     if (page !== 'article-detail') setSelectedArticle(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -100,6 +130,7 @@ export default function App() {
   const handleArticleClick = (article: Article) => {
     setSelectedArticle(article);
     setCurrentPage('article-detail');
+    window.location.hash = `article-detail/${article.slug}`;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -112,7 +143,7 @@ export default function App() {
       />
       
       <main>
-        {currentPage === 'home' ? (
+        {currentPage === 'home' || currentPage === '' ? (
           <>
             <Hero />
             <ImpactSnapshot projects={featuredProjects} />
@@ -150,7 +181,6 @@ export default function App() {
         onClose={() => setSelectedProject(null)} 
       />
 
-      {/* Floating Action Button */}
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
