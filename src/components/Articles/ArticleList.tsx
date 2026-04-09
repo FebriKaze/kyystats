@@ -13,6 +13,14 @@ interface ArticleListProps {
   onArticleClick: (article: Article) => void;
 }
 
+const stripMarkdown = (text: string) => {
+  return text
+    .replace(/[#*`_~]/g, '')
+    .replace(/!\[.*?\]\(.*?\)/g, '')
+    .replace(/\[.*?\]\(.*?\)/g, '$1')
+    .trim();
+};
+
 const ARTICLES_PER_PAGE = 8;
 
 const ArticleList: React.FC<ArticleListProps> = ({ 
@@ -80,13 +88,15 @@ const ArticleList: React.FC<ArticleListProps> = ({
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ duration: 0.3 }}
-                      className="flex flex-col md:flex-row gap-6 border-b border-slate-100 dark:border-slate-800 pb-8 last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-900/50 p-4 -mx-4 rounded-xl transition-all cursor-pointer group"
+                      className="flex flex-col md:flex-row gap-6 border-b border-slate-100 dark:border-slate-800 pb-8 last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-900/50 p-4 md:-mx-4 rounded-xl transition-all cursor-pointer group"
                       onClick={() => onArticleClick(article)}
                     >
                       <div className="w-full md:w-64 h-40 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0 flex items-center justify-center p-0 relative">
                         <img 
                           src={article.thumbnail_url} 
                           alt={article.title} 
+                          width="256"
+                          height="160"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                         />
                       </div>
@@ -109,7 +119,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
                         </div>
                         
                         <p className="text-sm text-slate-500 leading-relaxed line-clamp-2 mb-3">
-                          {article.summary}
+                          {stripMarkdown(article.summary || article.content || '')}
                         </p>
 
                         <div className="mt-auto">

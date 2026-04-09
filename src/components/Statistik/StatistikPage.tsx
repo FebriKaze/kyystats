@@ -9,6 +9,14 @@ interface StatistikPageProps {
   onStatClick: (item: Statistic) => void;
 }
 
+const stripMarkdown = (text: string) => {
+  return text
+    .replace(/[#*`_~]/g, '') // Remove simple markdown chars
+    .replace(/!\[.*?\]\(.*?\)/g, '') // Remove images
+    .replace(/\[.*?\]\(.*?\)/g, '$1') // Remove links but keep text
+    .trim();
+};
+
 const STATISTIK_PER_PAGE = 8;
 
 const StatistikPage: React.FC<StatistikPageProps> = ({ statistik, onStatClick }) => {
@@ -98,6 +106,8 @@ const StatistikPage: React.FC<StatistikPageProps> = ({ statistik, onStatClick })
                         <img 
                           src={item.image_url} 
                           alt={item.title} 
+                          width="256"
+                          height="160"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                         />
                       </div>
@@ -120,7 +130,7 @@ const StatistikPage: React.FC<StatistikPageProps> = ({ statistik, onStatClick })
                         </div>
                         
                         <p className="text-sm text-slate-500 leading-relaxed line-clamp-2 mb-3">
-                          {item.content}
+                          {stripMarkdown(item.content)}
                         </p>
 
                         <div className="mt-auto">
