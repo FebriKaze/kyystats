@@ -31,7 +31,7 @@ const StatistikPage: React.FC<StatistikPageProps> = ({ statistik, onStatClick })
       created_at: s.created_at,
       title: s.title,
       slug: s.id,
-      summary: s.content.substring(0, 150) + '...', // Summary from content
+      summary: stripMarkdown(s.summary || s.content).substring(0, 150) + '...',
       content: s.content,
       category: s.category || 'Statistik',
       thumbnail_url: s.image_url,
@@ -130,7 +130,7 @@ const StatistikPage: React.FC<StatistikPageProps> = ({ statistik, onStatClick })
                         </div>
                         
                         <p className="text-sm text-slate-500 leading-relaxed line-clamp-2 mb-3">
-                          {stripMarkdown(item.content)}
+                          {stripMarkdown(item.summary || item.content || '')}
                         </p>
 
                         <div className="mt-auto">

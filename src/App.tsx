@@ -1,24 +1,26 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { Send } from 'lucide-react';
 import Navbar from './components/HomePage/Navbar';
 import Hero from './components/HomePage/Hero';
-import ImpactSnapshot from './components/HomePage/ImpactSnapshot';
-import ProjectArchive from './components/HomePage/ProjectArchive';
+import Footer from './components/HomePage/Footer';
 import ContactModal from './components/HomePage/ContactModal';
 import CaseStudyModal from './components/HomePage/CaseStudyModal';
-import Portfolio from './components/HomePage/Portfolio';
-import Footer from './components/HomePage/Footer';
-import ArticleList from './components/Articles/ArticleList';
-import ArticleDetail from './components/Articles/ArticleDetail';
-import StatistikPage from './components/Statistik/StatistikPage';
-import StatistikDetail from './components/Statistik/StatistikDetail';
-import { SpeedInsights } from "@vercel/speed-insights/react"
+import Login from './components/Admin/Login';
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Project, FeaturedProject, Article } from './types';
 import { fetchPortfolios, fetchFeaturedProjects, fetchArticles, fetchStatistics } from './services/portfolioService';
-import Login from './components/Admin/Login';
-import AdminDashboard from './components/Admin/AdminDashboard';
 import { supabase } from './lib/supabase';
+
+// Lazy load heavy page components for performance
+const ArticleList = lazy(() => import('./components/Articles/ArticleList'));
+const ArticleDetail = lazy(() => import('./components/Articles/ArticleDetail'));
+const StatistikPage = lazy(() => import('./components/Statistik/StatistikPage'));
+const StatistikDetail = lazy(() => import('./components/Statistik/StatistikDetail'));
+const AdminDashboard = lazy(() => import('./components/Admin/AdminDashboard'));
+const Portfolio = lazy(() => import('./components/HomePage/Portfolio'));
+const ProjectArchive = lazy(() => import('./components/HomePage/ProjectArchive'));
+const ImpactSnapshot = lazy(() => import('./components/HomePage/ImpactSnapshot'));
 import project1 from './components/img/1.jpg';
 import projectPengangguran from './components/img/Pengangguran Indonesia 2025.jpg';
 import projectTrackRecord from './components/img/TrackRecord MG.jpg';
@@ -181,29 +183,34 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen text-foreground transition-colors duration-300">
+    <div className="min-h-screen bg-white dark:bg-[#020617] transition-colors duration-300">
       {currentPage !== 'admin' && (
-        <Navbar 
-          onContactClick={() => setIsContactOpen(true)} 
-          onNavigate={handleNavigate}
-          currentPage={currentPage}
-        />
+        <Navbar onContactClick={() => setIsContactOpen(true)} onNavigate={handleNavigate} currentPage={currentPage} />
       )}
       
       <main>
+        <Suspense fallback={
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        }>
         {currentPage === 'home' ? (
-          <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="space-y-0"
+          >
             <Hero />
             <ImpactSnapshot projects={featuredProjects} />
             <ProjectArchive 
               projects={projects.slice(0, 3)} 
-              onProjectClick={(project) => setSelectedProject(project)} 
+              onProjectClick={(p) => setSelectedProject(p)}
             />
-          </>
+          </motion.div>
         ) : currentPage === 'portfolio' ? (
           <Portfolio 
-            projects={projects}
-            onProjectClick={(project) => setSelectedProject(project)} 
+            projects={projects} 
+            onProjectClick={(p) => setSelectedProject(p)} 
             onBackToHome={() => handleNavigate('home')}
           />
         ) : currentPage === 'statistik' ? (
@@ -244,11 +251,12 @@ export default function App() {
           session ? (
             <AdminDashboard />
           ) : (
-            <Login onLoginSuccess={(session) => setSession(session)} />
+            <Login onLoginSuccess={(s) => setSession(s)} />
           )
         ) : (
           <div className="pt-32 text-center text-slate-500">Page not found</div>
         )}
+        </Suspense>
       </main>
 
       {currentPage !== 'admin' && <Footer />}
@@ -266,7 +274,7 @@ export default function App() {
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsContactOpen(true)}
         className={`fixed bottom-8 right-8 z-40 bg-primary text-white pl-6 pr-5 py-4 rounded-full shadow-2xl shadow-primary/40 flex items-center gap-3 group transition-all ${
-          (currentPage === 'portfolio' || currentPage === 'article-detail') ? 'hidden md:flex' : 'flex'
+          currentPage === 'admin' ? 'hidden' : (currentPage === 'portfolio' || currentPage === 'article-detail') ? 'hidden md:flex' : 'flex'
         }`}
       >
         <span className="text-sm font-bold tracking-tight">Let's Collaborate</span>
