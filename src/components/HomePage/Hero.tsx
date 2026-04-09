@@ -21,9 +21,9 @@ const Hero: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white tracking-tighter leading-[1.1] mb-8"
+          className="text-4xl sm:text-5xl md:text-7xl font-black text-slate-900 dark:text-white tracking-tighter leading-tight md:leading-[1.1] mb-6 md:mb-8"
         >
-          Mengubah Data Mentah menjadi <br />
+          Mengubah Data Mentah menjadi <br className="hidden sm:block" />
           <span className="text-gradient">Pertumbuhan Bisnis</span>
         </motion.h1>
 

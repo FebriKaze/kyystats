@@ -67,7 +67,7 @@ const StatistikPage: React.FC<StatistikPageProps> = ({ statistik, onStatClick })
   };
 
   return (
-    <section className="pt-32 pb-24 px-6 bg-white dark:bg-[#020617] transition-colors duration-300" id="statistik">
+    <section className="pt-24 md:pt-32 pb-16 md:pb-24 px-6 bg-white dark:bg-[#020617] transition-colors duration-300" id="statistik">
       <div className="max-w-7xl mx-auto">
         <div className="mb-16">
           <h1 className="text-5xl md:text-7xl font-black tracking-tighter dark:text-white mb-4">

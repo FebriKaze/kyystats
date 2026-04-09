@@ -99,7 +99,7 @@ const Navbar: React.FC<NavbarProps> = ({ onContactClick, onNavigate, currentPage
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="absolute top-full left-0 w-full bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 p-6 flex flex-col space-y-4 md:hidden shadow-xl"
+            className="absolute top-full left-0 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-b border-slate-100 dark:border-slate-800 p-8 flex flex-col space-y-6 md:hidden shadow-2xl overflow-y-auto max-h-[80vh]"
           >
             {navLinks.map((link) => (
               <button

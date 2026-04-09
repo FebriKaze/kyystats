@@ -93,7 +93,7 @@ const ImpactSnapshot: React.FC<ImpactSnapshotProps> = ({ projects }) => {
           onMouseLeave={() => setIsAutoPlaying(true)}
         >
           {/* Main Featured Analysis Slide */}
-          <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden min-h-[600px] flex flex-col">
+          <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden min-h-[500px] md:min-h-[600px] flex flex-col">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentProject.id}
@@ -125,7 +125,7 @@ const ImpactSnapshot: React.FC<ImpactSnapshotProps> = ({ projects }) => {
                     <img 
                       src={currentProject.image_url} 
                       alt={currentProject.title} 
-                      className="h-[450px] w-auto object-contain block"
+                      className="h-[300px] sm:h-[450px] w-auto object-contain block"
                     />
                   </div>
                 </div>
@@ -163,19 +163,19 @@ const ImpactSnapshot: React.FC<ImpactSnapshotProps> = ({ projects }) => {
               </div>
               <div className="space-y-12">
                 <div className="flex flex-col gap-2">
-                  <div className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter">
+                  <div className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter">
                      {currentProject.impact_val || '—'}
                   </div>
-                  <div className="text-sm text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wide">
+                  <div className="text-xs md:text-sm text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wide">
                     {currentProject.impact_desc}
                   </div>
                 </div>
-                <div className="h-px bg-slate-100 dark:bg-slate-800 w-full" />
+                <div className="h-px bg-slate-100 dark:border-slate-800 w-full" />
                 <div className="flex flex-col gap-2">
-                  <div className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter">
+                  <div className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter">
                     {currentProject.highlight_y || '—'}
                   </div>
-                  <div className="text-sm text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wide">
+                  <div className="text-xs md:text-sm text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wide">
                     {currentProject.hightlight_desc}
                   </div>
                 </div>

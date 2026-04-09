@@ -48,8 +48,8 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
   const categories = ['All', ...Array.from(new Set(allStats.map(a => a.category).filter(Boolean)))];
 
   return (
-    <div className="pt-24 pb-24 min-h-screen bg-white dark:bg-[#020617] transition-colors duration-300">
-      <div className="max-w-7xl mx-auto px-6">
+    <div className="pt-20 md:pt-24 pb-16 md:pb-24 min-h-screen bg-white dark:bg-[#020617] transition-colors duration-300">
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
         <div className="mb-12">
           <button 
             onClick={onBack}
@@ -62,7 +62,7 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
             <span className="px-3 py-1 w-fit rounded-lg bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest border border-primary/20">
               {item.category}
             </span>
-            <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-slate-900 dark:text-white leading-[1.1] max-w-5xl">
+            <h1 className="text-3xl md:text-6xl font-black tracking-tighter text-slate-900 dark:text-white leading-[1.1] max-w-5xl">
               {item.title}
             </h1>
             
