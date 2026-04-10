@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { ChevronDown, Bell, User, LayoutDashboard, FileText, Settings, LogOut } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
-import logoLight from '../img/ky_stat_logo-removebg-preview.png';
-import logoDark from '../img/logo dark.png';
+import logoLight from '../img/ky_stat_logo-removebg-preview.webp';
+import logoDark from '../img/logo dark.webp';
 import { ThemeToggle } from '../HomePage/ThemeToggle';
 
 interface AdminHeaderProps {

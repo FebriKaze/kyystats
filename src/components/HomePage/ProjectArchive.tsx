@@ -2,9 +2,9 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { Project } from '../../types';
-import project1 from '../img/1.jpg';
-import projectPengangguran from '../img/Pengangguran Indonesia 2025.jpg';
-import projectTrackRecord from '../img/TrackRecord MG.jpg';
+import project1 from '../img/1.webp';
+import projectPengangguran from '../img/Pengangguran Indonesia 2025.webp';
+import projectTrackRecord from '../img/TrackRecord MG.webp';
 
 interface ProjectArchiveProps {
   projects: Project[];
