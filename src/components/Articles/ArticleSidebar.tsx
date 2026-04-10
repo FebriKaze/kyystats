@@ -24,7 +24,10 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'popular' | 'latest'>('popular');
 
-  const popularArticles = [...articles].slice(0, 4); 
+  const popularArticles = [...articles]
+    .sort((a: any, b: any) => (b.views || 0) - (a.views || 0))
+    .slice(0, 4);
+    
   const latestArticles = [...articles]
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 4);

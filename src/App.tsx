@@ -98,8 +98,15 @@ function AppContent() {
         fetchStatistics()
       ]);
       
+      // Ambil view counts untuk setiap artikel
+      const { fetchPageViewCount } = await import('./services/portfolioService');
+      const articlesWithViews = await Promise.all(dbArticles.map(async (art) => {
+        const views = await fetchPageViewCount('article', art.id);
+        return { ...art, views };
+      }));
+      
       setFeaturedProjects(dbFeatured);
-      setArticles(dbArticles);
+      setArticles(articlesWithViews);
       setStatistics(dbStats);
 
       const projectsWithImages = dbProjects.map(p => {
