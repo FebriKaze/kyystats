@@ -3,8 +3,8 @@ import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { Project } from '../../types';
 import project1 from '../img/1.webp';
-import projectPengangguran from '../img/Pengangguran Indonesia 2025.webp';
-import projectTrackRecord from '../img/TrackRecord MG.webp';
+import projectPengangguran from '../img/Pengangguran_Indonesia_2025.webp';
+import projectTrackRecord from '../img/TrackRecord_MG.webp';
 
 interface ProjectArchiveProps {
   projects: Project[];

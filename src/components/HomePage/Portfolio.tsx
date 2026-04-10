@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Search, Filter, ArrowRight, X } from 'lucide-react';
 import { Project } from '../../types';
 import project1 from '../img/1.webp';
-import projectPengangguran from '../img/Pengangguran Indonesia 2025.webp';
-import projectTrackRecord from '../img/TrackRecord MG.webp';
+import projectPengangguran from '../img/Pengangguran_Indonesia_2025.webp';
+import projectTrackRecord from '../img/TrackRecord_MG.webp';
 
 // Move projects data outside the component to prevent recreation on every render
 interface PortfolioProps {
