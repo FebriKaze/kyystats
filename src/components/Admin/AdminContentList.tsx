@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Filter, Edit3, Trash2, Eye, ChevronLeft, ChevronRight, Plus, Image as ImageIcon } from 'lucide-react';
+import { fetchPageViewCount } from '../../services/portfolioService';
 
 interface AdminContentListProps {
   type: 'articles' | 'portfolio' | 'featured' | 'statistics';
@@ -11,10 +12,38 @@ interface AdminContentListProps {
 
 const AdminContentList: React.FC<AdminContentListProps> = ({ type, data, onEdit, onDelete, onCreate }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [viewCounts, setViewCounts] = useState<Record<string, number>>({});
+  const [loadingViews, setLoadingViews] = useState(false);
   
   const filteredData = data.filter(item => 
     item.title?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  useEffect(() => {
+    const loadViews = async () => {
+      if (filteredData.length === 0) return;
+      setLoadingViews(true);
+      try {
+        const counts: Record<string, number> = {};
+        // Tentukan type untuk query page_views
+        const pageType = type === 'articles' ? 'article' : type === 'statistics' ? 'statistik' : 'portfolio';
+        
+        // Load data view per item
+        await Promise.all(filteredData.map(async (item) => {
+          const count = await fetchPageViewCount(pageType, item.id);
+          counts[item.id] = count;
+        }));
+        
+        setViewCounts(counts);
+      } catch (e) {
+        console.error('Error fetching pageview counts:', e);
+      } finally {
+        setLoadingViews(false);
+      }
+    };
+
+    loadViews();
+  }, [type, data.length]); // Reload jika data atau tipe berubah
 
   const title = type === 'articles' ? 'Manajemen Artikel' : type === 'portfolio' ? 'Manajemen Portfolio' : type === 'statistics' ? 'Manajemen Statistik' : 'Manajemen Featured Content';
 
@@ -100,19 +129,25 @@ const AdminContentList: React.FC<AdminContentListProps> = ({ type, data, onEdit,
                     </p>
                   </td>
                   <td className="px-8 py-6">
-                    <span className="text-sm font-bold dark:text-white">0</span>
+                    <span className="text-sm font-bold dark:text-white">
+                      {loadingViews ? (
+                        <span className="animate-pulse text-slate-300">...</span>
+                      ) : (
+                        viewCounts[item.id] || 0
+                      )}
+                    </span>
                   </td>
                   <td className="px-8 py-6">
                     <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button 
                         onClick={() => onEdit(item)}
-                        className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-primary transition-colors border border-slate-100 dark:border-slate-700"
+                        className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-primary transition-colors border border-slate-100 dark:border-slate-800"
                       >
                         <Edit3 size={16} />
                       </button>
                       <button 
                         onClick={() => onDelete(item.id)}
-                        className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-red-500 transition-colors border border-slate-100 dark:border-slate-700"
+                        className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-red-500 transition-colors border border-slate-100 dark:border-slate-800"
                       >
                         <Trash2 size={16} />
                       </button>
