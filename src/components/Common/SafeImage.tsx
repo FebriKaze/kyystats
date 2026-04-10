@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
 
 interface SafeImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
-  src: string;
+  src?: string;
 }
 
 const SafeImage: React.FC<SafeImageProps> = ({ src, alt, className, ...props }) => {
-  const [currentSrc, setCurrentSrc] = useState(src);
+  const [currentSrc, setCurrentSrc] = useState(src || '');
   const [hasError, setHasError] = useState(false);
 
   // Sync state when props change
   useEffect(() => {
-    setCurrentSrc(src);
+    setCurrentSrc(src || '');
     setHasError(false);
   }, [src]);
+
+  if (!src) return null;
 
   const getWebpUrl = (url: string) => {
     if (hasError) return url; // If already failed, don't try webp again

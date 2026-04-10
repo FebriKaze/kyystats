@@ -4,6 +4,7 @@ import { ArrowLeft, Calendar, User, Clock, Share2, Tag } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Article } from '../../types';
+import SafeImage from '../Common/SafeImage';
 import ArticleSidebar from './ArticleSidebar';
 import { useMeta } from '../../hooks/useMeta';
 import { usePageView } from '../../hooks/usePageView';
@@ -85,7 +86,7 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({
             <article>
               {/* Centered, much smaller image with full aspect ratio */}
               <div className="w-full md:w-1/2 lg:w-3/5 mx-auto rounded-3xl overflow-hidden shadow-2xl mb-12 border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40">
-                <img 
+                <SafeImage 
                   src={article.thumbnail_url} 
                   alt={article.title} 
                   className="w-full h-auto object-contain" 
@@ -102,7 +103,7 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({
                   components={{
                     img: ({node, ...props}) => (
                       <span className="block my-12">
-                        <img {...props} className="w-full h-auto rounded-3xl" />
+                        <SafeImage {...props} className="w-full h-auto rounded-3xl" />
                         {props.title && <span className="block text-center text-sm text-slate-400 mt-4 font-medium">{props.title}</span>}
                       </span>
                     ),

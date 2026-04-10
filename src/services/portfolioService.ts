@@ -77,10 +77,15 @@ export const fetchArticleBySlug = async (slug: string): Promise<Article | null> 
 };
 // --- ARTICLES CRUD ---
 export const saveArticle = async (article: Partial<Article>): Promise<Article | null> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Anda harus login untuk menyimpan konten.");
+
   const isNew = !article.id;
+  const payload = { ...article, user_id: user.id };
+  
   const { data, error } = isNew
-    ? await supabase.from('articles').insert([article]).select().single()
-    : await supabase.from('articles').update(article).eq('id', article.id).select().single();
+    ? await supabase.from('articles').insert([payload]).select().single()
+    : await supabase.from('articles').update(payload).eq('id', article.id).select().single();
 
   if (error) {
     console.error('Error saving article:', error);
@@ -110,7 +115,8 @@ export const savePortfolio = async (project: any): Promise<any> => {
     thumbnail_url: project.image,
     challenge_text: project.details.challenge,
     sulotion_text: project.details.solution,
-    key_result: project.details.result
+    key_result: project.details.result,
+    user_id: (await supabase.auth.getUser()).data.user?.id
   };
 
   const { data, error } = isNew
@@ -146,7 +152,8 @@ export const saveFeaturedProject = async (featured: any): Promise<any> => {
     impact_desc: featured.impact_desc,
     highlight_year: featured.highlight_y,
     hightlight_desc: featured.hightlight_desc,
-    image_label: featured.image_label
+    image_label: featured.image_label,
+    user_id: (await supabase.auth.getUser()).data.user?.id
   };
 
   const { data, error } = isNew
