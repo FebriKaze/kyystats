@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, TrendingUp, Clock, ChevronRight } from 'lucide-react';
 import { Article } from '../../types';
+import SafeImage from '../Common/SafeImage';
 
 interface ArticleSidebarProps {
   articles: Article[];
@@ -104,7 +105,7 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
               className="flex gap-4 group cursor-pointer"
             >
               <div className="w-20 h-20 rounded-2xl overflow-hidden shrink-0 border border-slate-200 dark:border-slate-800">
-                <img
+                <SafeImage
                   src={article.thumbnail_url}
                   alt={article.title}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
