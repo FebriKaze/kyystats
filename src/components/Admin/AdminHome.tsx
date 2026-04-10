@@ -14,6 +14,7 @@ import {
 } from 'recharts';
 import { TrendingUp, FileText, Briefcase, LineChart as ChartIcon, ExternalLink, Image as ImageIcon, Search, Filter } from 'lucide-react';
 import { fetchWeeklyPageViews, fetchPageViewCount } from '../../services/portfolioService';
+import SafeImage from '../Common/SafeImage';
 
 interface AdminHomeProps {
   stats: {
@@ -271,7 +272,11 @@ const AdminHome: React.FC<AdminHomeProps> = ({ stats, popularArticles = [] }) =>
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0 flex items-center justify-center">
                         {(item.thumbnail_url || item.image || item.image_url) ? (
-                          <img src={item.thumbnail_url || item.image || item.image_url} alt="" className="w-full h-full object-cover" />
+                          <SafeImage 
+                            src={item.thumbnail_url || item.image || item.image_url} 
+                            alt="" 
+                            className="w-full h-full object-cover" 
+                          />
                         ) : (
                           <ImageIcon size={16} className="text-slate-400" />
                         )}
