@@ -12,12 +12,21 @@ export const fetchPortfolios = async (): Promise<Project[]> => {
     return [];
   }
 
+  const ensureWebp = (url: string) => {
+    if (!url) return '';
+    // Only target Supabase storage URLs to avoid breaking other links
+    if (url.includes('supabase.co/storage/v1/object/public')) {
+      return url.replace(/\.(jpg|jpeg|png)$/i, '.webp');
+    }
+    return url;
+  };
+
   return data.map((row: any) => ({
     id: row.id,
     category: row.category,
     title: row.title,
     description: row.short_desc,
-    image: row.thumbnail_url || '',
+    image: ensureWebp(row.thumbnail_url || ''),
     details: {
       challenge: row.challenge_text,
       solution: row.sulotion_text,
@@ -32,15 +41,23 @@ export const fetchFeaturedProjects = async (): Promise<FeaturedProject[]> => {
     .select('*')
     .order('updated_at', { ascending: false });
 
+  const ensureWebp = (url: string) => {
+    if (!url) return '';
+    if (url.includes('supabase.co/storage/v1/object/public')) {
+      return url.replace(/\.(jpg|jpeg|png)$/i, '.webp');
+    }
+    return url;
+  };
+
   return data.map((row: any) => ({
     id: String(row.id),
     title: row.title || '',
     description: row.description || '',
-    image_url: row.image_url || '',
+    image_url: ensureWebp(row.image_url || ''),
     tags: row.tags || [],
-    impact_val: row.impact_value || '', // Matches DB column: impact_value
+    impact_val: row.impact_value || '', 
     impact_desc: row.impact_desc || '',
-    highlight_y: row.highlight_year || '', // Matches DB column: highlight_year
+    highlight_y: row.highlight_year || '', 
     hightlight_desc: row.hightlight_desc || '',
     image_label: row.image_label || ''
   }));
@@ -58,7 +75,18 @@ export const fetchArticles = async (): Promise<Article[]> => {
     return [];
   }
 
-  return data as Article[];
+  const ensureWebp = (url: string) => {
+    if (!url) return '';
+    if (url.includes('supabase.co/storage/v1/object/public')) {
+      return url.replace(/\.(jpg|jpeg|png)$/i, '.webp');
+    }
+    return url;
+  };
+
+  return data.map((row: any) => ({
+    ...row,
+    thumbnail_url: ensureWebp(row.thumbnail_url || '')
+  })) as Article[];
 };
 
 export const fetchArticleBySlug = async (slug: string): Promise<Article | null> => {
@@ -68,9 +96,16 @@ export const fetchArticleBySlug = async (slug: string): Promise<Article | null> 
     .eq('slug', slug)
     .single();
 
-  if (error) {
-    console.error('Error fetching article:', error);
-    return null;
+  const ensureWebp = (url: string) => {
+    if (!url) return '';
+    if (url.includes('supabase.co/storage/v1/object/public')) {
+      return url.replace(/\.(jpg|jpeg|png)$/i, '.webp');
+    }
+    return url;
+  };
+
+  if (data) {
+    data.thumbnail_url = ensureWebp(data.thumbnail_url || '');
   }
 
   return data as Article;
@@ -180,8 +215,18 @@ export const fetchStatistics = async (): Promise<Statistic[]> => {
     console.error('Error fetching statistics:', error);
     return [];
   }
+
+  const ensureWebp = (url: string) => {
+    if (!url) return '';
+    if (url.includes('supabase.co/storage/v1/object/public')) {
+      return url.replace(/\.(jpg|jpeg|png)$/i, '.webp');
+    }
+    return url;
+  };
+
   return data.map((row: any) => ({
     ...row,
+    image_url: ensureWebp(row.image_url || ''),
     summary: row.short_desc || ''
   })) as Statistic[];
 };
