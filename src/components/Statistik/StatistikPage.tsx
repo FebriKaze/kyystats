@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, User, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Statistic, Article } from '../../types';
 import ArticleSidebar from '../Articles/ArticleSidebar';
+import { usePageView } from '../../hooks/usePageView';
 
 interface StatistikPageProps {
   statistik: Statistic[];
@@ -23,6 +24,11 @@ const StatistikPage: React.FC<StatistikPageProps> = ({ statistik, onStatClick })
   const [currentPage, setCurrentPage] = useState(1);
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+
+  usePageView({
+    pageType: 'statistik-list',
+    pageTitle: 'Daftar Statistik Utama'
+  });
 
   // Map Statistic to Article format purely for UI compatibility with ArticleSidebar
   const mappedToArticleFormat: Article[] = useMemo(() => {
