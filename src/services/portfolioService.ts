@@ -211,3 +211,52 @@ export const deleteStatistic = async (id: string): Promise<boolean> => {
   }
   return true;
 };
+
+// --- PAGE VIEWS ---
+export const fetchWeeklyPageViews = async (pageType: string): Promise<{ name: string; views: number }[]> => {
+  const now = new Date();
+  const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+  const result: { name: string; views: number }[] = [];
+
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date(now);
+    date.setDate(date.getDate() - i);
+    const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate()).toISOString();
+    const endOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1).toISOString();
+
+    const { count, error } = await supabase
+      .from('page_views')
+      .select('*', { count: 'exact', head: true })
+      .eq('page_type', pageType)
+      .gte('viewed_at', startOfDay)
+      .lt('viewed_at', endOfDay);
+
+    result.push({
+      name: dayNames[date.getDay()],
+      views: error ? 0 : (count || 0)
+    });
+  }
+
+  return result;
+};
+
+export const fetchPageViewCount = async (pageType: string, pageId: string): Promise<number> => {
+  const { count, error } = await supabase
+    .from('page_views')
+    .select('*', { count: 'exact', head: true })
+    .eq('page_type', pageType)
+    .eq('page_id', pageId);
+
+  if (error) return 0;
+  return count || 0;
+};
+
+export const fetchTotalViews = async (pageType: string): Promise<number> => {
+  const { count, error } = await supabase
+    .from('page_views')
+    .select('*', { count: 'exact', head: true })
+    .eq('page_type', pageType);
+
+  if (error) return 0;
+  return count || 0;
+};

@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm';
 import { Statistic, Article } from '../../types';
 import ArticleSidebar from '../Articles/ArticleSidebar';
 import { useMeta } from '../../hooks/useMeta';
+import { usePageView } from '../../hooks/usePageView';
 
 interface StatistikDetailProps {
   item: Statistic;
@@ -29,6 +30,13 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
     title: item?.title, 
     description: item?.summary 
   });
+
+  usePageView({
+    pageType: 'statistik',
+    pageId: item?.id,
+    pageTitle: item?.title
+  });
+
   if (!item) return null;
 
   // Map to Article for sidebar compatibility

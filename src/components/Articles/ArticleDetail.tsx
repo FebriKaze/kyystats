@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm';
 import { Article } from '../../types';
 import ArticleSidebar from './ArticleSidebar';
 import { useMeta } from '../../hooks/useMeta';
+import { usePageView } from '../../hooks/usePageView';
 
 interface ArticleDetailProps {
   article: Article;
@@ -29,6 +30,12 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({
   useMeta({ 
     title: article?.title, 
     description: article?.summary 
+  });
+
+  usePageView({
+    pageType: 'article',
+    pageId: article?.id,
+    pageTitle: article?.title
   });
 
   const wordCount = article?.content?.split(/\s+/).length || 0;

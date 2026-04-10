@@ -13,18 +13,7 @@ import {
   Area
 } from 'recharts';
 import { TrendingUp, FileText, Briefcase, LineChart as ChartIcon, ExternalLink, Image as ImageIcon, Search, Filter } from 'lucide-react';
-
-const MOCK_VIEW_DATA = [
-  { name: 'Mon', views: 400 },
-  { name: 'Tue', views: 300 },
-  { name: 'Wed', views: 600 },
-  { name: 'Thu', views: 800 },
-  { name: 'Fri', views: 500 },
-  { name: 'Sat', views: 900 },
-  { name: 'Sun', views: 700 },
-];
-
-
+import { fetchWeeklyPageViews, fetchPageViewCount } from '../../services/portfolioService';
 
 interface AdminHomeProps {
   stats: {
@@ -38,6 +27,38 @@ interface AdminHomeProps {
 const AdminHome: React.FC<AdminHomeProps> = ({ stats, popularArticles = [] }) => {
   const [trends, setTrends] = useState<any[]>([]);
   const [loadingTrends, setLoadingTrends] = useState(true);
+  const [articleViewData, setArticleViewData] = useState<{ name: string; views: number }[]>([]);
+  const [statViewData, setStatViewData] = useState<{ name: string; views: number }[]>([]);
+  const [itemViews, setItemViews] = useState<Record<string, number>>({});
+  const [loadingViews, setLoadingViews] = useState(true);
+
+  // Fetch real pageview data from Supabase
+  useEffect(() => {
+    const loadPageViews = async () => {
+      try {
+        const [articleData, statData] = await Promise.all([
+          fetchWeeklyPageViews('article'),
+          fetchWeeklyPageViews('statistik')
+        ]);
+        setArticleViewData(articleData);
+        setStatViewData(statData);
+
+        // Fetch individual view counts for table
+        const viewCounts: Record<string, number> = {};
+        for (const item of popularArticles) {
+          const type = item.thumbnail_url ? 'article' : 'statistik';
+          const count = await fetchPageViewCount(type, item.id);
+          viewCounts[item.id] = count;
+        }
+        setItemViews(viewCounts);
+      } catch (e) {
+        console.warn('Failed to load pageview data:', e);
+      } finally {
+        setLoadingViews(false);
+      }
+    };
+    loadPageViews();
+  }, [popularArticles]);
 
   useEffect(() => {
     const fetchTrends = async () => {
@@ -69,6 +90,11 @@ const AdminHome: React.FC<AdminHomeProps> = ({ stats, popularArticles = [] }) =>
     };
     fetchTrends();
   }, []);
+
+  // Calculate total weekly views
+  const totalArticleViews = articleViewData.reduce((sum, d) => sum + d.views, 0);
+  const totalStatViews = statViewData.reduce((sum, d) => sum + d.views, 0);
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex items-center justify-between">
@@ -90,8 +116,8 @@ const AdminHome: React.FC<AdminHomeProps> = ({ stats, popularArticles = [] }) =>
               <h2 className="text-6xl font-black mt-2">{stats.articles}</h2>
               <div className="mt-8 pt-6 border-t border-white/10 flex justify-between items-end">
                  <div>
-                  <p className="text-xs font-bold opacity-60">Persentase artikel terbit</p>
-                  <p className="text-xl font-black mt-1">100%</p>
+                  <p className="text-xs font-bold opacity-60">Total view minggu ini</p>
+                  <p className="text-xl font-black mt-1">{totalArticleViews}</p>
                  </div>
               </div>
             </div>
@@ -104,14 +130,14 @@ const AdminHome: React.FC<AdminHomeProps> = ({ stats, popularArticles = [] }) =>
               <h2 className="text-6xl font-black mt-2">{stats.featured}</h2>
               <div className="mt-8 pt-6 border-t border-white/10 flex justify-between items-end">
                  <div>
-                  <p className="text-xs font-bold opacity-60">Persentase statistik terbit</p>
-                  <p className="text-xl font-black mt-1">100%</p>
+                  <p className="text-xs font-bold opacity-60">Total view statistik minggu ini</p>
+                  <p className="text-xl font-black mt-1">{totalStatViews}</p>
                  </div>
               </div>
             </div>
           </div>
 
-          {/* Pageview Charts */}
+          {/* Pageview Charts — Now with REAL data */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-white dark:bg-slate-900 p-8 rounded-4xl border border-slate-100 dark:border-slate-800">
               <div className="mb-8">
@@ -119,17 +145,23 @@ const AdminHome: React.FC<AdminHomeProps> = ({ stats, popularArticles = [] }) =>
                 <p className="text-xs text-slate-500 mt-1 uppercase tracking-widest font-bold">Minggu Ini</p>
               </div>
               <div className="h-48 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={MOCK_VIEW_DATA}>
-                    <defs>
-                      <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#4F46E5" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <Area type="monotone" dataKey="views" stroke="#4F46E5" strokeWidth={3} fillOpacity={1} fill="url(#colorViews)" />
-                  </AreaChart>
-                </ResponsiveContainer>
+                {loadingViews ? (
+                  <div className="h-full flex items-center justify-center text-slate-400 text-sm animate-pulse">Memuat data...</div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={articleViewData}>
+                      <defs>
+                        <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#4F46E5" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                      <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
+                      <Area type="monotone" dataKey="views" stroke="#4F46E5" strokeWidth={3} fillOpacity={1} fill="url(#colorViews)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                )}
               </div>
             </div>
 
@@ -139,17 +171,23 @@ const AdminHome: React.FC<AdminHomeProps> = ({ stats, popularArticles = [] }) =>
                 <p className="text-xs text-slate-500 mt-1 uppercase tracking-widest font-bold">Minggu Ini</p>
               </div>
               <div className="h-48 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={MOCK_VIEW_DATA}>
-                    <defs>
-                      <linearGradient id="colorViewsStat" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#2563EB" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#2563EB" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <Area type="monotone" dataKey="views" stroke="#2563EB" strokeWidth={3} fillOpacity={1} fill="url(#colorViewsStat)" />
-                  </AreaChart>
-                </ResponsiveContainer>
+                {loadingViews ? (
+                  <div className="h-full flex items-center justify-center text-slate-400 text-sm animate-pulse">Memuat data...</div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={statViewData}>
+                      <defs>
+                        <linearGradient id="colorViewsStat" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#2563EB" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#2563EB" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                      <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
+                      <Area type="monotone" dataKey="views" stroke="#2563EB" strokeWidth={3} fillOpacity={1} fill="url(#colorViewsStat)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                )}
               </div>
             </div>
           </div>
@@ -196,9 +234,9 @@ const AdminHome: React.FC<AdminHomeProps> = ({ stats, popularArticles = [] }) =>
         <div className="p-8 border-b border-slate-50 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <h3 className="text-lg font-black dark:text-white capitalize">
-              Statistik Terpopuler
+              Konten Terpopuler
             </h3>
-            <p className="text-xs text-slate-500 mt-1">Daftar statistik terpopuler per pekan</p>
+            <p className="text-xs text-slate-500 mt-1">Berdasarkan total pageview</p>
           </div>
           
           <div className="flex items-center gap-4">
@@ -252,14 +290,14 @@ const AdminHome: React.FC<AdminHomeProps> = ({ stats, popularArticles = [] }) =>
                     </p>
                   </td>
                   <td className="px-8 py-6">
-                    <span className="text-sm font-bold dark:text-white">0</span>
+                    <span className="text-sm font-bold dark:text-white">{itemViews[item.id] ?? '—'}</span>
                   </td>
                 </tr>
               ))}
               {popularArticles.length === 0 && (
                 <tr>
                   <td colSpan={4} className="px-8 py-6 text-center text-slate-400 text-sm">
-                    Belum ada data artikel.
+                    Belum ada data konten.
                   </td>
                 </tr>
               )}
