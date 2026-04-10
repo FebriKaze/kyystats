@@ -1,7 +1,7 @@
 import React from 'react';
 import { Linkedin, Github, BookOpen, Mail } from 'lucide-react';
-import logoLight from '../img/ky_stat_logo-removebg-preview.png';
-import logoDark from '../img/logo dark.png';
+import logoLight from '../img/ky_stat_logo-removebg-preview.webp';
+import logoDark from '../img/logo dark.webp';
 
 const Footer: React.FC = () => {
   return (
