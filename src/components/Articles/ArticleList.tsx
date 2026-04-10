@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, User, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Article } from '../../types';
 import ArticleSidebar from './ArticleSidebar';
+import SafeImage from '../Common/SafeImage';
 
 interface ArticleListProps {
   articles: Article[];
@@ -92,13 +93,9 @@ const ArticleList: React.FC<ArticleListProps> = ({
                       onClick={() => onArticleClick(article)}
                     >
                       <div className="w-full md:w-64 h-40 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0 flex items-center justify-center p-0 relative">
-                        <img 
+                        <SafeImage 
                           src={article.thumbnail_url} 
                           alt={article.title} 
-                          width="400"
-                          height="224"
-                          loading="lazy"
-                          crossOrigin="anonymous"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                         />
                       </div>

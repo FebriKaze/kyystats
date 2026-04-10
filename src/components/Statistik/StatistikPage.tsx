@@ -4,6 +4,7 @@ import { Calendar, User, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-re
 import { Statistic, Article } from '../../types';
 import ArticleSidebar from '../Articles/ArticleSidebar';
 import { usePageView } from '../../hooks/usePageView';
+import SafeImage from '../Common/SafeImage';
 
 interface StatistikPageProps {
   statistik: Statistic[];
@@ -109,11 +110,9 @@ const StatistikPage: React.FC<StatistikPageProps> = ({ statistik, onStatClick })
                       className="flex flex-col md:flex-row gap-6 border-b border-slate-100 dark:border-slate-800 pb-8 last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-900/50 p-4 -mx-4 rounded-xl transition-all cursor-pointer group"
                     >
                       <div className="w-full md:w-64 h-40 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0 flex items-center justify-center p-0 relative">
-                        <img 
+                        <SafeImage 
                           src={item.image_url} 
                           alt={item.title} 
-                          crossOrigin="anonymous"
-                          loading="lazy"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                         />
                       </div>

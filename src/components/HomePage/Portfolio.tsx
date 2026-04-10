@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Search, Filter, ArrowRight, X } from 'lucide-react';
 import { Project } from '../../types';
+import SafeImage from '../Common/SafeImage';
 import project1 from '../img/1.webp';
 import projectPengangguran from '../img/Pengangguran_Indonesia_2025.webp';
 import projectTrackRecord from '../img/TrackRecord_MG.webp';
