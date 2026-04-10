@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Terminal, Database, Palette, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import { FeaturedProject } from '../../types';
+import SafeImage from '../Common/SafeImage';
 import taxImage from '../img/Pendapatan_Pajak_Negara.webp';
 
 interface ImpactSnapshotProps {
@@ -122,10 +123,10 @@ const ImpactSnapshot: React.FC<ImpactSnapshotProps> = ({ projects }) => {
                     <div className="absolute top-3 right-3 z-10 bg-primary/90 backdrop-blur-md text-white px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-lg">
                       {currentProject.image_label}
                     </div>
-                    <img 
-                      src={currentProject.image_url} 
+                    <SafeImage 
+                      src={currentProject.image_url || (currentProject as any).image} 
                       alt={currentProject.title} 
-                      className="h-[300px] sm:h-[450px] w-auto object-contain block"
+                      className="h-[300px] sm:h-[450px] w-auto object-contain block mx-auto"
                     />
                   </div>
                 </div>

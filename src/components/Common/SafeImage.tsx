@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface SafeImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string;
@@ -6,23 +6,28 @@ interface SafeImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
 
 const SafeImage: React.FC<SafeImageProps> = ({ src, alt, className, ...props }) => {
   const [currentSrc, setCurrentSrc] = useState(src);
-  const [triedWebp, setTriedWebp] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
-  // Function to try converting to webp if it's a Supabase image
+  // Sync state when props change
+  useEffect(() => {
+    setCurrentSrc(src);
+    setHasError(false);
+  }, [src]);
+
   const getWebpUrl = (url: string) => {
-    if (url.includes('supabase.co/storage/v1/object/public') && !url.toLowerCase().endsWith('.webp')) {
-      return url.replace(/\.(jpg|jpeg|png)$/i, '.webp');
+    if (hasError) return url; // If already failed, don't try webp again
+    
+    if (url.includes('supabase.co/storage/v1/object/public') && 
+        !url.toLowerCase().endsWith('.webp')) {
+      return url.replace(/\.(jpg|jpeg|png|JPG|JPEG|PNG)$/i, '.webp');
     }
     return url;
   };
 
   const handleError = () => {
-    if (!triedWebp && currentSrc.toLowerCase().endsWith('.webp')) {
-      // If webp failed, try the original URL (assume it might be jpg/png)
-      // We'll revert .webp back to the original if we can, 
-      // but usually the original 'src' passed to the component should be the backup.
-      setCurrentSrc(src); 
-      setTriedWebp(true);
+    if (!hasError) {
+      setHasError(true);
+      // When error occurs, it will re-render and getWebpUrl will return the original URL
     }
   };
 
@@ -33,6 +38,7 @@ const SafeImage: React.FC<SafeImageProps> = ({ src, alt, className, ...props }) 
       className={className}
       onError={handleError}
       crossOrigin="anonymous"
+      loading="lazy"
       {...props}
     />
   );

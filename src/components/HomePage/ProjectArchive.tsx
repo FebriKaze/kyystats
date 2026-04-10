@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { Project } from '../../types';
+import SafeImage from '../Common/SafeImage';
 import project1 from '../img/1.webp';
 import projectPengangguran from '../img/Pengangguran_Indonesia_2025.webp';
 import projectTrackRecord from '../img/TrackRecord_MG.webp';
@@ -31,11 +32,10 @@ const ProjectArchive: React.FC<ProjectArchiveProps> = ({ projects, onProjectClic
               className="group bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300"
             >
               <div className="bg-slate-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden border-b border-slate-200 dark:border-slate-800">
-                <img
+                <SafeImage
                   src={project.image}
                   alt={project.title}
                   className="w-full h-auto block group-hover:scale-105 transition-transform duration-500"
-                  referrerPolicy="no-referrer"
                 />
               </div>
               <div className="p-8">
