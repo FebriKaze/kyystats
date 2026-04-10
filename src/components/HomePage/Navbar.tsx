@@ -23,10 +23,10 @@ const Navbar: React.FC<NavbarProps> = ({ onContactClick, onNavigate, currentPage
   }, []);
 
   const navLinks = [
-    { name: 'Beranda', href: 'home' },
-    { name: 'Portfolio', href: 'portfolio' },
-    { name: 'Artikel', href: 'articles' },
-    { name: 'Statistik', href: 'statistik' },
+    { name: 'Beranda', href: '/' },
+    { name: 'Portfolio', href: '/portfolio' },
+    { name: 'Artikel', href: '/articles' },
+    { name: 'Statistik', href: '/statistik' },
     { name: 'Kontak', href: '#contact' },
   ];
 
@@ -36,10 +36,10 @@ const Navbar: React.FC<NavbarProps> = ({ onContactClick, onNavigate, currentPage
       scrolled ? "bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm border-b dark:border-slate-800" : "bg-transparent"
     )}>
       <div className="max-w-7xl mx-auto flex justify-between items-center text-slate-900 dark:text-white">
-        <a href="#" onClick={(e) => { e.preventDefault(); onNavigate('home'); }} className="flex items-center">
+        <button onClick={() => onNavigate('/')} className="flex items-center cursor-pointer">
           <img src={logoLight} alt="KY Stat" className="h-8 md:h-10 w-auto object-contain dark:hidden" />
           <img src={logoDark} alt="KY Stat" className="h-8 md:h-10 w-auto object-contain hidden dark:block" />
-        </a>
+        </button>
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center space-x-8">
@@ -47,13 +47,17 @@ const Navbar: React.FC<NavbarProps> = ({ onContactClick, onNavigate, currentPage
             <button
               key={link.name}
               onClick={() => {
-                if (link.name === 'Contact') {
-                  onContactClick();
-                } else if (link.href.startsWith('#')) {
-                  if (currentPage !== 'home') onNavigate('home');
-                  setTimeout(() => {
-                    window.location.hash = link.href;
-                  }, 100);
+                if (link.name === 'Kontak' || link.href.startsWith('#')) {
+                  if (currentPage !== 'home') {
+                    onNavigate('/');
+                    setTimeout(() => {
+                      const el = document.getElementById('contact');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }, 100);
+                  } else {
+                    const el = document.getElementById('contact');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }
                 } else {
                   onNavigate(link.href);
                 }
@@ -106,13 +110,17 @@ const Navbar: React.FC<NavbarProps> = ({ onContactClick, onNavigate, currentPage
                 key={link.name}
                 onClick={() => {
                   setIsOpen(false);
-                  if (link.name === 'Contact') {
-                    onContactClick();
-                  } else if (link.href.startsWith('#')) {
-                    if (currentPage !== 'home') onNavigate('home');
-                    setTimeout(() => {
-                      window.location.hash = link.href;
-                    }, 100);
+                  if (link.name === 'Kontak' || link.href.startsWith('#')) {
+                    if (currentPage !== 'home') {
+                      onNavigate('/');
+                      setTimeout(() => {
+                        const el = document.getElementById('contact');
+                        if (el) el.scrollIntoView({ behavior: 'smooth' });
+                      }, 100);
+                    } else {
+                      const el = document.getElementById('contact');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }
                   } else {
                     onNavigate(link.href);
                   }

@@ -1,4 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Send } from 'lucide-react';
 import Navbar from './components/HomePage/Navbar';
@@ -12,7 +13,7 @@ import { Project, FeaturedProject, Article } from './types';
 import { fetchPortfolios, fetchFeaturedProjects, fetchArticles, fetchStatistics } from './services/portfolioService';
 import { supabase } from './lib/supabase';
 
-// Lazy load heavy page components for performance
+// Lazy load components
 const ArticleList = lazy(() => import('./components/Articles/ArticleList'));
 const ArticleDetail = lazy(() => import('./components/Articles/ArticleDetail'));
 const StatistikPage = lazy(() => import('./components/Statistik/StatistikPage'));
@@ -21,6 +22,7 @@ const AdminDashboard = lazy(() => import('./components/Admin/AdminDashboard'));
 const Portfolio = lazy(() => import('./components/HomePage/Portfolio'));
 const ProjectArchive = lazy(() => import('./components/HomePage/ProjectArchive'));
 const ImpactSnapshot = lazy(() => import('./components/HomePage/ImpactSnapshot'));
+
 import project1 from './components/img/1.webp';
 import projectPengangguran from './components/img/Pengangguran_Indonesia_2025.webp';
 import projectTrackRecord from './components/img/TrackRecord_MG.webp';
@@ -62,14 +64,11 @@ const LOCAL_FALLBACK_PROJECTS: Project[] = [
   }
 ];
 
-type Page = 'home' | 'portfolio' | 'articles' | 'article-detail' | 'statistik' | 'statistik-detail' | 'admin';
-
-export default function App() {
-  const [currentPage, setCurrentPage] = useState<Page>('home');
+function AppContent() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
-  const [selectedStat, setSelectedStat] = useState<any | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [featuredProjects, setFeaturedProjects] = useState<FeaturedProject[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
@@ -78,47 +77,17 @@ export default function App() {
   const [articleSearchQuery, setArticleSearchQuery] = useState('');
   const [session, setSession] = useState<any>(null);
 
+  const isAdminPage = location.pathname.startsWith('/admin');
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
     });
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
-
     return () => subscription.unsubscribe();
   }, []);
-
-  useEffect(() => {
-    const handleHashChange = () => {
-      const fullHash = window.location.hash;
-      const hash = fullHash.replace('#', '');
-      
-      if (hash === 'admin') {
-        setCurrentPage('admin');
-      } else if (hash.startsWith('article-detail/')) {
-        const slug = hash.replace('article-detail/', '');
-        const found = articles.find(a => a.slug === slug);
-        if (found) setSelectedArticle(found);
-        setCurrentPage('article-detail');
-      } else if (hash.startsWith('statistik-detail/')) {
-        const id = hash.replace('statistik-detail/', '');
-        const found = statistics.find(s => s.id === id);
-        if (found) setSelectedStat(found);
-        setCurrentPage('statistik-detail');
-      } else if (hash === 'portfolio' || hash === 'articles' || hash === 'statistik') {
-        setCurrentPage(hash as Page);
-      } else {
-        setCurrentPage('home');
-      }
-    };
-
-    window.addEventListener('hashchange', handleHashChange);
-    handleHashChange();
-
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [articles, statistics]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -132,17 +101,6 @@ export default function App() {
       setFeaturedProjects(dbFeatured);
       setArticles(dbArticles);
       setStatistics(dbStats);
-      
-      const hash = window.location.hash.replace('#', '');
-      if (hash.startsWith('article-detail/')) {
-        const slug = hash.replace('article-detail/', '');
-        const article = dbArticles.find(a => a.slug === slug);
-        if (article) setSelectedArticle(article);
-      } else if (hash.startsWith('statistik-detail/')) {
-        const id = hash.replace('statistik-detail/', '');
-        const stat = dbStats.find(s => s.id === id);
-        if (stat) setSelectedStat(stat);
-      }
 
       const projectsWithImages = dbProjects.map(p => {
         if (!p.image) {
@@ -160,32 +118,18 @@ export default function App() {
     loadData();
   }, []);
 
-  const handleNavigate = (page: string) => {
-    if (page === 'home' || page.startsWith('#')) {
-      window.location.hash = page === 'home' ? '' : page;
-      setCurrentPage('home');
-    } else {
-      window.location.hash = page;
-      setCurrentPage(page as Page);
-    }
-    
-    if (page !== 'article-detail') setSelectedArticle(null);
-    if (page !== 'statistik-detail') setSelectedStat(null);
+  useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleArticleClick = (article: Article) => {
-    window.location.hash = `article-detail/${article.slug}`;
-  };
-
-  const handleStatClick = (stat: any) => {
-    window.location.hash = `statistik-detail/${stat.id}`;
-  };
+  }, [location.pathname]);
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#020617] transition-colors duration-300">
-      {currentPage !== 'admin' && (
-        <Navbar onContactClick={() => setIsContactOpen(true)} onNavigate={handleNavigate} currentPage={currentPage} />
+      {!isAdminPage && (
+        <Navbar 
+          onContactClick={() => setIsContactOpen(true)} 
+          onNavigate={(path) => navigate(path)} 
+          currentPage={location.pathname.replace('/', '') || 'home'} 
+        />
       )}
       
       <main>
@@ -194,72 +138,66 @@ export default function App() {
             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
         }>
-        {currentPage === 'home' ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="space-y-0"
-          >
-            <Hero />
-            <ImpactSnapshot projects={featuredProjects} />
-            <ProjectArchive 
-              projects={projects.slice(0, 3)} 
-              onProjectClick={(p) => setSelectedProject(p)}
-            />
-          </motion.div>
-        ) : currentPage === 'portfolio' ? (
-          <Portfolio 
-            projects={projects} 
-            onProjectClick={(p) => setSelectedProject(p)} 
-            onBackToHome={() => handleNavigate('home')}
-          />
-        ) : currentPage === 'statistik' ? (
-          <StatistikPage 
-            statistik={statistics} 
-            onStatClick={handleStatClick}
-          />
-        ) : currentPage === 'statistik-detail' ? (
-          <StatistikDetail 
-            item={selectedStat}
-            allStats={statistics}
-            onBack={() => handleNavigate('statistik')}
-            onStatClick={handleStatClick}
-            onFilterChange={() => {}}
-            onSearchChange={() => {}}
-            searchQuery=""
-          />
-        ) : currentPage === 'articles' ? (
-          <ArticleList 
-            articles={articles}
-            onArticleClick={handleArticleClick}
-            activeFilter={articleFilter}
-            onFilterChange={setArticleFilter}
-            searchQuery={articleSearchQuery}
-            onSearchChange={setArticleSearchQuery}
-          />
-        ) : currentPage === 'article-detail' ? (
-          <ArticleDetail 
-            article={selectedArticle!} 
-            articles={articles}
-            onBack={() => handleNavigate('articles')}
-            onArticleClick={handleArticleClick}
-            onFilterChange={() => {}}
-            onSearchChange={() => {}}
-            searchQuery=""
-          />
-        ) : currentPage === 'admin' ? (
-          session ? (
-            <AdminDashboard />
-          ) : (
-            <Login onLoginSuccess={(s) => setSession(s)} />
-          )
-        ) : (
-          <div className="pt-32 text-center text-slate-500">Page not found</div>
-        )}
+          <Routes>
+            <Route path="/" element={
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-0">
+                <Hero />
+                <ImpactSnapshot projects={featuredProjects} />
+                <ProjectArchive 
+                  projects={projects.slice(0, 3)} 
+                  onProjectClick={(p) => setSelectedProject(p)}
+                />
+              </motion.div>
+            } />
+            
+            <Route path="/portfolio" element={
+              <Portfolio 
+                projects={projects} 
+                onProjectClick={(p) => setSelectedProject(p)} 
+                onBackToHome={() => navigate('/')}
+              />
+            } />
+
+            <Route path="/statistik" element={
+              <StatistikPage 
+                statistik={statistics} 
+                onStatClick={(stat) => navigate(`/statistik/${stat.id}`)}
+              />
+            } />
+
+            <Route path="/statistik/:id" element={
+              <StatistikDetailWrapper statistics={statistics} onBack={() => navigate('/statistik')} onStatClick={(stat) => navigate(`/statistik/${stat.id}`)} />
+            } />
+
+            <Route path="/articles" element={
+              <ArticleList 
+                articles={articles}
+                onArticleClick={(article) => navigate(`/articles/${article.slug}`)}
+                activeFilter={articleFilter}
+                onFilterChange={setArticleFilter}
+                searchQuery={articleSearchQuery}
+                onSearchChange={setArticleSearchQuery}
+              />
+            } />
+
+            <Route path="/articles/:slug" element={
+              <ArticleDetailWrapper articles={articles} onBack={() => navigate('/articles')} onArticleClick={(article) => navigate(`/articles/${article.slug}`)} />
+            } />
+
+            <Route path="/admin" element={
+              session ? (
+                <AdminDashboard />
+              ) : (
+                <Login onLoginSuccess={(s) => setSession(s)} />
+              )
+            } />
+
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
         </Suspense>
       </main>
 
-      {currentPage !== 'admin' && <Footer />}
+      {!isAdminPage && <Footer />}
       <SpeedInsights />
       
       <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
@@ -274,7 +212,7 @@ export default function App() {
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsContactOpen(true)}
         className={`fixed bottom-8 right-8 z-40 bg-primary text-white pl-6 pr-5 py-4 rounded-full shadow-2xl shadow-primary/40 flex items-center gap-3 group transition-all ${
-          currentPage === 'admin' ? 'hidden' : (currentPage === 'portfolio' || currentPage === 'article-detail') ? 'hidden md:flex' : 'flex'
+          isAdminPage ? 'hidden' : (location.pathname === '/portfolio' || location.pathname.startsWith('/articles/')) ? 'hidden md:flex' : 'flex'
         }`}
       >
         <span className="text-sm font-bold tracking-tight">Let's Collaborate</span>
@@ -283,3 +221,49 @@ export default function App() {
     </div>
   );
 }
+
+// Wrapper components for single detail pages using params
+import { useParams } from 'react-router-dom';
+
+function ArticleDetailWrapper({ articles, onBack, onArticleClick }: any) {
+  const { slug } = useParams();
+  const article = articles.find((a: any) => a.slug === slug);
+  if (!article) return <div className="pt-32 text-center">Article not found</div>;
+  return (
+    <ArticleDetail 
+      article={article} 
+      articles={articles}
+      onBack={onBack}
+      onArticleClick={onArticleClick}
+      onFilterChange={() => {}}
+      onSearchChange={() => {}}
+      searchQuery=""
+    />
+  );
+}
+
+function StatistikDetailWrapper({ statistics, onBack, onStatClick }: any) {
+  const { id } = useParams();
+  const stat = statistics.find((s: any) => s.id === id);
+  if (!stat) return <div className="pt-32 text-center">Statistic not found</div>;
+  return (
+    <StatistikDetail 
+      item={stat}
+      allStats={statistics}
+      onBack={onBack}
+      onStatClick={onStatClick}
+      onFilterChange={() => {}}
+      onSearchChange={() => {}}
+      searchQuery=""
+    />
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
+  );
+}
+
