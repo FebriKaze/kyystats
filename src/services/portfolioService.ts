@@ -14,9 +14,12 @@ export const fetchPortfolios = async (): Promise<Project[]> => {
 
   const ensureWebp = (url: string) => {
     if (!url) return '';
-    // Only target Supabase storage URLs to avoid breaking other links
+    // Support all your buckets: project-images, article-images, portfolio-images
     if (url.includes('supabase.co/storage/v1/object/public')) {
-      return url.replace(/\.(jpg|jpeg|png)$/i, '.webp');
+      // If it already ends with .webp, don't do anything
+      if (url.toLowerCase().endsWith('.webp')) return url;
+      // Replace common image extensions with .webp
+      return url.replace(/\.(jpg|jpeg|png|PNG|JPG|JPEG)$/i, '.webp');
     }
     return url;
   };
