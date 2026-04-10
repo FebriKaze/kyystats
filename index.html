@@ -1,50 +1,84 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#4f46e5" />
-    
+
     <!-- Favicon Dinamis -->
-    <link id="favicon" rel="icon" type="image/webp" href="/src/components/img/ky_stat_logo-removebg-preview.webp" />
+    <link
+      id="favicon"
+      rel="icon"
+      type="image/webp"
+      href="/src/components/img/ky_stat_logo-removebg-preview.webp"
+    />
 
     <!-- Preload Critical Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
 
-    <title>KyyStats - Data Analysis & Statistics Insights</title>
-    <meta name="description" content="KyyStats adalah platform analisis data dan statistik mendalam mengenai berbagai tren ekonomi, sosial, dan finansial. Temukan insight berharga melalui visualisasi data berkualitas." />
-    <meta name="keywords" content="kyystats, analisis data, statistik indonesia, visualisasi data, data analyst portfolio, insight ekonomi, tren finansial" />
+    <title>KyyStats</title>
+    <meta
+      name="description"
+      content="KyyStats adalah platform analisis data dan statistik mendalam mengenai berbagai tren ekonomi, sosial, dan finansial. Temukan insight berharga melalui visualisasi data berkualitas."
+    />
+    <meta
+      name="keywords"
+      content="kyystats, analisis data, statistik indonesia, visualisasi data, data analyst portfolio, insight ekonomi, tren finansial"
+    />
     <meta name="author" content="KyyStats" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://kyystats.vercel.app/" />
-    <meta property="og:title" content="KyyStats - Data Analysis & Statistics Insights" />
-    <meta property="og:description" content="Eksplorasi insight mendalam melalui data dan statistik. Analisis tren terkini dengan penyajian data yang modern dan akurat." />
-    <meta property="og:image" content="/src/components/img/ky_stat_logo-removebg-preview.webp" />
+    <meta
+      property="og:title"
+      content="KyyStats - Data Analysis & Statistics Insights"
+    />
+    <meta
+      property="og:description"
+      content="Eksplorasi insight mendalam melalui data dan statistik. Analisis tren terkini dengan penyajian data yang modern dan akurat."
+    />
+    <meta
+      property="og:image"
+      content="/src/components/img/ky_stat_logo-removebg-preview.webp"
+    />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:title" content="KyyStats - Data Analysis & Statistics Insights" />
-    <meta property="twitter:description" content="Eksplorasi insight mendalam melalui data dan statistik." />
-    <meta property="twitter:image" content="/src/components/img/ky_stat_logo-removebg-preview.webp" />
+    <meta
+      property="twitter:title"
+      content="KyyStats - Data Analysis & Statistics Insights"
+    />
+    <meta
+      property="twitter:description"
+      content="Eksplorasi insight mendalam melalui data dan statistik."
+    />
+    <meta
+      property="twitter:image"
+      content="/src/components/img/ky_stat_logo-removebg-preview.webp"
+    />
 
     <!-- Script Tema & Favicon Dinamis -->
     <script>
       (function () {
         function updateFavicon(isDark) {
-          const favicon = document.getElementById('favicon');
+          const favicon = document.getElementById("favicon");
           if (favicon) {
-            favicon.href = isDark 
-              ? "/src/components/img/logo dark.webp" 
+            favicon.href = isDark
+              ? "/src/components/img/logo dark.webp"
               : "/src/components/img/ky_stat_logo-removebg-preview.webp";
           }
         }
 
         const theme = localStorage.getItem("theme");
-        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const prefersDark = window.matchMedia(
+          "(prefers-color-scheme: dark)",
+        ).matches;
         const isDark = theme === "dark" || (!theme && prefersDark);
 
         if (isDark) {
@@ -56,11 +90,13 @@
         }
 
         // Pantau perubahan mode sistem otomatis
-        window.matchMedia("(prefers-color-scheme: dark)").addEventListener('change', e => {
-          if (!localStorage.getItem("theme")) {
-            updateFavicon(e.matches);
-          }
-        });
+        window
+          .matchMedia("(prefers-color-scheme: dark)")
+          .addEventListener("change", (e) => {
+            if (!localStorage.getItem("theme")) {
+              updateFavicon(e.matches);
+            }
+          });
       })();
     </script>
   </head>
