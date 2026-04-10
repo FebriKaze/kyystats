@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Mail, Lock, LogIn, ArrowRight, UserPlus, Loader2, Heart, CheckCircle2, AlertCircle } from 'lucide-react';
-import logoLight from '../img/ky_stat_logo-removebg-preview.png';
-import logoDark from '../img/logo dark.png';
+import logoLight from '../img/ky_stat_logo-removebg-preview.webp';
+import logoDark from '../img/logo dark.webp';
 
 interface LoginProps {
   onLoginSuccess: (session: any) => void;
