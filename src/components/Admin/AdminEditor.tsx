@@ -137,6 +137,18 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
     </button>
   );
 
+  const slugify = (text: string) => {
+    return text
+      .toString()
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')     // Ganti spasi dengan -
+      .replace(/[^\w-]+/g, '')   // Hapus karakter non-word
+      .replace(/--+/g, '-')      // Ganti multiple - dengan satu -
+      .replace(/^-+/, '')        // Hapus - di awal
+      .replace(/-+$/, '');       // Hapus - di akhir
+  };
+
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500 pb-20">
       <div className="flex items-center justify-between">
@@ -159,7 +171,11 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
                 <input 
                   required
                   value={formData.title || ''} 
-                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  onChange={(e) => {
+                    const newTitle = e.target.value;
+                    const newSlug = type === 'articles' && !item.id ? slugify(newTitle) : formData.slug;
+                    setFormData({...formData, title: newTitle, slug: newSlug});
+                  }}
                   placeholder="Masukkan judul konten yang menarik..."
                   className="w-full bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 dark:border-slate-900 rounded-2xl py-5 px-8 text-base dark:text-white focus:outline-none focus:border-primary/50 transition-all font-bold placeholder:text-slate-300"
                 />

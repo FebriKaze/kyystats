@@ -227,7 +227,8 @@ import { useParams } from 'react-router-dom';
 
 function ArticleDetailWrapper({ articles, onBack, onArticleClick }: any) {
   const { slug } = useParams();
-  const article = articles.find((a: any) => a.slug === slug);
+  const decodedSlug = decodeURIComponent(slug || '');
+  const article = articles.find((a: any) => a.slug === decodedSlug || a.slug === slug);
   if (!article) return <div className="pt-32 text-center">Article not found</div>;
   return (
     <ArticleDetail 
