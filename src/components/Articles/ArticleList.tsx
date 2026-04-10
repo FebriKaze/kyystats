@@ -98,6 +98,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
                           width="400"
                           height="224"
                           loading="lazy"
+                          crossOrigin="anonymous"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                         />
                       </div>

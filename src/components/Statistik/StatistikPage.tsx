@@ -112,8 +112,7 @@ const StatistikPage: React.FC<StatistikPageProps> = ({ statistik, onStatClick })
                         <img 
                           src={item.image_url} 
                           alt={item.title} 
-                          width="256"
-                          height="160"
+                          crossOrigin="anonymous"
                           loading="lazy"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                         />

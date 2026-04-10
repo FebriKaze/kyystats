@@ -22,9 +22,9 @@ const Portfolio = lazy(() => import('./components/HomePage/Portfolio'));
 const ProjectArchive = lazy(() => import('./components/HomePage/ProjectArchive'));
 const ImpactSnapshot = lazy(() => import('./components/HomePage/ImpactSnapshot'));
 import project1 from './components/img/1.webp';
-import projectPengangguran from './components/img/Pengangguran Indonesia 2025.webp';
-import projectTrackRecord from './components/img/TrackRecord MG.webp';
-import projectPajak from './components/img/Pendapatan Pajak Negara.webp';
+import projectPengangguran from './components/img/Pengangguran_Indonesia_2025.webp';
+import projectTrackRecord from './components/img/TrackRecord_MG.webp';
+import projectPajak from './components/img/Pendapatan_Pajak_Negara.webp';
 
 const LOCAL_FALLBACK_PROJECTS: Project[] = [
   {

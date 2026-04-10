@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import logoLight from '../img/ky_stat_logo-removebg-preview.webp';
-import logoDark from '../img/logo dark.webp';
+import logoLight from '../img/ky_stat_logo.webp';
+import logoDark from '../img/logo_dark.webp';
 import { ThemeToggle } from './ThemeToggle';
 
 interface NavbarProps {
