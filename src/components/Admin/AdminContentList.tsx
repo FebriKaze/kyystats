@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Edit3, Trash2, Eye, ChevronLeft, ChevronRight, Plus, Image as ImageIcon } from 'lucide-react';
 import { fetchPageViewCount } from '../../services/portfolioService';
+import SafeImage from '../Common/SafeImage';
 
 interface AdminContentListProps {
   type: 'articles' | 'portfolio' | 'featured' | 'statistics';
@@ -104,7 +105,11 @@ const AdminContentList: React.FC<AdminContentListProps> = ({ type, data, onEdit,
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0 flex items-center justify-center">
                         {(item.thumbnail_url || item.image || item.image_url) ? (
-                          <img src={item.thumbnail_url || item.image || item.image_url} alt="" className="w-full h-full object-cover" />
+                          <SafeImage 
+                            src={item.thumbnail_url || item.image || item.image_url} 
+                            alt="" 
+                            className="w-full h-full object-cover" 
+                          />
                         ) : (
                           <ImageIcon size={20} className="text-slate-400" />
                         )}
