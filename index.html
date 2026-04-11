@@ -4,25 +4,61 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#4f46e5" />
-    
+
+    <!-- Google Analytics -->
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-0GCSK0DTJ0"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "G-0GCSK0DTJ0");
+    </script>
+
     <!-- Favicon Dinamis (Root Path) -->
-    <link id="favicon" rel="icon" type="image/webp" href="/favicon-light.webp" />
+    <link
+      id="favicon"
+      rel="icon"
+      type="image/webp"
+      href="/favicon-light.webp"
+    />
 
     <!-- Preload Critical Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
 
     <title>KyyStats</title>
-    <meta name="description" content="KyyStats adalah platform analisis data dan statistik mendalam mengenai berbagai tren ekonomi, sosial, dan finansial. Temukan insight berharga melalui visualisasi data berkualitas." />
-    <meta name="keywords" content="kyystats, analisis data, statistik indonesia, visualisasi data, data analyst portfolio, insight ekonomi, tren finansial" />
+    <meta
+      name="description"
+      content="KyyStats adalah platform analisis data dan statistik mendalam mengenai berbagai tren ekonomi, sosial, dan finansial. Temukan insight berharga melalui visualisasi data berkualitas."
+    />
+    <meta
+      name="keywords"
+      content="kyystats, analisis data, statistik indonesia, visualisasi data, data analyst portfolio, insight ekonomi, tren finansial"
+    />
     <meta name="author" content="KyyStats" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://kyystats.vercel.app/" />
-    <meta property="og:title" content="KyyStats - Data Analysis & Statistics Insights" />
-    <meta property="og:description" content="Eksplorasi insight mendalam melalui data dan statistik. Analisis tren terkini dengan penyajian data yang modern dan akurat." />
+    <meta
+      property="og:title"
+      content="KyyStats - Data Analysis & Statistics Insights"
+    />
+    <meta
+      property="og:description"
+      content="Eksplorasi insight mendalam melalui data dan statistik. Analisis tren terkini dengan penyajian data yang modern dan akurat."
+    />
     <meta property="og:image" content="/favicon-light.webp" />
 
     <!-- Script Tema & Favicon Dinamis -->
@@ -31,12 +67,16 @@
         function updateFavicon(isDark) {
           const favicon = document.getElementById("favicon");
           if (favicon) {
-            favicon.href = isDark ? "/favicon-dark.webp" : "/favicon-light.webp";
+            favicon.href = isDark
+              ? "/favicon-dark.webp"
+              : "/favicon-light.webp";
           }
         }
 
         const theme = localStorage.getItem("theme");
-        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const prefersDark = window.matchMedia(
+          "(prefers-color-scheme: dark)",
+        ).matches;
         const isDark = theme === "dark" || (!theme && prefersDark);
 
         if (isDark) {
@@ -47,11 +87,13 @@
           updateFavicon(false);
         }
 
-        window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
-          if (!localStorage.getItem("theme")) {
-            updateFavicon(e.matches);
-          }
-        });
+        window
+          .matchMedia("(prefers-color-scheme: dark)")
+          .addEventListener("change", (e) => {
+            if (!localStorage.getItem("theme")) {
+              updateFavicon(e.matches);
+            }
+          });
       })();
     </script>
   </head>
