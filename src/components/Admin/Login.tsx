@@ -64,7 +64,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
           <p className="text-slate-500 dark:text-slate-400 mt-3 font-medium px-4">
             {isLogin 
               ? 'Silakan masuk untuk mengelola konten dashboard KyyStats.' 
-              : 'Daftarkan email kamu untuk mendapatkan akses penuh ke manajemen konten.'}
+              : 'Daftarkan email kamu untuk bergabung menjadi Kontributor konten.'}
           </p>
         </div>
 

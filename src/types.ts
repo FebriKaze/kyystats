@@ -35,6 +35,7 @@ export interface Article {
   thumbnail_url: string;
   author: string;
   is_published: boolean;
+  views?: number;
 }
 
 export interface Statistic {

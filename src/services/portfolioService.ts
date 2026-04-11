@@ -49,7 +49,7 @@ export const fetchFeaturedProjects = async (): Promise<FeaturedProject[]> => {
 export const fetchArticles = async (): Promise<Article[]> => {
   const { data, error } = await supabase
     .from('articles')
-    .select('*')
+    .select('*, profiles(full_name, avatar_url)')
     .eq('is_published', true)
     .order('created_at', { ascending: false });
 
@@ -174,7 +174,7 @@ export const deleteFeaturedProject = async (id: string): Promise<boolean> => {
 export const fetchStatistics = async (): Promise<Statistic[]> => {
   const { data, error } = await supabase
     .from('statistics')
-    .select('*')
+    .select('*, profiles(full_name, avatar_url)')
     .order('created_at', { ascending: false });
 
   if (error) {

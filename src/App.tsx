@@ -9,6 +9,7 @@ import ContactModal from './components/HomePage/ContactModal';
 import CaseStudyModal from './components/HomePage/CaseStudyModal';
 import Login from './components/Admin/Login';
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import AuthorPage from './components/Author/AuthorPage';
 import { Project, FeaturedProject, Article } from './types';
 import { fetchPortfolios, fetchFeaturedProjects, fetchArticles, fetchStatistics } from './services/portfolioService';
 import { supabase } from './lib/supabase';
@@ -76,18 +77,27 @@ function AppContent() {
   const [articleFilter, setArticleFilter] = useState('All');
   const [articleSearchQuery, setArticleSearchQuery] = useState('');
   const [session, setSession] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
 
   const isAdminPage = location.pathname.startsWith('/admin');
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      if (session) fetchUserProfile(session.user.id);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      if (session) fetchUserProfile(session.user.id);
+      else setUserProfile(null);
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  const fetchUserProfile = async (userId: string) => {
+    const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
+    if (data) setUserProfile(data);
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -136,6 +146,8 @@ function AppContent() {
           onContactClick={() => setIsContactOpen(true)} 
           onNavigate={(path) => navigate(path)} 
           currentPage={location.pathname.replace('/', '') || 'home'} 
+          session={session}
+          userProfile={userProfile}
         />
       )}
       

@@ -129,9 +129,16 @@ const StatistikPage: React.FC<StatistikPageProps> = ({ statistik, onStatClick })
                            <span className="flex items-center gap-1.5 text-xs text-slate-500 font-medium ml-3 border-l border-slate-300 dark:border-slate-700 pl-3">
                              <Calendar size={12} className="text-primary" /> {new Date(item.created_at).toLocaleDateString('id-ID')}
                            </span>
-                           <span className="flex items-center gap-1.5 text-xs text-slate-500 font-medium ml-3 border-l border-slate-300 dark:border-slate-700 pl-3">
+                            <button 
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               const authorId = (item as any).user_id;
+                               if (authorId) window.location.href = `/author/${authorId}`;
+                             }}
+                             className="flex items-center gap-1.5 text-xs text-slate-500 font-bold ml-3 border-l border-slate-300 dark:border-slate-700 pl-3 hover:text-primary transition-colors cursor-pointer"
+                           >
                              <User size={12} className="text-primary" /> {item.author}
-                           </span>
+                           </button>
                         </div>
                         
                         <p className="text-sm text-slate-500 leading-relaxed line-clamp-2 mb-3">

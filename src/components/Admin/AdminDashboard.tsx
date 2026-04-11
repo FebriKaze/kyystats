@@ -5,6 +5,7 @@ import AdminHome from './AdminHome';
 import AdminContentList from './AdminContentList';
 import AdminEditor from './AdminEditor';
 import AdminProfile from './AdminProfile';
+import AdminUserManagement from './AdminUserManagement';
 import { 
   fetchArticles, 
   saveArticle, 
@@ -19,12 +20,13 @@ import {
 } from '../../services/portfolioService';
 import { Article, Project, FeaturedProject, Statistic } from '../../types';
 
-type AdminView = 'home' | 'manage-articles' | 'manage-portfolio' | 'manage-statistics' | 'edit' | 'create' | 'profile' | 'settings';
+type AdminView = 'home' | 'manage-articles' | 'manage-portfolio' | 'manage-statistics' | 'manage-users' | 'edit' | 'create' | 'profile' | 'settings';
 
 const AdminDashboard: React.FC = () => {
   const [activeView, setActiveView] = useState<AdminView>('home');
   const [lastView, setLastView] = useState<AdminView>('home');
   const [loading, setLoading] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
   
   // Data lists
   const [articles, setArticles] = useState<Article[]>([]);
@@ -38,7 +40,16 @@ const AdminDashboard: React.FC = () => {
 
   useEffect(() => {
     loadAllData();
+    checkProfile();
   }, []);
+
+  const checkProfile = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      setUserProfile(data);
+    }
+  };
 
   const loadAllData = async () => {
     setLoading(true);
@@ -69,10 +80,10 @@ const AdminDashboard: React.FC = () => {
   const handleCreate = (type: 'articles' | 'portfolio' | 'statistics') => {
     setContentType(type);
     const defaultData = type === 'articles' 
-      ? { is_published: true, author: 'KyyStats', content: '', summary: '' } 
+      ? { is_published: true, author: userProfile?.full_name || 'KyyStats', content: '', summary: '' } 
       : type === 'portfolio' 
         ? { category: '', title: '', description: '', details: { challenge: '', solution: '', result: '' } } 
-        : { is_published: true, author: 'KyyStats', content: '', category: 'Ekonomi' };
+        : { is_published: true, author: userProfile?.full_name || 'KyyStats', content: '', category: 'Ekonomi' };
     setEditingItem(defaultData);
     navigateTo('create');
   };
@@ -99,78 +110,83 @@ const AdminDashboard: React.FC = () => {
     if (type === 'articles') success = await deleteArticle(id);
     if (type === 'portfolio') success = await deletePortfolio(id);
     if (type === 'statistics') success = await deleteStatistic(id);
-    
+
     if (success) {
-      alert('Berhasil dihapus');
+      alert('Konten berhasil dihapus!');
       loadAllData();
+    } else {
+      alert('Gagal menghapus konten.');
+    }
+  };
+
+  const renderContent = () => {
+    if (loading) return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+
+    // Filter articles for display in AdminHome based on popularArticles prop (e.g., top 5)
+    // We'll pass the whole articles list and let AdminHome handle it or pre-slice
+    const popularList = [...articles].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5);
+
+    switch (activeView) {
+      case 'home':
+        return <AdminHome 
+          stats={{
+            articles: articles.length,
+            portfolio: projects.length,
+            featured: featuredCount
+          }}
+          popularArticles={popularList}
+        />;
+      case 'manage-articles':
+        return <AdminContentList 
+          type="articles" 
+          data={articles} 
+          onEdit={(item) => handleEdit('articles', item)} 
+          onCreate={() => handleCreate('articles')}
+          onDelete={(id) => handleDelete('articles', id)} 
+        />;
+      case 'manage-statistics':
+        return <AdminContentList 
+          type="statistics" 
+          data={statistics} 
+          onEdit={(item) => handleEdit('statistics', item)} 
+          onCreate={() => handleCreate('statistics')}
+          onDelete={(id) => handleDelete('statistics', id)} 
+        />;
+      case 'manage-users':
+        return <AdminUserManagement />;
+      case 'edit':
+      case 'create':
+        return <AdminEditor 
+          item={editingItem} 
+          type={contentType} 
+          onSave={handleSave} 
+          onCancel={() => navigateTo(lastView)} 
+        />;
+      case 'profile':
+        return <AdminProfile />;
+      case 'manage-portfolio':
+        return <AdminContentList 
+          type="portfolio" 
+          data={projects} 
+          onEdit={(item) => handleEdit('portfolio', item)} 
+          onCreate={() => handleCreate('portfolio')}
+          onDelete={(id) => handleDelete('portfolio', id)} 
+        />;
+      default:
+        return <AdminHome stats={{ articles: articles.length, portfolio: projects.length, featured: featuredCount }} />;
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#020617] flex flex-col">
-      <AdminHeader activeView={activeView} onNavigate={(v) => navigateTo(v)} />
-
-      <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-12">
-        {activeView === 'home' && (
-          <AdminHome 
-            stats={{
-              articles: articles.length,
-              portfolio: projects.length,
-              featured: featuredCount
-            }} 
-            popularArticles={articles.slice(0, 5)}
-          />
-        )}
-
-        {activeView === 'manage-articles' && (
-          <AdminContentList 
-            type="articles" 
-            data={articles} 
-            onEdit={(item) => handleEdit('articles', item)}
-            onDelete={(id) => handleDelete('articles', id)}
-            onCreate={() => handleCreate('articles')}
-          />
-        )}
-
-        {activeView === 'manage-portfolio' && (
-          <AdminContentList 
-            type="portfolio" 
-            data={projects} 
-            onEdit={(item) => handleEdit('portfolio', item)}
-            onDelete={(id) => handleDelete('portfolio', id)}
-            onCreate={() => handleCreate('portfolio')}
-          />
-        )}
-
-        {activeView === 'manage-statistics' && (
-          <AdminContentList 
-            type="statistics" 
-            data={statistics} 
-            onEdit={(item) => handleEdit('statistics', item)}
-            onDelete={(id) => handleDelete('statistics', id)}
-            onCreate={() => handleCreate('statistics')}
-          />
-        )}
-
-        {activeView === 'profile' && (
-          <AdminProfile />
-        )}
-
-        {activeView === 'settings' && (
-          <div className="py-20 text-center text-slate-400">
-             <h2 className="text-2xl font-black">Sistem Pengaturan</h2>
-             <p className="mt-2">Halaman konfigurasi sistem akan segera tersedia.</p>
-          </div>
-        )}
-
-        {(activeView === 'edit' || activeView === 'create') && (
-          <AdminEditor 
-            type={contentType} 
-            item={editingItem} 
-            onSave={handleSave} 
-            onCancel={() => navigateTo(lastView)} 
-          />
-        )}
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors">
+      <AdminHeader onNavigate={navigateTo} activeView={activeView} />
+      
+      <main className="max-w-7xl mx-auto px-6 py-10">
+        {renderContent()}
       </main>
     </div>
   );
