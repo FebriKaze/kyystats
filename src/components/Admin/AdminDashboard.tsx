@@ -126,16 +126,22 @@ const AdminDashboard: React.FC = () => {
       </div>
     );
 
-    // Filter articles for display in AdminHome based on popularArticles prop (e.g., top 5)
-    // We'll pass the whole articles list and let AdminHome handle it or pre-slice
-    const popularList = [...articles].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5);
+    const isOwner = userProfile?.role === 'owner';
+    const currentUserId = userProfile?.id;
+
+    // Filter data based on user role
+    const filteredArticles = isOwner ? articles : articles.filter(a => a.user_id === currentUserId);
+    const filteredStatistics = isOwner ? statistics : statistics.filter(s => s.user_id === currentUserId);
+    const filteredProjects = isOwner ? projects : projects.filter(p => (p as any).user_id === currentUserId);
+
+    const popularList = [...filteredArticles].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5);
 
     switch (activeView) {
       case 'home':
         return <AdminHome 
           stats={{
-            articles: articles.length,
-            portfolio: projects.length,
+            articles: filteredArticles.length,
+            portfolio: filteredProjects.length,
             featured: featuredCount
           }}
           popularArticles={popularList}
@@ -143,7 +149,7 @@ const AdminDashboard: React.FC = () => {
       case 'manage-articles':
         return <AdminContentList 
           type="articles" 
-          data={articles} 
+          data={filteredArticles} 
           onEdit={(item) => handleEdit('articles', item)} 
           onCreate={() => handleCreate('articles')}
           onDelete={(id) => handleDelete('articles', id)} 
@@ -151,7 +157,7 @@ const AdminDashboard: React.FC = () => {
       case 'manage-statistics':
         return <AdminContentList 
           type="statistics" 
-          data={statistics} 
+          data={filteredStatistics} 
           onEdit={(item) => handleEdit('statistics', item)} 
           onCreate={() => handleCreate('statistics')}
           onDelete={(id) => handleDelete('statistics', id)} 

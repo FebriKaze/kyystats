@@ -36,6 +36,7 @@ export interface Article {
   author: string;
   is_published: boolean;
   views?: number;
+  user_id?: string;
 }
 
 export interface Statistic {
@@ -49,4 +50,5 @@ export interface Statistic {
   content: string;
   views: number;
   is_published: boolean;
+  user_id?: string;
 }
