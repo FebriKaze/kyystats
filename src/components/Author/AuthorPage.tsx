@@ -98,11 +98,12 @@ const AuthorPage: React.FC = () => {
                 <div className="bg-white dark:bg-slate-900 rounded-4xl overflow-hidden border border-slate-100 dark:border-slate-800 shadow-2xl shadow-slate-200/50 dark:shadow-none">
                    <div className="h-28 bg-primary/10" />
                    <div className="px-8 pb-10 -mt-14 flex flex-col items-center text-center">
-                      <div className="w-28 h-28 rounded-3xl overflow-hidden border-4 border-white dark:border-slate-900 shadow-2xl mb-6 bg-slate-100">
-                        <SafeImage 
-                          src={profile.avatar_url || `https://ui-avatars.com/api/?name=${profile.full_name}&background=8b5cf6&color=fff&size=500&bold=true`} 
-                          className="w-full h-full object-cover"
-                        />
+                      <div className="w-28 h-28 rounded-3xl overflow-hidden border-4 border-white dark:border-slate-900 shadow-2xl mb-6 bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                        {profile.avatar_url ? (
+                          <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                          <User size={48} className="text-slate-300 dark:text-slate-600" />
+                        )}
                       </div>
                       <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter uppercase">{profile.full_name}</h1>
                       <p className="text-[10px] font-black text-primary mt-2 uppercase tracking-widest bg-primary/5 px-4 py-1.5 rounded-full">{profile.job || 'Contributor'}</p>

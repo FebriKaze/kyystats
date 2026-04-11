@@ -8,6 +8,7 @@ import Footer from './components/HomePage/Footer';
 import ContactModal from './components/HomePage/ContactModal';
 import CaseStudyModal from './components/HomePage/CaseStudyModal';
 import Login from './components/Admin/Login';
+import ResetPassword from './components/Admin/ResetPassword';
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import AuthorPage from './components/Author/AuthorPage';
 import { Project, FeaturedProject, Article, Statistic } from './types';
@@ -48,15 +49,29 @@ function AppContent() {
 
   useEffect(() => {
     loadData();
+    
+    // Initial Session Check
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user) fetchProfile(session.user.id);
     });
     
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    // Auth Listener for everything (Login, Recovery, Confirmation)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       if (session?.user) fetchProfile(session.user.id);
+
+      // Handle Password Recovery Event
+      if (event === 'PASSWORD_RECOVERY') {
+        navigate('/admin/reset');
+      }
+
+      // Handle Email Confirmation (SIGNED_IN but might be from link)
+      if (event === 'SIGNED_IN' && location.pathname.includes('error_description')) {
+         console.error('Auth error from link');
+      }
     });
+
     return () => subscription.unsubscribe();
   }, []);
 
@@ -150,6 +165,9 @@ function AppContent() {
                 <Login onLoginSuccess={(s) => setSession(s)} />
               )
             } />
+
+            {/* RESET PASSWORD ROUTE */}
+            <Route path="/admin/reset" element={<ResetPassword />} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

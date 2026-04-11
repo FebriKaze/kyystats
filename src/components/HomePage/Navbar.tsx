@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, LogIn, LayoutDashboard, LogOut } from 'lucide-react';
+import { Menu, X, LogIn, LayoutDashboard, LogOut, User } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import logoLight from '../img/ky_stat_logo.webp';
 import logoDark from '../img/logo_dark.webp';
@@ -92,11 +92,13 @@ const Navbar: React.FC<NavbarProps> = ({ onContactClick, onNavigate, currentPage
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20 hover:border-primary transition-all active:scale-95 bg-slate-100 dark:bg-slate-800"
                 >
-                  <SafeImage 
-                    src={userProfile?.avatar_url || `https://ui-avatars.com/api/?name=${userProfile?.full_name || 'User'}&background=random`} 
-                    alt="Profile" 
-                    className="w-full h-full object-cover"
-                  />
+                  {userProfile?.avatar_url ? (
+                    <img src={userProfile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-400">
+                      <User size={20} />
+                    </div>
+                  )}
                 </button>
 
                 <AnimatePresence>
