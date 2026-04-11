@@ -102,7 +102,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onNavigate, activeView }) => 
                       onClick={() => { onNavigate('manage-users'); setIsPengaturanOpen(false); }} 
                       className="w-full text-left px-4 py-3 text-sm font-black text-primary hover:bg-primary/5 transition-all border-t border-slate-50 dark:border-slate-800 mt-1"
                     >
-                      KELOLA USER (OWNER)
+                      Kelola User
                     </button>
                   )}
                 </div>
