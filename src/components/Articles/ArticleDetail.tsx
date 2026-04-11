@@ -104,17 +104,14 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({
                     alert('Profil penulis belum tertaut sepenuhnya.');
                   }
                 }}
-                className="flex items-center gap-2.5 hover:text-primary transition-all cursor-pointer pr-6 border-r border-slate-100 dark:border-slate-800 group"
+                className="flex items-center gap-2 hover:text-primary transition-all cursor-pointer pr-6 border-r border-slate-100 dark:border-slate-800 group"
               >
-                <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 border-2 border-slate-50 dark:border-slate-800 shadow-sm group-hover:border-primary/50 transition-all">
-                  <SafeImage 
-                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(article.author)}&background=8b5cf6&color=fff&bold=true`} 
-                    className="w-full h-full object-cover" 
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[8px] text-slate-400">WRITTEN BY</span>
-                  <span className="text-slate-900 dark:text-white group-hover:text-primary transition-colors">{article.author}</span>
+                <div className="flex items-center gap-2">
+                  <User size={14} className="text-primary" />
+                  <div className="flex flex-col">
+                    <span className="text-[8px] text-slate-400">WRITTEN BY</span>
+                    <span className="text-slate-900 dark:text-white group-hover:text-primary transition-colors">{article.author}</span>
+                  </div>
                 </div>
               </div>
 
