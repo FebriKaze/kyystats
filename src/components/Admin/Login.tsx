@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Mail, Lock, LogIn, ArrowRight, UserPlus, ShieldCheck, Loader2, Key, ArrowLeft } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { Mail, Lock, LogIn, ArrowRight, UserPlus, Loader2, Heart, CheckCircle2, AlertCircle } from 'lucide-react';
-import logoLight from '../img/ky_stat_logo.webp';
-import logoDark from '../img/logo_dark.webp';
+import { ThemeToggle } from '../HomePage/ThemeToggle';
 
 interface LoginProps {
   onLoginSuccess: (session: any) => void;
 }
 
+type AuthView = 'login' | 'signup' | 'forgot-password';
+
 const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [view, setView] = useState<AuthView>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
@@ -21,25 +24,31 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     setMessage(null);
 
     try {
-      if (isLogin) {
+      if (view === 'login') {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         onLoginSuccess(data.session);
-      } else {
-        const { error, data } = await supabase.auth.signUp({ 
+      } else if (view === 'signup') {
+        const { data, error } = await supabase.auth.signUp({ 
           email, 
           password,
           options: {
-            emailRedirectTo: window.location.origin
+            data: { full_name: fullName, role: 'contributor' }
           }
         });
         if (error) throw error;
-        if (data.user) {
-          setMessage({ type: 'success', text: 'Pendaftaran berhasil! Silakan cek email kamu untuk konfirmasi akun admin.' });
-        }
+        setMessage({ type: 'success', text: 'Pendaftaran berhasil! Silakan cek email Anda untuk verifikasi.' });
+        setView('login');
+      } else if (view === 'forgot-password') {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: `${window.location.origin}/admin?view=reset-password`,
+        });
+        if (error) throw error;
+        setMessage({ type: 'success', text: 'Instruksi reset password telah dikirim ke email Anda.' });
+        setView('login');
       }
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'Terjadi kesalahan sistem' });
+      setMessage({ type: 'error', text: err.message });
     } finally {
       setLoading(false);
     }
@@ -47,104 +56,144 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#020617] flex items-center justify-center p-6 relative overflow-hidden transition-colors duration-500">
-      {/* Dynamic Background Blobs */}
-      <div className="absolute top-[-15%] left-[-15%] w-[50%] h-[50%] bg-primary/20 blur-[130px] rounded-full animate-pulse opacity-60"></div>
-      <div className="absolute bottom-[-15%] right-[-15%] w-[50%] h-[50%] bg-blue-600/20 blur-[130px] rounded-full animate-pulse delay-1000 opacity-60"></div>
+      {/* Background Ornaments */}
+      <div className="absolute top-0 left-0 w-full h-full -z-10 bg-grid-pattern opacity-10" />
+      <div className="absolute -top-24 -left-24 w-96 h-96 bg-primary/20 rounded-full blur-[100px]" />
+      <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-blue-500/20 rounded-full blur-[100px]" />
 
-      <div className="w-full max-w-md relative z-10 transition-all">
-        {/* Branding */}
-        <div className="text-center mb-10 group">
-          <div className="inline-flex p-5 bg-white dark:bg-slate-900 rounded-[32px] shadow-2xl shadow-primary/10 mb-6 border border-slate-100 dark:border-slate-800 transition-all group-hover:scale-110 group-hover:rotate-3 duration-500">
-            <img src={logoLight} className="h-10 md:h-12 dark:hidden" alt="Logo" />
-            <img src={logoDark} className="h-10 md:h-12 hidden dark:block" alt="Logo" />
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-md"
+      >
+        <div className="bg-white dark:bg-slate-900 rounded-4xl shadow-2xl border border-slate-100 dark:border-slate-800 p-10 relative">
+          <div className="absolute top-8 right-8 scale-75">
+            <ThemeToggle />
           </div>
-          <h1 className="text-4xl font-black tracking-tight dark:text-white transition-colors duration-500">
-            {isLogin ? 'Welcome Back' : 'Create Account'}
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-3 font-medium px-4">
-            {isLogin 
-              ? 'Silakan masuk untuk mengelola konten dashboard KyyStats.' 
-              : 'Daftarkan email kamu untuk bergabung menjadi Kontributor konten.'}
-          </p>
-        </div>
 
-        {/* Auth Card */}
-        <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl p-8 rounded-[48px] shadow-2xl border border-white dark:border-slate-800 transition-all duration-500">
-          {message && (
-            <div className={`mb-6 p-4 rounded-3xl flex items-start gap-3 animate-in fade-in slide-in-from-top-4 duration-300 ${
-              message.type === 'success' ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 border border-green-100/50 dark:border-green-900/50' : 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 border border-red-100/50 dark:border-red-900/50'
-            }`}>
-              {message.type === 'success' ? <CheckCircle2 size={20} className="shrink-0" /> : <AlertCircle size={20} className="shrink-0" />}
-              <p className="text-xs font-bold leading-relaxed">{message.text}</p>
-            </div>
-          )}
+          <div className="text-center mb-10">
+            <h1 className="text-4xl font-black tracking-tighter dark:text-white uppercase italic">
+              Kyy<span className="text-primary">Stats</span>
+            </h1>
+            <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-2 italic">
+              {view === 'login' ? 'Selamat Datang Kembali' : view === 'signup' ? 'Daftar Kontributor Baru' : 'Reset Kata Sandi'}
+            </p>
+          </div>
+
+          <AnimatePresence mode="wait">
+            {message && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className={`mb-6 p-4 rounded-2xl text-[10px] font-black uppercase tracking-wider ${
+                  message.type === 'success' ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600' : 'bg-red-50 dark:bg-red-500/10 text-red-600'
+                }`}
+              >
+                {message.text}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {view === 'signup' && (
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 italic">Nama Lengkap</label>
+                <div className="relative">
+                  <span className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400"><ShieldCheck size={18} /></span>
+                  <input 
+                    required
+                    type="text" 
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="w-full pl-14 pr-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border-none text-sm dark:text-white focus:ring-2 focus:ring-primary/20 transition-all font-bold"
+                    placeholder="Masukkan nama..."
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-2">Email Address</label>
-              <div className="relative group">
-                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={20} />
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 italic">Alamat Email</label>
+              <div className="relative">
+                <span className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400"><Mail size={18} /></span>
                 <input 
-                  type="email" 
                   required
-                  placeholder="admin@kyystats.id"
-                  className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800 rounded-3xl py-4 pl-14 pr-6 text-sm dark:text-white focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-700"
+                  type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  className="w-full pl-14 pr-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border-none text-sm dark:text-white focus:ring-2 focus:ring-primary/20 transition-all font-bold"
+                  placeholder="name@example.com"
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-2">Secure Password</label>
-              <div className="relative group">
-                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={20} />
-                <input 
-                  type="password" 
-                  required
-                  placeholder="••••••••"
-                  className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800 rounded-3xl py-4 pl-14 pr-6 text-sm dark:text-white focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-700"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+            {view !== 'forgot-password' && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 italic">Kata Sandi</label>
+                    {view === 'login' && (
+                        <button 
+                            type="button"
+                            onClick={() => { setView('forgot-password'); setMessage(null); }}
+                            className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline italic"
+                        >
+                            Lupa Kata Sandi?
+                        </button>
+                    )}
+                </div>
+                <div className="relative">
+                  <span className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400"><Lock size={18} /></span>
+                  <input 
+                    required
+                    type="password" 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full pl-14 pr-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border-none text-sm dark:text-white focus:ring-2 focus:ring-primary/20 transition-all font-bold"
+                    placeholder="••••••••"
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             <button 
-              type="submit" 
               disabled={loading}
-              className="w-full bg-primary text-white py-4 rounded-3xl font-black text-sm shadow-xl shadow-primary/30 hover:shadow-primary/50 hover:-translate-y-1 transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed group border-2 border-primary/20"
+              type="submit" 
+              className="w-full py-4 bg-primary text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 group"
             >
               {loading ? (
-                <Loader2 className="animate-spin" size={20} />
+                <Loader2 size={18} className="animate-spin" />
               ) : (
                 <>
-                  <span className="tracking-widest uppercase">{isLogin ? 'Log In Now' : 'Join as Admin'}</span>
+                  {view === 'login' ? 'Masuk Sekarang' : view === 'signup' ? 'Daftar Akun' : 'Kirim Link Reset'}
                   <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                 </>
               )}
             </button>
           </form>
 
-          <button 
-            type="button"
-            onClick={() => { setIsLogin(!isLogin); setMessage(null); }}
-            className="w-full mt-8 text-center"
-          >
-            <p className="text-sm text-slate-500 font-medium hover:text-primary transition-colors">
-              {isLogin ? 'Belum punya akses?' : 'Sudah punya akses?'}
-              <span className="ml-2 text-primary font-black underline underline-offset-8 decoration-2 decoration-primary/30">
-                {isLogin ? 'Daftar Sekarang' : 'Log In Saja'}
-              </span>
-            </p>
-          </button>
+          <div className="mt-10 pt-10 border-t border-slate-50 dark:border-slate-800 text-center">
+            {view === 'forgot-password' ? (
+                 <button 
+                    onClick={() => { setView('login'); setMessage(null); }}
+                    className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center justify-center gap-2 hover:text-primary transition-colors italic w-full"
+                >
+                    <ArrowLeft size={14} /> Kembali ke Halaman Masuk
+                </button>
+            ) : (
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 italic">
+                {view === 'login' ? 'Belum punya akun?' : 'Sudah punya akun?'}
+                <button 
+                    onClick={() => { setView(view === 'login' ? 'signup' : 'login'); setMessage(null); }}
+                    className="ml-2 text-primary hover:underline italic"
+                >
+                    {view === 'login' ? 'Daftar Disini' : 'Masuk Sekarang'}
+                </button>
+                </p>
+            )}
+          </div>
         </div>
-
-        {/* Fine Print */}
-        <p className="text-center mt-12 text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] opacity-60">
-          &copy; 2026 KyyStats Analytical Engine &bull; System Protected
-        </p>
-      </div>
+      </motion.div>
     </div>
   );
 };

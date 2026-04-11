@@ -77,7 +77,9 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onNavigate, activeView }) => 
                 >
                   <button onClick={() => { onNavigate('manage-articles'); setIsKontenOpen(false); }} className="w-full text-left px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary transition-all">Artikel</button>
                   <button onClick={() => { onNavigate('manage-statistics'); setIsKontenOpen(false); }} className="w-full text-left px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary transition-all">Statistik</button>
-                  <button onClick={() => { onNavigate('manage-portfolio'); setIsKontenOpen(false); }} className="w-full text-left px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary transition-all">Portfolio</button>
+                  {profile?.role === 'owner' && (
+                    <button onClick={() => { onNavigate('manage-portfolio'); setIsKontenOpen(false); }} className="w-full text-left px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary transition-all">Portfolio</button>
+                  )}
                 </div>
               )}
             </div>
