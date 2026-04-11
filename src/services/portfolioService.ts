@@ -46,12 +46,16 @@ export const fetchFeaturedProjects = async (): Promise<FeaturedProject[]> => {
   }));
 };
 
-export const fetchArticles = async (): Promise<Article[]> => {
-  const { data, error } = await supabase
+export const fetchArticles = async (onlyPublished = true): Promise<Article[]> => {
+  let query = supabase
     .from('articles')
-    .select('*, profiles(full_name, avatar_url)')
-    .eq('is_published', true)
-    .order('created_at', { ascending: false });
+    .select('*, profiles!left(full_name, avatar_url)');
+  
+  if (onlyPublished) {
+    query = query.eq('is_published', true);
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false });
 
   if (error) {
     console.error('Error fetching articles:', error);
@@ -171,11 +175,16 @@ export const deleteFeaturedProject = async (id: string): Promise<boolean> => {
 };
 
 // --- STATISTICS CRUD ---
-export const fetchStatistics = async (): Promise<Statistic[]> => {
-  const { data, error } = await supabase
+export const fetchStatistics = async (onlyPublished = true): Promise<Statistic[]> => {
+  let query = supabase
     .from('statistics')
-    .select('*, profiles(full_name, avatar_url)')
-    .order('created_at', { ascending: false });
+    .select('*, profiles!left(full_name, avatar_url)');
+
+  if (onlyPublished) {
+    query = query.eq('is_published', true);
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false });
 
   if (error) {
     console.error('Error fetching statistics:', error);

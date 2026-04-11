@@ -116,7 +116,14 @@ const Navbar: React.FC<NavbarProps> = ({ onContactClick, onNavigate, currentPage
                           <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{userProfile?.full_name || 'Kontributor'}</p>
                         </div>
                         <button 
-                          onClick={() => { onNavigate('/admin'); setIsProfileOpen(false); }}
+                          onClick={() => { onNavigate(`author/${userProfile?.id}`); setIsProfileOpen(false); }}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all group"
+                        >
+                          <User size={18} className="group-hover:text-primary transition-colors" />
+                          Profil Saya
+                        </button>
+                        <button 
+                          onClick={() => { onNavigate('admin'); setIsProfileOpen(false); }}
                           className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all group"
                         >
                           <LayoutDashboard size={18} className="group-hover:text-primary transition-colors" />

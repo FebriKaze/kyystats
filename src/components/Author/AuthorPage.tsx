@@ -25,21 +25,29 @@ const AuthorPage: React.FC = () => {
       if (!id) return;
       setLoading(true);
       try {
+        // Ambil data profil (Pastikan RLS di Supabase mengizinkan pencarian publik pada tabel profiles)
         const { data: profileData, error: pError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', id)
           .single();
         
-        if (pError) throw pError;
+        if (pError) {
+           console.error('Profile fetch error:', pError);
+           throw pError;
+        }
         setProfile(profileData);
 
+        // Fetch articles & stats filter by author id
         const [allArt, allStat] = await Promise.all([
           fetchArticles(),
           fetchStatistics()
         ]);
 
-        // Get Views Count from page_views table
+        const userArts = allArt.filter((a: any) => a.user_id === id);
+        const userStats = allStat.filter((s: any) => s.user_id === id);
+
+        // Get Views Count
         const { data: viewsData } = await supabase.from('page_views').select('page_id');
         const counts: Record<string, number> = {};
         viewsData?.forEach((v: any) => {
@@ -47,8 +55,8 @@ const AuthorPage: React.FC = () => {
         });
         setViewCounts(counts);
 
-        setArticles(allArt.filter((a: any) => a.user_id === id).map(a => ({...a, views: counts[a.slug] || counts[a.id] || 0})));
-        setStats(allStat.filter((s: any) => s.user_id === id).map(s => ({...s, views: counts[s.id] || 0})));
+        setArticles(userArts.map(a => ({...a, views: counts[a.slug] || counts[a.id] || 0})));
+        setStats(userStats.map(s => ({...s, views: counts[s.id] || 0})));
       } catch (err) {
         console.error('Error loading author:', err);
       } finally {
@@ -130,20 +138,26 @@ const AuthorPage: React.FC = () => {
 
                       <div className="pt-8 border-t border-slate-200 dark:border-slate-700 space-y-4">
                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Ikuti :</p>
-                         <div className="flex gap-3">
+                          <div className="flex flex-wrap justify-center gap-3">
                             {profile.instagram_url && (
-                              <a href={profile.instagram_url} target="_blank" rel="noopener noreferrer" className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 text-slate-400 hover:text-primary transition-all shadow-sm"><Instagram size={16} /></a>
+                              <a href={profile.instagram_url} target="_blank" rel="noopener noreferrer" className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 text-slate-400 hover:text-primary transition-all shadow-sm">
+                                <Instagram size={16} />
+                              </a>
                             )}
                             {profile.twitter_url && (
-                              <a href={profile.twitter_url} target="_blank" rel="noopener noreferrer" className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 text-slate-400 hover:text-primary transition-all shadow-sm"><Twitter size={16} /></a>
+                              <a href={profile.twitter_url} target="_blank" rel="noopener noreferrer" className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 text-slate-400 hover:text-primary transition-all shadow-sm">
+                                <Twitter size={16} />
+                              </a>
                             )}
                             {profile.linkedin_url && (
-                              <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 text-slate-400 hover:text-primary transition-all shadow-sm"><Linkedin size={16} /></a>
+                              <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 text-slate-400 hover:text-primary transition-all shadow-sm">
+                                <Linkedin size={16} />
+                              </a>
                             )}
                             {!profile.instagram_url && !profile.twitter_url && !profile.linkedin_url && (
-                              <p className="text-[8px] font-black text-slate-300 italic">Belum ada link sosmed</p>
+                              <p className="text-[8px] font-black text-slate-300 italic">Sosial media belum ditautkan</p>
                             )}
-                         </div>
+                          </div>
                       </div>
                    </div>
                 </div>

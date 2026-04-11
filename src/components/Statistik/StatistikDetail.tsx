@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Calendar, User, Clock, Share2, Tag, Link as LinkIcon } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../../lib/supabase';
 import { Statistic, Article } from '../../types';
 import ArticleSidebar from '../Articles/ArticleSidebar';
 import { useMeta } from '../../hooks/useMeta';
@@ -28,6 +30,8 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
   onSearchChange,
   searchQuery
 }) => {
+  const navigate = useNavigate();
+
   useMeta({ 
     title: item?.title, 
     description: item?.summary 
@@ -101,9 +105,14 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
             
             <div className="flex flex-wrap items-center gap-6 mt-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest border-y border-slate-100 dark:border-slate-800 py-6">
               <button 
-                onClick={() => {
+                onClick={async () => {
                   const authorId = (item as any).user_id;
-                  if (authorId) window.location.href = `/author/${authorId}`;
+                  if (authorId) {
+                    navigate(`/author/${authorId}`);
+                  } else {
+                    const { data } = await supabase.from('profiles').select('id').ilike('full_name', '%kyystats%').limit(1).single();
+                    if (data?.id) navigate(`/author/${data.id}`);
+                  }
                 }}
                 className="flex items-center gap-1.5 hover:text-primary transition-colors cursor-pointer"
               >

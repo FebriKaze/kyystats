@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Calendar, User, Clock, Share2, Tag, Link as LinkIcon } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Article } from '../../types';
@@ -95,13 +96,20 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({
             
             <div className="flex flex-wrap items-center gap-6 mt-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest border-y border-slate-100 dark:border-slate-800 py-6">
               <div 
-                onClick={(e) => {
+                onClick={async (e) => {
                   e.preventDefault();
                   const authorId = (article as any).user_id;
+                  
                   if (authorId) {
                     navigate(`/author/${authorId}`);
                   } else {
-                    alert('Profil penulis belum tertaut sepenuhnya.');
+                    // Fallback: Cari ID owner berdasarkan profil KYYSTATS
+                    const { data } = await supabase.from('profiles').select('id').ilike('full_name', '%kyystats%').limit(1).single();
+                    if (data?.id) {
+                      navigate(`/author/${data.id}`);
+                    } else {
+                      alert('Profil penulis sedang diperbarui.');
+                    }
                   }
                 }}
                 className="flex items-center gap-2 hover:text-primary transition-all cursor-pointer pr-6 border-r border-slate-100 dark:border-slate-800 group"

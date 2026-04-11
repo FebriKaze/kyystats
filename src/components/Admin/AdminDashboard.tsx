@@ -1,92 +1,91 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import { 
+  fetchArticles, 
+  fetchPortfolios, 
+  fetchStatistics,
+  saveArticle,
+  deleteArticle,
+  savePortfolio,
+  deletePortfolio,
+  saveStatistic,
+  deleteStatistic
+} from '../../services/portfolioService';
+import { Article, Project, Statistic } from '../../types';
 import AdminHeader from './AdminHeader';
 import AdminHome from './AdminHome';
 import AdminContentList from './AdminContentList';
 import AdminEditor from './AdminEditor';
-import AdminProfile from './AdminProfile';
 import AdminUserManagement from './AdminUserManagement';
-import { 
-  fetchArticles, 
-  saveArticle, 
-  deleteArticle, 
-  fetchPortfolios, 
-  savePortfolio, 
-  deletePortfolio,
-  fetchFeaturedProjects,
-  fetchStatistics,
-  saveStatistic,
-  deleteStatistic
-} from '../../services/portfolioService';
-import { Article, Project, FeaturedProject, Statistic } from '../../types';
+import AdminProfile from './AdminProfile';
 
 type AdminView = 'home' | 'manage-articles' | 'manage-portfolio' | 'manage-statistics' | 'manage-users' | 'edit' | 'create' | 'profile' | 'settings';
 
 const AdminDashboard: React.FC = () => {
   const [activeView, setActiveView] = useState<AdminView>('home');
-  const [lastView, setLastView] = useState<AdminView>('home');
   const [loading, setLoading] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
-  
-  // Data lists
   const [articles, setArticles] = useState<Article[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [featuredCount, setFeaturedCount] = useState(0);
   const [statistics, setStatistics] = useState<Statistic[]>([]);
-  
-  // Editorial State
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [rawViews, setRawViews] = useState<any[]>([]);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [contentType, setContentType] = useState<'articles' | 'portfolio' | 'statistics'>('articles');
+  const [lastView, setLastView] = useState<AdminView>('home');
 
   useEffect(() => {
-    loadAllData();
-    checkProfile();
+    initDashboard();
   }, []);
 
-  const checkProfile = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-      setUserProfile(data);
-    }
-  };
-
-  const loadAllData = async () => {
+  const initDashboard = async () => {
     setLoading(true);
     try {
+      // 1. Ambil Profil User
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: pData } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+        if (pData) setUserProfile(pData);
+      }
+
+      // 2. Ambil Data Konten (Sama persis logic-nya dengan UserManagement)
       const [artData, statData, projData] = await Promise.all([
-        fetchArticles(),
-        fetchStatistics(),
+        fetchArticles(false),
+        fetchStatistics(false),
         fetchPortfolios()
       ]);
 
-      // Fetch Real View Counts directly from page_views table
-      const { data: viewsData, error: vError } = await supabase.from('page_views').select('page_id');
-      if (vError) throw vError;
+      // 3. Ambil MENTAH Data Views (Penting: Ambil '*' agar semua kolom terangkut)
+      const { data: vData } = await supabase.from('page_views').select('*');
+      const viewsList = vData || [];
+      setRawViews(viewsList);
 
+      // Hitung views per page_id
       const viewCounts: Record<string, number> = {};
-      viewsData?.forEach((v: any) => {
-        const pid = v.page_id;
-        viewCounts[pid] = (viewCounts[pid] || 0) + 1;
+      viewsList.forEach((v: any) => {
+        const pid = String(v.page_id);
+        if (pid) {
+          viewCounts[pid] = (viewCounts[pid] || 0) + 1;
+        }
       });
 
-      // Map views to articles (match by ID or Slug)
-      const mappedArticles = artData.map((a: Article) => ({
-        ...a,
-        views: viewCounts[a.id] || viewCounts[a.slug] || 0
-      }));
+      // 4. Mapping Views ke Artikel & Statistik (Gunakan Triple Check: ID, Slug, and Title ID)
+      const mappedArticles = (artData || []).map(a => {
+        const idViews = a.id ? (viewCounts[String(a.id)] || 0) : 0;
+        const slugViews = a.slug ? (viewCounts[String(a.slug)] || 0) : 0;
+        return { ...a, views: idViews + slugViews };
+      });
 
-      // Map views to statistics
-      const mappedStatistics = statData.map((s: Statistic) => ({
-        ...s,
-        views: viewCounts[s.id] || 0
-      }));
+      const mappedStatistics = (statData || []).map(s => {
+        const idViews = s.id ? (viewCounts[String(s.id)] || 0) : 0;
+        return { ...s, views: idViews };
+      });
 
       setArticles(mappedArticles);
       setStatistics(mappedStatistics);
-      setProjects(projData);
+      setProjects(projData || []);
+
     } catch (err) {
-      console.error('Error loading analytics:', err);
+      console.error('Dashboard Init Error:', err);
     } finally {
       setLoading(false);
     }
@@ -97,129 +96,85 @@ const AdminDashboard: React.FC = () => {
     if (view !== 'edit' && view !== 'create') setLastView(view);
   };
 
-  const handleEdit = (type: 'articles' | 'portfolio' | 'statistics', item: any) => {
-    setContentType(type);
+  const handleEdit = (type: any, item: any) => {
     setEditingItem(item);
+    setContentType(type);
     navigateTo('edit');
   };
 
-  const handleCreate = (type: 'articles' | 'portfolio' | 'statistics') => {
+  const handleCreate = (type: any) => {
     setContentType(type);
-    const defaultData = type === 'articles' 
-      ? { is_published: true, author: userProfile?.full_name || 'KyyStats', content: '', summary: '' } 
-      : type === 'portfolio' 
-        ? { category: '', title: '', description: '', details: { challenge: '', solution: '', result: '' } } 
-        : { is_published: true, author: userProfile?.full_name || 'KyyStats', content: '', category: 'Ekonomi' };
-    setEditingItem(defaultData);
+    setEditingItem(type === 'articles' ? { is_published: true, author: userProfile?.full_name } : { is_published: true, author: userProfile?.full_name, category: 'Ekonomi' });
     navigateTo('create');
   };
 
   const handleSave = async (item: any) => {
-    try {
-      if (contentType === 'articles') await saveArticle(item);
-      if (contentType === 'portfolio') await savePortfolio(item);
-      if (contentType === 'statistics') await saveStatistic(item);
-      
-      alert('Konten berhasil disimpan!');
-      loadAllData();
-      navigateTo(lastView);
-    } catch (err: any) {
-      console.error(err);
-      alert('Gagal menyimpan konten: ' + (err?.message || 'Error tidak diketahui'));
-    }
+     try {
+       if (contentType === 'articles') await saveArticle(item);
+       if (contentType === 'portfolio') await savePortfolio(item);
+       if (contentType === 'statistics') await saveStatistic(item);
+       alert('Berhasil disimpan!');
+       initDashboard();
+       navigateTo(lastView);
+     } catch (err) { alert('Gagal simpan'); }
   };
 
-  const handleDelete = async (type: 'articles' | 'portfolio' | 'statistics', id: string) => {
+  const handleDelete = async (type: any, id: string) => {
     if (!window.confirm('Hapus konten ini?')) return;
-    
     let success = false;
     if (type === 'articles') success = await deleteArticle(id);
     if (type === 'portfolio') success = await deletePortfolio(id);
     if (type === 'statistics') success = await deleteStatistic(id);
-
-    if (success) {
-      alert('Konten berhasil dihapus!');
-      loadAllData();
-    } else {
-      alert('Gagal menghapus konten.');
-    }
+    if (success) initDashboard();
   };
 
   const renderContent = () => {
-    if (loading) return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
+    if (loading) return <div className="flex justify-center py-20"><div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div></div>;
 
-    const isOwner = userProfile?.role === 'owner';
-    const currentUserId = userProfile?.id;
+    const isOwner = userProfile?.role?.toLowerCase() === 'owner';
+    const uid = userProfile?.id;
 
-    // Filter data based on user role
-    const filteredArticles = isOwner ? articles : articles.filter(a => a.user_id === currentUserId);
-    const filteredStatistics = isOwner ? statistics : statistics.filter(s => s.user_id === currentUserId);
-    const filteredProjects = isOwner ? projects : projects.filter(p => (p as any).user_id === currentUserId);
+    const fArticles = isOwner ? articles : articles.filter(a => a.user_id === uid);
+    const fStatistics = isOwner ? statistics : statistics.filter(s => s.user_id === uid);
+    const fProjects = isOwner ? projects : projects.filter(p => (p as any).user_id === uid);
 
-    const popularList = [...filteredArticles].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5);
+    const popularList = [...fArticles].sort((a,b) => (b.views||0) - (a.views||0)).slice(0,5);
 
     switch (activeView) {
       case 'home':
         return <AdminHome 
           stats={{
-            articles: filteredArticles.length,
-            statistics: filteredStatistics.length
+            articles: fArticles.length,
+            statistics: fStatistics.length
           }}
           popularArticles={popularList}
-          items={{ articles: filteredArticles, statistics: filteredStatistics }}
+          items={{ articles: fArticles, statistics: fStatistics }}
+          profile={userProfile}
+          rawViews={rawViews}
+          currentUserId={uid}
         />;
       case 'manage-articles':
-        return <AdminContentList 
-          type="articles" 
-          data={filteredArticles} 
-          onEdit={(item) => handleEdit('articles', item)} 
-          onCreate={() => handleCreate('articles')}
-          onDelete={(id) => handleDelete('articles', id)} 
-        />;
+        return <AdminContentList data={fArticles} type="articles" onEdit={(i) => handleEdit('articles', i)} onCreate={() => handleCreate('articles')} onDelete={(id) => handleDelete('articles', id)} />;
       case 'manage-statistics':
-        return <AdminContentList 
-          type="statistics" 
-          data={filteredStatistics} 
-          onEdit={(item) => handleEdit('statistics', item)} 
-          onCreate={() => handleCreate('statistics')}
-          onDelete={(id) => handleDelete('statistics', id)} 
-        />;
-      case 'manage-users':
-        return <AdminUserManagement />;
+        return <AdminContentList data={fStatistics} type="statistics" onEdit={(i) => handleEdit('statistics', i)} onCreate={() => handleCreate('statistics')} onDelete={(id) => handleDelete('statistics', id)} />;
+      case 'manage-portfolio':
+        return <AdminContentList data={fProjects} type="portfolio" onEdit={(i) => handleEdit('portfolio', i)} onCreate={() => handleCreate('portfolio')} onDelete={(id) => handleDelete('portfolio', id)} />;
+      case 'manage-users': return <AdminUserManagement />;
+      case 'profile': return <AdminProfile />;
       case 'edit':
       case 'create':
-        return <AdminEditor 
-          item={editingItem} 
-          type={contentType} 
-          onSave={handleSave} 
-          onCancel={() => navigateTo(lastView)} 
-        />;
-      case 'profile':
-        return <AdminProfile />;
-      case 'manage-portfolio':
-        return <AdminContentList 
-          type="portfolio" 
-          data={projects} 
-          onEdit={(item) => handleEdit('portfolio', item)} 
-          onCreate={() => handleCreate('portfolio')}
-          onDelete={(id) => handleDelete('portfolio', id)} 
-        />;
+        return <AdminEditor type={contentType} item={editingItem} onSave={handleSave} onCancel={() => navigateTo(lastView)} />;
       default:
-        return <AdminHome stats={{ articles: filteredArticles.length, statistics: filteredStatistics.length }} popularArticles={popularList} items={{ articles: filteredArticles, statistics: filteredStatistics }} />;
+        return null;
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors">
-      <AdminHeader onNavigate={navigateTo} activeView={activeView} />
-      
-      <main className="max-w-7xl mx-auto px-6 py-10">
-        {renderContent()}
-      </main>
+    <div className="min-h-screen bg-slate-50 dark:bg-[#020617] transition-colors duration-500">
+      <AdminHeader activeView={activeView} onNavigate={navigateTo} />
+      <div className="max-w-7xl mx-auto px-4 md:px-6 pt-24 pb-12 overflow-hidden">
+         {renderContent()}
+      </div>
     </div>
   );
 };
