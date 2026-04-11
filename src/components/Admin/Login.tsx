@@ -4,6 +4,9 @@ import { Mail, Lock, LogIn, ArrowRight, UserPlus, ShieldCheck, Loader2, Key, Arr
 import { supabase } from '../../lib/supabase';
 import { ThemeToggle } from '../HomePage/ThemeToggle';
 
+import logoLight from '../img/ky_stat_logo.webp';
+import logoDark from '../img/logo_dark.webp';
+
 interface LoginProps {
   onLoginSuccess: (session: any) => void;
 }
@@ -17,6 +20,9 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+
+  // Check dark mode
+  const isDark = document.documentElement.classList.contains('dark');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,9 +78,13 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
           </div>
 
           <div className="text-center mb-10">
-            <h1 className="text-4xl font-black tracking-tighter dark:text-white uppercase italic">
-              Kyy<span className="text-primary">Stats</span>
-            </h1>
+            <div className="flex justify-center mb-4">
+               <img 
+                 src={isDark ? logoDark : logoLight} 
+                 alt="KyyStats Logo" 
+                 className="h-14 w-auto object-contain"
+               />
+            </div>
             <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-2 italic">
               {view === 'login' ? 'Selamat Datang Kembali' : view === 'signup' ? 'Daftar Kontributor Baru' : 'Reset Kata Sandi'}
             </p>

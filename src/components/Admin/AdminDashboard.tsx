@@ -141,10 +141,10 @@ const AdminDashboard: React.FC = () => {
         return <AdminHome 
           stats={{
             articles: filteredArticles.length,
-            statistics: filteredStatistics.length,
-            portfolio: filteredProjects.length
+            statistics: filteredStatistics.length
           }}
           popularArticles={popularList}
+          items={{ articles: filteredArticles, statistics: filteredStatistics }}
         />;
       case 'manage-articles':
         return <AdminContentList 
@@ -183,7 +183,7 @@ const AdminDashboard: React.FC = () => {
           onDelete={(id) => handleDelete('portfolio', id)} 
         />;
       default:
-        return <AdminHome stats={{ articles: filteredArticles.length, statistics: filteredStatistics.length, portfolio: filteredProjects.length }} popularArticles={popularList} />;
+        return <AdminHome stats={{ articles: filteredArticles.length, statistics: filteredStatistics.length }} popularArticles={popularList} items={{ articles: filteredArticles, statistics: filteredStatistics }} />;
     }
   };
 
