@@ -53,17 +53,43 @@ const AdminDashboard: React.FC = () => {
 
   const loadAllData = async () => {
     setLoading(true);
-    const [a, p, s, f] = await Promise.all([
-      fetchArticles(),
-      fetchPortfolios(),
-      fetchStatistics(),
-      fetchFeaturedProjects()
-    ]);
-    setArticles(a);
-    setProjects(p);
-    setStatistics(s);
-    setFeaturedCount(f.length);
-    setLoading(false);
+    try {
+      const [artData, statData, projData] = await Promise.all([
+        fetchArticles(),
+        fetchStatistics(),
+        fetchPortfolios()
+      ]);
+
+      // Fetch Real View Counts directly from page_views table
+      const { data: viewsData, error: vError } = await supabase.from('page_views').select('page_id');
+      if (vError) throw vError;
+
+      const viewCounts: Record<string, number> = {};
+      viewsData?.forEach((v: any) => {
+        const pid = v.page_id;
+        viewCounts[pid] = (viewCounts[pid] || 0) + 1;
+      });
+
+      // Map views to articles (match by ID or Slug)
+      const mappedArticles = artData.map((a: Article) => ({
+        ...a,
+        views: viewCounts[a.id] || viewCounts[a.slug] || 0
+      }));
+
+      // Map views to statistics
+      const mappedStatistics = statData.map((s: Statistic) => ({
+        ...s,
+        views: viewCounts[s.id] || 0
+      }));
+
+      setArticles(mappedArticles);
+      setStatistics(mappedStatistics);
+      setProjects(projData);
+    } catch (err) {
+      console.error('Error loading analytics:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const navigateTo = (view: AdminView) => {
