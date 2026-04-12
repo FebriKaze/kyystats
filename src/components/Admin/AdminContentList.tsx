@@ -9,9 +9,13 @@ interface AdminContentListProps {
   onEdit: (item: any) => void;
   onDelete: (id: string) => void;
   onCreate: () => void;
+  onBulkAssign?: () => void;
+  showBulkAssign?: boolean;
+  onManageAssignments?: () => void;
+  showManageAssignments?: boolean;
 }
 
-const AdminContentList: React.FC<AdminContentListProps> = ({ type, data, onEdit, onDelete, onCreate }) => {
+const AdminContentList: React.FC<AdminContentListProps> = ({ type, data, onEdit, onDelete, onCreate, onBulkAssign, showBulkAssign, onManageAssignments, showManageAssignments }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [viewCounts, setViewCounts] = useState<Record<string, number>>({});
   const [loadingViews, setLoadingViews] = useState(false);
@@ -55,12 +59,22 @@ const AdminContentList: React.FC<AdminContentListProps> = ({ type, data, onEdit,
           <h1 className="text-3xl font-black tracking-tighter dark:text-white">{title}</h1>
           <p className="text-slate-500 dark:text-slate-400">Beranda - {type === 'articles' ? 'Artikel' : 'Statistik'} - Daftar</p>
         </div>
-        <button 
-          onClick={onCreate}
-          className="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-2xl font-black text-sm shadow-xl shadow-primary/20 hover:scale-105 transition-transform"
-        >
-          <Plus size={20} /> Tambah {type === 'articles' ? 'Artikel' : type === 'portfolio' ? 'Portfolio' : 'Statistik'} Baru
-        </button>
+        <div className="flex items-center gap-3">
+          {showManageAssignments && onManageAssignments && type === 'articles' && (
+            <button 
+              onClick={onManageAssignments}
+              className="flex items-center gap-2 bg-purple-500 text-white px-5 py-3 rounded-2xl font-black text-sm shadow-xl shadow-purple-500/20 hover:scale-105 transition-transform"
+            >
+              <Plus size={20} /> Manage Article Assignment
+            </button>
+          )}
+          <button 
+            onClick={onCreate}
+            className="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-2xl font-black text-sm shadow-xl shadow-primary/20 hover:scale-105 transition-transform"
+          >
+            <Plus size={20} /> Tambah {type === 'articles' ? 'Artikel' : type === 'portfolio' ? 'Portfolio' : 'Statistik'} Baru
+          </button>
+        </div>
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-4xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm">

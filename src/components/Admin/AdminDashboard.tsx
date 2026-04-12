@@ -18,6 +18,8 @@ import AdminContentList from './AdminContentList';
 import AdminEditor from './AdminEditor';
 import AdminUserManagement from './AdminUserManagement';
 import AdminProfile from './AdminProfile';
+import ArticleAssignment from './ArticleAssignment';
+import { showToast } from '../Common/Toast';
 
 type AdminView = 'home' | 'manage-articles' | 'manage-portfolio' | 'manage-statistics' | 'manage-users' | 'edit' | 'create' | 'profile' | 'settings';
 
@@ -32,6 +34,7 @@ const AdminDashboard: React.FC = () => {
   const [editingItem, setEditingItem] = useState<any>(null);
   const [contentType, setContentType] = useState<'articles' | 'portfolio' | 'statistics'>('articles');
   const [lastView, setLastView] = useState<AdminView>('home');
+  const [showAssignmentModal, setShowAssignmentModal] = useState(false);
 
   useEffect(() => {
     initDashboard();
@@ -113,19 +116,25 @@ const AdminDashboard: React.FC = () => {
        if (contentType === 'articles') await saveArticle(item);
        if (contentType === 'portfolio') await savePortfolio(item);
        if (contentType === 'statistics') await saveStatistic(item);
-       alert('Berhasil disimpan!');
+       showToast('success', 'Konten berhasil disimpan!');
        initDashboard();
        navigateTo(lastView);
-     } catch (err) { alert('Gagal simpan'); }
+     } catch (err) { showToast('error', 'Gagal menyimpan konten!'); }
   };
 
+  
   const handleDelete = async (type: any, id: string) => {
     if (!window.confirm('Hapus konten ini?')) return;
     let success = false;
     if (type === 'articles') success = await deleteArticle(id);
     if (type === 'portfolio') success = await deletePortfolio(id);
     if (type === 'statistics') success = await deleteStatistic(id);
-    if (success) initDashboard();
+    if (success) {
+      showToast('success', 'Konten berhasil dihapus!');
+      initDashboard();
+    } else {
+      showToast('error', 'Gagal menghapus konten!');
+    }
   };
 
   const renderContent = () => {
@@ -154,7 +163,16 @@ const AdminDashboard: React.FC = () => {
           currentUserId={uid}
         />;
       case 'manage-articles':
-        return <AdminContentList data={fArticles} type="articles" onEdit={(i) => handleEdit('articles', i)} onCreate={() => handleCreate('articles')} onDelete={(id) => handleDelete('articles', id)} />;
+        const hasUnassignedArticles = articles.some(a => !a.user_id);
+        return <AdminContentList 
+          data={fArticles} 
+          type="articles" 
+          onEdit={(i) => handleEdit('articles', i)} 
+          onCreate={() => handleCreate('articles')} 
+          onDelete={(id) => handleDelete('articles', id)}
+          onManageAssignments={() => setShowAssignmentModal(true)}
+          showManageAssignments={isOwner && hasUnassignedArticles}
+        />;
       case 'manage-statistics':
         return <AdminContentList data={fStatistics} type="statistics" onEdit={(i) => handleEdit('statistics', i)} onCreate={() => handleCreate('statistics')} onDelete={(id) => handleDelete('statistics', id)} />;
       case 'manage-portfolio':
@@ -175,6 +193,13 @@ const AdminDashboard: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 md:px-6 pt-24 pb-12 overflow-hidden">
          {renderContent()}
       </div>
+      
+      {showAssignmentModal && (
+        <ArticleAssignment
+          onClose={() => setShowAssignmentModal(false)}
+          onAssignmentComplete={initDashboard}
+        />
+      )}
     </div>
   );
 };

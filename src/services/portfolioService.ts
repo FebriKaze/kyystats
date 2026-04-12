@@ -83,6 +83,14 @@ export const fetchArticleBySlug = async (slug: string): Promise<Article | null> 
 export const saveArticle = async (article: Partial<Article>): Promise<Article | null> => {
   const isNew = !article.id;
   
+  // Get current user and add user_id if not present
+  if (isNew && !article.user_id) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      article.user_id = user.id;
+    }
+  }
+  
   const { data, error } = isNew
     ? await supabase.from('articles').insert([article]).select().single()
     : await supabase.from('articles').update(article).eq('id', article.id).select().single();
@@ -211,6 +219,14 @@ export const saveStatistic = async (stat: Partial<Statistic>): Promise<Statistic
   // Map summary back to short_desc
   const { summary, ...rest } = stat;
   const dbData = { ...rest, short_desc: summary };
+
+  // Get current user and add user_id if not present
+  if (isNew && !dbData.user_id) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      dbData.user_id = user.id;
+    }
+  }
 
   const { data, error } = isNew
     ? await supabase.from('statistics').insert([dbData]).select().single()

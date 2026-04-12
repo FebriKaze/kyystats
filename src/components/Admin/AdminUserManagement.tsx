@@ -240,7 +240,7 @@ const AdminUserManagement: React.FC = () => {
                 <X size={20} />
               </button>
 
-              <div className="md:w-2/5 relative bg-slate-100 dark:bg-slate-800 min-h-[300px]">
+              <div className="md:w-2/5 relative bg-slate-100 dark:bg-slate-800 min-h-75">
                  <SafeImage src={selectedContent.thumbnail_url || selectedContent.image_url} className="w-full h-full object-cover" />
                  <div className="absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-10">
                     <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-3">{selectedContent.category}</span>

@@ -9,6 +9,7 @@ import {
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { supabase } from '../../lib/supabase';
+import { showToast } from '../Common/Toast';
 
 interface AdminEditorProps {
   type: 'articles' | 'portfolio' | 'statistics';
@@ -30,6 +31,14 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
     e.preventDefault();
     setLoading(true);
     try {
+      // Auto-assign user_id for unassigned content
+      if (!formData.user_id) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          formData.user_id = user.id;
+          console.log('Auto-assigned user_id:', user.id);
+        }
+      }
       await onSave(formData);
     } finally {
       setLoading(false);
@@ -83,7 +92,7 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
       insertMarkdown(`\n![Image](${publicUrl})\n`, '');
       
     } catch (error: any) {
-      alert('Gagal mengupload gambar: ' + error.message);
+      showToast('error', 'Gagal mengupload gambar: ' + error.message);
     } finally {
       setInlineUploading(false);
       if (contentFileRef.current) contentFileRef.current.value = '';
@@ -117,7 +126,7 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
       else setFormData({...formData, image_url: publicUrl});
       
     } catch (error: any) {
-      alert('Gagal mengupload gambar sampul: ' + error.message);
+      showToast('error', 'Gagal mengupload gambar sampul: ' + error.message);
     } finally {
       setUploading(false);
     }
@@ -241,7 +250,7 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
                   </div>
 
                   {isPreview ? (
-                    <div className="w-full min-h-[500px] bg-white dark:bg-slate-950 py-12 px-14 prose prose-slate dark:prose-invert max-w-none prose-sm md:prose-base overflow-y-auto selection:bg-primary/20">
+                    <div className="w-full min-h-125 bg-white dark:bg-slate-950 py-12 px-14 prose prose-slate dark:prose-invert max-w-none prose-sm md:prose-base overflow-y-auto selection:bg-primary/20">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {type === 'portfolio' ? formData.details?.challenge : formData.content || '*Konten masih kosong...*'}
                       </ReactMarkdown>
@@ -260,7 +269,7 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
                           setFormData({...formData, content: e.target.value});
                         }
                       }}
-                      className="w-full bg-transparent py-10 px-12 text-sm dark:text-white focus:outline-none font-mono leading-relaxed resize-y min-h-[400px]"
+                      className="w-full bg-transparent py-10 px-12 text-sm dark:text-white focus:outline-none font-mono leading-relaxed resize-y min-h-100"
                     />
                   )}
                 </div>
@@ -329,7 +338,7 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
                 <button 
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-primary text-white py-5 rounded-2xl font-black text-xs tracking-widest uppercase shadow-xl shadow-primary/30 flex items-center justify-center gap-3 hover:translate-y-[-2px] hover:shadow-2xl transition-all active:scale-95"
+                  className="w-full bg-primary text-white py-5 rounded-2xl font-black text-xs tracking-widest uppercase shadow-xl shadow-primary/30 flex items-center justify-center gap-3 hover:-translate-y-0.5 hover:shadow-2xl transition-all active:scale-95"
                 >
                   {loading ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
                   DITERBITKAN SEKARANG

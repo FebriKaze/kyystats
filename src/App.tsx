@@ -11,6 +11,7 @@ import Login from './components/Admin/Login';
 import ResetPassword from './components/Admin/ResetPassword';
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import AuthorPage from './components/Author/AuthorPage';
+import { ToastContainer } from './components/Common/Toast';
 import { Project, FeaturedProject, Article, Statistic } from './types';
 import { fetchPortfolios, fetchFeaturedProjects, fetchArticles, fetchStatistics } from './services/portfolioService';
 import { supabase } from './lib/supabase';
@@ -182,13 +183,14 @@ function AppContent() {
         isOpen={!!selectedProject} 
         onClose={() => setSelectedProject(null)} 
       />
+      <ToastContainer />
 
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsContactOpen(true)}
         className={`fixed bottom-8 right-8 z-40 bg-primary text-white pl-6 pr-5 py-4 rounded-full shadow-2xl shadow-primary/40 flex items-center gap-3 group transition-all ${
-          isAdminPage ? 'hidden' : 'flex'
+          isAdminPage ? 'hidden' : location.pathname === '/' ? 'flex md:flex' : 'hidden md:flex'
         }`}
       >
         <span className="text-sm font-bold tracking-tight">Let's Collaborate</span>

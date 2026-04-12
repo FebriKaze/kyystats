@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { showToast } from '../Common/Toast';
 import { supabase } from '../../lib/supabase';
 import { Mail, Phone, MapPin, Briefcase, Info, Lock, Check, Loader2, Camera, Instagram, Twitter, Linkedin } from 'lucide-react';
 import ProfileAvatar from '../Common/ProfileAvatar';
@@ -87,9 +88,9 @@ const AdminProfile: React.FC = () => {
         .getPublicUrl(filePath);
 
       setProfile({ ...profile, avatar_url: publicUrl });
-      alert('Foto berhasil diunggah!');
+      showToast('success', 'Foto berhasil diunggah!');
     } catch (error: any) {
-      alert(error.message);
+      showToast('error', error.message);
     } finally {
       setUploading(false);
     }
@@ -105,9 +106,9 @@ const AdminProfile: React.FC = () => {
         updated_at: new Date()
       });
       if (error) throw error;
-      alert('Profil berhasil diperbarui!');
+      showToast('success', 'Profil berhasil diperbarui!');
     } catch (err: any) {
-      alert('Gagal memperbarui profil: ' + err.message);
+      showToast('error', 'Gagal memperbarui profil: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -116,7 +117,7 @@ const AdminProfile: React.FC = () => {
   const updatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password.new !== password.confirm) {
-        alert('Konfirmasi sandi baru tidak cocok!');
+        showToast('warning', 'Konfirmasi sandi baru tidak cocok!');
         return;
     }
     setLoading(true);
@@ -124,9 +125,9 @@ const AdminProfile: React.FC = () => {
         password: password.new 
     });
     if (error) {
-        alert(error.message);
+        showToast('error', error.message);
     } else {
-        alert('Kata sandi berhasil diganti!');
+        showToast('success', 'Kata sandi berhasil diganti!');
         setPassword({ old: '', new: '', confirm: '' });
     }
     setLoading(false);
@@ -360,7 +361,7 @@ const AdminProfile: React.FC = () => {
 
            {/* Informational Widget */}
            <div className="bg-blue-600 p-8 rounded-4xl text-white shadow-xl shadow-blue-600/20 relative overflow-hidden group">
-              <div className="absolute right-[-10px] top-[-10px] opacity-10 group-hover:scale-110 transition-transform duration-700">
+              <div className="absolute -right-2.5 -top-2.5 opacity-10 group-hover:scale-110 transition-transform duration-700">
                 <Lock size={120} />
               </div>
               <h4 className="text-xl font-black tracking-tight leading-tight">Keamanan Akun</h4>
