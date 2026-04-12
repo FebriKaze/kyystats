@@ -7,6 +7,7 @@ import logoDark from '../img/logo_dark.webp';
 import { ThemeToggle } from './ThemeToggle';
 import { supabase } from '../../lib/supabase';
 import SafeImage from '../Common/SafeImage';
+import ProfileAvatar from '../Common/ProfileAvatar';
 
 interface NavbarProps {
   onContactClick: () => void;
@@ -90,15 +91,14 @@ const Navbar: React.FC<NavbarProps> = ({ onContactClick, onNavigate, currentPage
               <div className="relative">
                 <button 
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20 hover:border-primary transition-all active:scale-95 bg-slate-100 dark:bg-slate-800"
+                  className="h-10 w-10 overflow-hidden rounded-full border-2 border-primary/20 transition-all hover:border-primary active:scale-95"
                 >
-                  {userProfile?.avatar_url ? (
-                    <img src={userProfile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-400">
-                      <User size={20} />
-                    </div>
-                  )}
+                  <ProfileAvatar
+                    src={userProfile?.avatar_url}
+                    alt={userProfile?.full_name || 'Profil'}
+                    className="h-full w-full rounded-full"
+                    iconSize={20}
+                  />
                 </button>
 
                 <AnimatePresence>

@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { User, Trash2, FileText, BarChart3, Search, ShieldCheck, ChevronDown, ChevronUp, Eye, Filter, Calendar, X, TrendingUp } from 'lucide-react';
 import { fetchArticles, fetchStatistics, deleteArticle, deleteStatistic } from '../../services/portfolioService';
 import SafeImage from '../Common/SafeImage';
+import ProfileAvatar from '../Common/ProfileAvatar';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const AdminUserManagement: React.FC = () => {
@@ -142,9 +143,12 @@ const AdminUserManagement: React.FC = () => {
                     >
                       <td className="px-8 py-6">
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white dark:border-slate-800 shadow-lg bg-slate-100">
-                            <SafeImage src={u.avatar_url || `https://ui-avatars.com/api/?name=${u.full_name}&background=random`} className="w-full h-full object-cover" />
-                          </div>
+                          <ProfileAvatar
+                            src={u.avatar_url}
+                            alt={u.full_name || 'Kontributor'}
+                            className="h-12 w-12 rounded-full border-2 border-white shadow-lg dark:border-slate-800"
+                            iconSize={24}
+                          />
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="font-black text-slate-900 dark:text-white uppercase tracking-tighter">{u.full_name}</span>

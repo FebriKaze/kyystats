@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { User, Mail, Phone, MapPin, Briefcase, Info, Lock, Check, Loader2, Camera } from 'lucide-react';
+import { Mail, Phone, MapPin, Briefcase, Info, Lock, Check, Loader2, Camera } from 'lucide-react';
+import ProfileAvatar from '../Common/ProfileAvatar';
 
 const AdminProfile: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -158,10 +159,13 @@ const AdminProfile: React.FC = () => {
                   <div className="w-24 h-24 rounded-3xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-center overflow-hidden relative group">
                     {uploading ? (
                       <Loader2 className="animate-spin text-primary" size={24} />
-                    ) : profile.avatar_url ? (
-                      <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
-                      <User size={40} className="text-slate-300" />
+                      <ProfileAvatar
+                        src={profile.avatar_url}
+                        alt={profile.full_name || 'Profil'}
+                        className="h-full w-full rounded-3xl"
+                        iconSize={40}
+                      />
                     )}
                     <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
                       <Camera size={20} className="text-white" />

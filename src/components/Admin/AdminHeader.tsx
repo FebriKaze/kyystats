@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, Bell, User, LayoutDashboard, FileText, Settings, LogOut } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import ProfileAvatar from '../Common/ProfileAvatar';
 
 import logoLight from '../img/ky_stat_logo.webp';
 import logoDark from '../img/logo_dark.webp';
@@ -139,15 +140,12 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onNavigate, activeView }) => 
                   {profile?.role === 'owner' ? 'Owner Account' : 'Contributor'}
                 </p>
               </div>
-              <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-slate-100 dark:border-slate-800 bg-slate-100 group-hover:border-primary transition-colors">
-                {profile?.avatar_url ? (
-                  <img src={profile.avatar_url} className="w-full h-full object-cover" alt="" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-primary text-white font-black text-xs">
-                    {profile?.full_name?.[0] || 'A'}
-                  </div>
-                )}
-              </div>
+              <ProfileAvatar
+                src={profile?.avatar_url}
+                alt={profile?.full_name || 'Admin'}
+                className="h-10 w-10 rounded-full border-2 border-slate-100 group-hover:border-primary dark:border-slate-800"
+                iconSize={20}
+              />
             </div>
 
             {isProfileOpen && (

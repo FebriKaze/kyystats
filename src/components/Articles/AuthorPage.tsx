@@ -5,6 +5,7 @@ import { ArrowLeft, Mail, MapPin, Briefcase, Calendar, FileText, BarChart3, Glob
 import { supabase } from '../../lib/supabase';
 import { Article, Statistic } from '../../types';
 import SafeImage from '../Common/SafeImage';
+import ProfileAvatar from '../Common/ProfileAvatar';
 import { fetchArticles, fetchStatistics } from '../../services/portfolioService';
 
 const AuthorPage: React.FC = () => {
@@ -78,13 +79,12 @@ const AuthorPage: React.FC = () => {
               <div className="absolute top-0 left-0 w-full h-2 bg-primary"></div>
               
               <div className="flex flex-col items-center text-center">
-                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-slate-50 dark:border-slate-800 shadow-xl mb-6 bg-slate-100 dark:bg-slate-800">
-                  <SafeImage 
-                    src={profile.avatar_url || `https://ui-avatars.com/api/?name=${profile.full_name}&background=random`} 
-                    alt={profile.full_name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+                <ProfileAvatar
+                  src={profile.avatar_url}
+                  alt={profile.full_name || 'Penulis'}
+                  className="mb-6 h-32 w-32 rounded-full border-4 border-slate-50 shadow-xl dark:border-slate-800"
+                  iconSize={52}
+                />
                 
                 <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter mb-2 uppercase">
                   {profile.full_name}
