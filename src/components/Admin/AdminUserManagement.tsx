@@ -91,6 +91,23 @@ const AdminUserManagement: React.FC = () => {
     ];
   };
 
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-2xl">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></div>
+            <p className="text-lg font-black dark:text-white uppercase tracking-tighter">
+              {payload[0].value} <span className="text-[10px] text-purple-500/70">Views</span>
+            </p>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
   const filteredUsers = users.filter(u => 
     u.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     u.email?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -284,7 +301,7 @@ const AdminUserManagement: React.FC = () => {
                           </defs>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" opacity={0.1} />
                           <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{fontSize: 9, fontWeight: 900, fill: '#64748B'}} dy={10} />
-                          <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', fontWeight: 900, fontSize: '10px' }} />
+                          <Tooltip content={<CustomTooltip />} />
                           <Area type="monotone" dataKey="views" stroke="#8b5cf6" strokeWidth={4} fillOpacity={1} fill="url(#colorViews)" />
                        </AreaChart>
                     </ResponsiveContainer>

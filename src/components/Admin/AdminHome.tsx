@@ -27,6 +27,7 @@ interface AdminHomeProps {
   profile?: any;
   rawViews?: any[];
   currentUserId?: string;
+  onEdit?: (type: 'articles' | 'statistics', item: any) => void;
 }
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -46,7 +47,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-const AdminHome: React.FC<AdminHomeProps> = ({ stats, popularArticles, items, profile, rawViews = [], currentUserId }) => {
+const AdminHome: React.FC<AdminHomeProps> = ({ stats, popularArticles, items, profile, rawViews = [], currentUserId, onEdit }) => {
   const [popularFilter, setPopularFilter] = useState<'Semua' | 'Artikel' | 'Statistik'>('Semua');
   const [startDate, setStartDate] = useState(() => {
     const d = new Date();
@@ -199,7 +200,7 @@ const AdminHome: React.FC<AdminHomeProps> = ({ stats, popularArticles, items, pr
             </div>
           </div>
 
-          <div className="h-[300px] md:h-[350px] w-full mt-4">
+          <div className="h-75 md:h-87.5 w-full mt-4">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData}>
                 <defs>
@@ -249,7 +250,16 @@ const AdminHome: React.FC<AdminHomeProps> = ({ stats, popularArticles, items, pr
 
           <div className="space-y-4">
             {filteredPopular.length > 0 ? filteredPopular.map((item, idx) => (
-              <div key={item.id} className="group cursor-pointer">
+              <div 
+                key={item.id} 
+                className="group cursor-pointer"
+                onClick={() => {
+                  if (onEdit) {
+                    const type = item.type === 'Artikel' ? 'articles' : 'statistics';
+                    onEdit(type, item);
+                  }
+                }}
+              >
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0 border border-slate-100 dark:border-slate-800 shadow-sm relative">
                     <SafeImage 

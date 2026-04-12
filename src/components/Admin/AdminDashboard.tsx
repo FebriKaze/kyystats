@@ -161,6 +161,7 @@ const AdminDashboard: React.FC = () => {
           profile={userProfile}
           rawViews={rawViews}
           currentUserId={uid}
+          onEdit={(type, item) => handleEdit(type, item)}
         />;
       case 'manage-articles':
         const hasUnassignedArticles = articles.some(a => !a.user_id);
