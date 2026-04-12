@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Mail, Phone, MapPin, Briefcase, Info, Lock, Check, Loader2, Camera } from 'lucide-react';
+import { Mail, Phone, MapPin, Briefcase, Info, Lock, Check, Loader2, Camera, Instagram, Twitter, Linkedin } from 'lucide-react';
 import ProfileAvatar from '../Common/ProfileAvatar';
 
 const AdminProfile: React.FC = () => {
@@ -18,7 +18,10 @@ const AdminProfile: React.FC = () => {
     work_field: '',
     job: '',
     position: '',
-    bio: ''
+    bio: '',
+    instagram_url: '',
+    twitter_url: '',
+    linkedin_url: ''
   });
 
   const [password, setPassword] = useState({
@@ -45,7 +48,13 @@ const AdminProfile: React.FC = () => {
         .single();
       
       if (data) {
-        setProfile(prev => ({ ...prev, ...data }));
+        setProfile(prev => ({
+          ...prev,
+          ...data,
+          instagram_url: data.instagram_url ?? '',
+          twitter_url: data.twitter_url ?? '',
+          linkedin_url: data.linkedin_url ?? ''
+        }));
         const standardFields = ['Data Analytics', 'Software Engineering', 'UI/UX Design', 'Marketing'];
         if (data.work_field && !standardFields.includes(data.work_field)) {
           setIsOtherWorkField(true);
@@ -258,6 +267,54 @@ const AdminProfile: React.FC = () => {
                     <label className="text-xs font-black uppercase tracking-widest text-slate-400">Bio</label>
                     <textarea rows={4} value={profile.bio} onChange={(e) => setProfile({...profile, bio: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-3 px-4 text-sm dark:text-white" />
                  </div>
+              </div>
+
+              <div className="pt-8 border-t border-slate-50 dark:border-slate-800 space-y-4">
+                <h4 className="text-sm font-black uppercase tracking-widest text-slate-400">Tautan media sosial</h4>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed -mt-2">
+                  Tampil di halaman profil publik penulis. Gunakan URL lengkap (mis. https://instagram.com/username).
+                </p>
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400">
+                      <Instagram size={14} className="text-primary shrink-0" /> Instagram
+                    </label>
+                    <input
+                      type="url"
+                      inputMode="url"
+                      placeholder="https://www.instagram.com/username"
+                      value={profile.instagram_url}
+                      onChange={(e) => setProfile({ ...profile, instagram_url: e.target.value })}
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-3 px-4 text-sm dark:text-white focus:ring-2 focus:ring-primary/20 outline-none"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400">
+                      <Twitter size={14} className="text-primary shrink-0" /> Twitter / X
+                    </label>
+                    <input
+                      type="url"
+                      inputMode="url"
+                      placeholder="https://twitter.com/username atau https://x.com/username"
+                      value={profile.twitter_url}
+                      onChange={(e) => setProfile({ ...profile, twitter_url: e.target.value })}
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-3 px-4 text-sm dark:text-white focus:ring-2 focus:ring-primary/20 outline-none"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400">
+                      <Linkedin size={14} className="text-primary shrink-0" /> LinkedIn
+                    </label>
+                    <input
+                      type="url"
+                      inputMode="url"
+                      placeholder="https://www.linkedin.com/in/username"
+                      value={profile.linkedin_url}
+                      onChange={(e) => setProfile({ ...profile, linkedin_url: e.target.value })}
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-3 px-4 text-sm dark:text-white focus:ring-2 focus:ring-primary/20 outline-none"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="pt-8 flex justify-end gap-3">
