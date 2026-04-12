@@ -27,7 +27,6 @@ interface AdminHomeProps {
   profile?: any;
   rawViews?: any[];
   currentUserId?: string;
-  onEdit?: (type: 'articles' | 'statistics', item: any) => void;
 }
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -47,7 +46,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-const AdminHome: React.FC<AdminHomeProps> = ({ stats, popularArticles, items, profile, rawViews = [], currentUserId, onEdit }) => {
+const AdminHome: React.FC<AdminHomeProps> = ({ stats, popularArticles, items, profile, rawViews = [], currentUserId }) => {
   const [popularFilter, setPopularFilter] = useState<'Semua' | 'Artikel' | 'Statistik'>('Semua');
   const [startDate, setStartDate] = useState(() => {
     const d = new Date();
@@ -254,9 +253,11 @@ const AdminHome: React.FC<AdminHomeProps> = ({ stats, popularArticles, items, pr
                 key={item.id} 
                 className="group cursor-pointer"
                 onClick={() => {
-                  if (onEdit) {
-                    const type = item.type === 'Artikel' ? 'articles' : 'statistics';
-                    onEdit(type, item);
+                  // Open content in new tab
+                  if (item.type === 'Artikel') {
+                    window.open(`/articles/${item.slug}`, '_blank');
+                  } else if (item.type === 'Statistik') {
+                    window.open(`/statistik/${item.id}`, '_blank');
                   }
                 }}
               >
