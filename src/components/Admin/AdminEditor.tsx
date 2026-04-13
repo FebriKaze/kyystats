@@ -496,48 +496,53 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
              </div>
 
              <div className="space-y-4">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Gambar Sampul Utama</label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Gambar Sampul Utama</label>
+                  <span className="text-[8px] font-bold text-primary px-2 py-0.5 bg-primary/10 rounded">BISA PASTE LINK FLOURISH</span>
+                </div>
+
+                <input 
+                  type="text"
+                  value={formData.thumbnail_url || ""}
+                  onChange={(e) => setFormData({...formData, thumbnail_url: e.target.value})}
+                  placeholder="Paste link Flourish, MP4, atau URL Gambar..."
+                  className="w-full bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 dark:border-slate-800 rounded-2xl py-4 px-6 text-sm dark:text-white font-bold focus:border-primary transition-all outline-none mb-2"
+                />
                 <div className="aspect-16/10 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center gap-3 overflow-hidden group relative transition-all hover:bg-slate-100 dark:hover:bg-slate-900">
-                   {(formData.thumbnail_url || formData.image || formData.image_url) ? (
+                   {formData.thumbnail_url ? (
                      <>
-                        <img src={formData.thumbnail_url || formData.image || formData.image_url} alt="" className="w-full h-full object-cover" />
+                        {(() => {
+                          const isVideo = /\.(mp4|webm|ogg|mov)$/i.test(formData.thumbnail_url);
+                          const isFlourish = /public\.flourish\.studio\/visualisation\/(\d+)/.test(formData.thumbnail_url);
+                          
+                          if (isFlourish) {
+                            const flourishId = formData.thumbnail_url.match(/visualisation\/(\d+)/)?.[1];
+                            return (
+                              <iframe 
+                                src={}
+                                className="w-full h-full border-0 pointer-events-none"
+                                scrolling="no"
+                              />
+                            );
+                          }
+
+                          if (isVideo) {
+                            return <video src={formData.thumbnail_url} className="w-full h-full object-cover" muted autoPlay loop />;
+                          }
+                          
+                          return <img src={formData.thumbnail_url} alt="" className="w-full h-full object-cover" />;
+                        })()}
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                           <input type="file" accept="image/*" onChange={uploadCoverImage} className="absolute inset-0 opacity-0 cursor-pointer" />
+                           <input type="file" onChange={uploadCoverImage} className="absolute inset-0 opacity-0 cursor-pointer" />
                            <button type="button" className="p-4 bg-white rounded-2xl text-primary font-black text-[10px] uppercase shadow-2xl transition-transform active:scale-90">Ganti Gambar</button>
                         </div>
                      </>
                    ) : (
                      <div className="relative w-full h-full flex flex-col items-center justify-center">
-                        <input type="file" accept="image/*" onChange={uploadCoverImage} className="absolute inset-0 opacity-0 cursor-pointer" />
+                        <input type="file" onChange={uploadCoverImage} className="absolute inset-0 opacity-0 cursor-pointer" />
                         <ImageIcon size={40} className="text-slate-300 mb-2" />
-                        <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">{uploading ? 'MEMPROSES...' : 'UPLOAD SAMPUL'}</p>
+                        <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase text-center px-4">
+                          {uploading ? 'MEMPROSES...' : 'UPLOAD SAMPUL ATAU PASTE LINK DI ATAS'}
+                        </p>
                      </div>
                    )}
-                </div>
-             </div>
-
-             <div className="pt-8 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-3">
-                <button 
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-primary text-white py-5 rounded-2xl font-black text-xs tracking-widest uppercase shadow-xl shadow-primary/30 flex items-center justify-center gap-3 hover:-translate-y-0.5 hover:shadow-2xl transition-all active:scale-95"
-                >
-                  {loading ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
-                  DITERBITKAN SEKARANG
-                </button>
-                <button 
-                  type="button" 
-                  onClick={onCancel}
-                  className="w-full bg-slate-100 dark:bg-slate-800 text-slate-500 py-5 rounded-2xl font-black text-xs tracking-widest uppercase transition-all hover:bg-slate-200 dark:hover:bg-slate-700"
-                >
-                  BATALKAN
-                </button>
-             </div>
-          </div>
-        </div>
-      </form>
-    </div>
-  );
-};
-
-export default AdminEditor;
