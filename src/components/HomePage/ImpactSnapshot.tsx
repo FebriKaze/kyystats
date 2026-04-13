@@ -94,7 +94,7 @@ const ImpactSnapshot: React.FC<ImpactSnapshotProps> = ({ projects }) => {
           onMouseLeave={() => setIsAutoPlaying(true)}
         >
           {/* Main Featured Analysis Slide */}
-          <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden min-h-[500px] md:min-h-[600px] flex flex-col">
+          <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden min-h-125 md:min-h-150 flex flex-col">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentProject.id}

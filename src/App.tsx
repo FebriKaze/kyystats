@@ -206,7 +206,14 @@ function ArticleDetailWrapper({ articles, onBack, onArticleClick }: any) {
   const decodedSlug = decodeURIComponent(slug || '');
   const article = articles.find((a: any) => a.slug === decodedSlug || a.slug === slug);
   const navigate = useNavigate();
-  if (!article) return <div className="pt-32 text-center">Article not found</div>;
+  if (!article) return (
+    <div className="pt-32 flex justify-center items-center min-h-[50vh]">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+        <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Loading artikel...</p>
+      </div>
+    </div>
+  );
   return (
     <ArticleDetail 
       article={article} 
@@ -224,7 +231,14 @@ function StatistikDetailWrapper({ statistics }: any) {
   const { id } = useParams();
   const statistic = statistics.find((s: any) => s.id === id);
   const navigate = useNavigate();
-  if (!statistic) return <div className="pt-32 text-center">Statistic not found</div>;
+  if (!statistic) return (
+    <div className="pt-32 flex justify-center items-center min-h-[50vh]">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+        <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Loading statistik...</p>
+      </div>
+    </div>
+  );
   return (
     <StatistikDetail 
       item={statistic} 

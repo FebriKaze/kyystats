@@ -44,7 +44,7 @@ const Hero: React.FC = () => {
         >
           <a
             href="#projects"
-            className="w-full sm:w-auto px-8 py-4 bg-primary text-white rounded-full font-bold text-base shadow-xl shadow-primary/30 flex items-center justify-center gap-2 hover:translate-y-[-2px] transition-all active:scale-95"
+            className="w-full sm:w-auto px-8 py-4 bg-primary text-white rounded-full font-bold text-base shadow-xl shadow-primary/30 flex items-center justify-center gap-2 hover:translate-y-0.5 transition-all active:scale-95"
           >
             Lihat Portfolio <ArrowDown size={18} />
           </a>
