@@ -92,6 +92,12 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ article, articles, onBack
               </div>
             </header>
 
+            {article.intro_text && (
+              <div className="prose prose-slate dark:prose-invert max-w-none pt-2 pb-6 border-b border-slate-100 dark:border-slate-800 mb-8 prose-p:leading-relaxed prose-headings:mb-4">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{article.intro_text}</ReactMarkdown>
+              </div>
+            )}
+
             <div className="relative w-full rounded-3xl md:rounded-4xl overflow-hidden bg-slate-50 dark:bg-slate-900/50 shadow-2xl border border-slate-100 dark:border-slate-800">
               {flourishId ? (
                 <div className="relative w-full min-h-[500px] md:min-h-[650px]">

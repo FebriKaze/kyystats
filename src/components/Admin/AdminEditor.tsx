@@ -51,15 +51,10 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
 
   const handleChartUpdate = (chartInfo: any) => setChartData(chartInfo);
 
-  const insertMarkdown = (before: string, after: string = '') => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const text = type === 'portfolio' ? formData.details?.challenge : formData.content || '';
-    const newVal = text.substring(0, start) + before + text.substring(start, end) + after + text.substring(end);
-    if (type === 'portfolio') setFormData({...formData, details: {...formData.details, challenge: newVal}});
-    else setFormData({...formData, content: newVal});
+  const insertMarkdown = (field: string, before: string, after: string = '') => {
+    const text = (formData as any)[field] || '';
+    const newVal = before + text + after;
+    setFormData({ ...formData, [field]: newVal });
   };
 
   const handleInlineImageUpload = async (event: any) => {
@@ -71,7 +66,7 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
       const bucket = type === 'portfolio' || type === 'featured' ? 'portfolio-images' : 'article-images';
       await supabase.storage.from(bucket).upload(`inline/${fileName}`, file);
       const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(`inline/${fileName}`);
-      insertMarkdown(`\n![Image](${publicUrl})\n`, '');
+      insertMarkdown('content', `\n![Image](${publicUrl})\n`, '');
     } catch (err: any) { showToast('error', err.message); } finally { setInlineUploading(false); }
   };
 
@@ -117,15 +112,33 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
           <div className="bg-white dark:bg-slate-900 p-10 rounded-4xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-8">
              <div className="space-y-3">
                 <label className="text-[10px] font-black uppercase text-slate-400">Judul Konten *</label>
-                <input required value={formData.title || ''} onChange={(e) => setFormData({...formData, title: e.target.value, slug: (!item.id || !formData.slug) ? slugify(e.target.value) : formData.slug})} placeholder="Masukkan judul..." className="w-full bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 rounded-2xl py-5 px-8 text-base dark:text-white font-bold" />
+                <input required value={formData.title || ''} onChange={(e) => setFormData({...formData, title: e.target.value, slug: (!item.id || !formData.slug) ? slugify(e.target.value) : formData.slug})} placeholder="Masukkan judul..." className="w-full bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 dark:border-slate-800 rounded-2xl py-5 px-8 text-base dark:text-white font-bold focus:border-primary transition-all" />
+             </div>
+
+             <div className="bg-slate-50 dark:bg-slate-950 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 space-y-4">
+                 <div className="flex items-center justify-between">
+                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Teks Intro (Di Atas Media)</label>
+                     <div className="flex items-center gap-1 bg-white dark:bg-slate-900 p-1 rounded-xl shadow-sm">
+                         <button type="button" onClick={() => insertMarkdown('intro_text', '# ')} className="p-1.5 hover:bg-primary/10 rounded-lg transition-all text-slate-400 hover:text-primary"><Heading2 size={16} /></button>
+                         <button type="button" onClick={() => insertMarkdown('intro_text', '**', '**')} className="p-1.5 hover:bg-primary/10 rounded-lg transition-all text-slate-400 hover:text-primary"><Bold size={16} /></button>
+                         <button type="button" onClick={() => insertMarkdown('intro_text', '_', '_')} className="p-1.5 hover:bg-primary/10 rounded-lg transition-all text-slate-400 hover:text-primary"><Italic size={16} /></button>
+                     </div>
+                 </div>
+                 <textarea 
+                     value={formData.intro_text || ''} 
+                     onChange={(e) => setFormData({...formData, intro_text: e.target.value})}
+                     placeholder="Tambahkan teks pengantar di sini (heading, bold, italic)..."
+                     rows={3}
+                     className="w-full bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all dark:text-white"
+                 />
              </div>
              
              <div className="space-y-3">
                 <label className="text-[10px] font-black uppercase text-slate-400">Badan Konten *</label>
                 <div className="border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden bg-white dark:bg-slate-950">
                   <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 flex flex-wrap items-center gap-2">
-                    <button type="button" onClick={() => insertMarkdown('# ', '')} className="p-2"><Heading1 size={18} /></button>
-                    <button type="button" onClick={() => insertMarkdown('**', '**')} className="p-2"><Bold size={18} /></button>
+                    <button type="button" onClick={() => insertMarkdown('content', '# ', '')} className="p-2 text-slate-400 hover:text-primary"><Heading1 size={18} /></button>
+                    <button type="button" onClick={() => insertMarkdown('content', '**', '**')} className="p-2 text-slate-400 hover:text-primary"><Bold size={18} /></button>
                     <button type="button" onClick={() => contentFileRef.current?.click()} className="p-2"><Upload size={18} /></button>
                     <input type="file" ref={contentFileRef} onChange={handleInlineImageUpload} className="hidden" accept="image/*" />
                     <div className="flex-1"></div>

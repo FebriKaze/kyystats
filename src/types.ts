@@ -35,6 +35,7 @@ export interface Article {
   content: string;
   category: string;
   thumbnail_url: string;
+  intro_text?: string;
   author: string;
   is_published: boolean;
   views?: number;
