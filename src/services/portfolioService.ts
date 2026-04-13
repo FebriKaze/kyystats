@@ -207,18 +207,38 @@ export const fetchStatistics = async (onlyPublished = true): Promise<Statistic[]
     return url;
   };
 
-  return data.map((row: any) => ({
-    ...row,
-    image_url: ensureWebp(row.image_url || ''),
-    summary: row.short_desc || ''
-  })) as Statistic[];
+  return data.map((row: any) => {
+    const stat = {
+      ...row,
+      image_url: ensureWebp(row.image_url || ''),
+      summary: row.short_desc || ''
+    };
+    
+    // Parse chart_data if exists
+    if (row.chart_data) {
+      try {
+        stat.chart_data = JSON.parse(row.chart_data);
+      } catch (e) {
+        console.error('Error parsing chart_data:', e);
+        stat.chart_data = null;
+      }
+    }
+    
+    return stat as Statistic;
+  });
 };
 
 export const saveStatistic = async (stat: Partial<Statistic>): Promise<Statistic | null> => {
   const isNew = !stat.id;
-  // Map summary back to short_desc
-  const { summary, ...rest } = stat;
-  const dbData = { ...rest, short_desc: summary };
+  // Map summary back to short_desc and handle chart_data
+  const { summary, chart_data, ...rest } = stat;
+  const dbData = { 
+    ...rest, 
+    short_desc: summary,
+    chart_data: chart_data ? JSON.stringify(chart_data) : null
+  };
+
+  console.log('Saving statistic with data:', dbData);
 
   // Get current user and add user_id if not present
   if (isNew && !dbData.user_id) {
@@ -236,6 +256,12 @@ export const saveStatistic = async (stat: Partial<Statistic>): Promise<Statistic
     console.error('Error saving statistic:', error);
     throw error;
   }
+  
+  // Parse chart_data back if exists
+  if (data && data.chart_data) {
+    data.chart_data = JSON.parse(data.chart_data);
+  }
+  
   return data as Statistic;
 };
 
