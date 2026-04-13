@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  Cell, Legend 
+  Cell, Legend, Label, LabelList 
 } from 'recharts';
 import { 
   Upload, FileSpreadsheet, Download, Share2, Copy, 
@@ -25,6 +25,8 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
   const [chartData, setChartData] = useState<ChartData[]>(initialData);
   const [chartTitle, setChartTitle] = useState('Statistik Performa');
   const [chartSource, setChartSource] = useState('Data Internal');
+  const [xAxisTitle, setXAxisTitle] = useState('Tahun');
+  const [yAxisTitle, setYAxisTitle] = useState('Inflasi');
   const [dataSource, setDataSource] = useState<'upload' | 'manual'>('manual');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -174,6 +176,8 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
       const chartInfo = {
         title: chartTitle,
         sourceText: chartSource,
+        xAxisTitle,
+        yAxisTitle,
         data,
         source: 'upload' as const,
         originalFile: {
@@ -206,7 +210,7 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
     const newData = [...chartData, newItem];
     setChartData(newData);
     setDataSource('manual');
-    onChartUpdate({ title: chartTitle, sourceText: chartSource, data: newData, source: 'manual' });
+    onChartUpdate({ title: chartTitle, sourceText: chartSource, xAxisTitle, yAxisTitle, data: newData, source: 'manual' });
   };
 
   // Update manual data
@@ -218,14 +222,14 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
       newData[index].value = Number(value);
     }
     setChartData(newData);
-    onChartUpdate({ title: chartTitle, sourceText: chartSource, data: newData, source: 'manual' });
+    onChartUpdate({ title: chartTitle, sourceText: chartSource, xAxisTitle, yAxisTitle, data: newData, source: 'manual' });
   };
 
   // Delete data
   const deleteData = (index: number) => {
     const newData = chartData.filter((_, i) => i !== index);
     setChartData(newData);
-    onChartUpdate({ title: chartTitle, sourceText: chartSource, data: newData, source: dataSource });
+    onChartUpdate({ title: chartTitle, sourceText: chartSource, xAxisTitle, yAxisTitle, data: newData, source: dataSource });
   };
 
   // Custom tooltip
@@ -312,11 +316,39 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
                 value={chartSource}
                 onChange={(e) => {
                   setChartSource(e.target.value);
-                  onChartUpdate({ title: chartTitle, sourceText: e.target.value, data: chartData, source: dataSource });
+                  onChartUpdate({ title: chartTitle, sourceText: e.target.value, xAxisTitle, yAxisTitle, data: chartData, source: dataSource });
                 }}
                 className="w-full text-sm font-medium bg-transparent border-b-2 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600 focus:border-primary outline-none transition-colors text-slate-500 pb-1"
                 placeholder="Contoh: BPS RI, 2026"
               />
+            </div>
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-2">Label Sumbu X</label>
+                <input
+                  type="text"
+                  value={xAxisTitle}
+                  onChange={(e) => {
+                    setXAxisTitle(e.target.value);
+                    onChartUpdate({ title: chartTitle, sourceText: chartSource, xAxisTitle: e.target.value, yAxisTitle, data: chartData, source: dataSource });
+                  }}
+                  className="w-full text-xs font-bold bg-transparent border-b border-slate-200 dark:border-slate-800 focus:border-primary outline-none transition-colors dark:text-white pb-1"
+                  placeholder="Contoh: Tahun"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-2">Label Sumbu Y</label>
+                <input
+                  type="text"
+                  value={yAxisTitle}
+                  onChange={(e) => {
+                    setYAxisTitle(e.target.value);
+                    onChartUpdate({ title: chartTitle, sourceText: chartSource, xAxisTitle, yAxisTitle: e.target.value, data: chartData, source: dataSource });
+                  }}
+                  className="w-full text-xs font-bold bg-transparent border-b border-slate-200 dark:border-slate-800 focus:border-primary outline-none transition-colors dark:text-white pb-1"
+                  placeholder="Contoh: Inflasi (%)"
+                />
+              </div>
             </div>
           </div>
           
@@ -369,7 +401,7 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
         <div ref={chartRef} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6 min-h-100">
           {chartData.length > 0 ? (
             <ResponsiveContainer width="100%" height={350}>
-              <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+              <BarChart data={chartData} margin={{ top: 30, right: 30, left: 20, bottom: 60 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" opacity={0.3} />
                 <XAxis 
                   dataKey="label" 
@@ -377,10 +409,16 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
                   textAnchor="end"
                   height={100}
                   tick={{ fontSize: 11, fontWeight: 600, fill: '#64748B' }}
-                />
-                <YAxis tick={{ fontSize: 11, fontWeight: 600, fill: '#64748B' }} />
+                >
+                  <Label value={xAxisTitle} offset={-40} position="insideBottom" fill="#94A3B8" style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase' }} />
+                </XAxis>
+                <YAxis tick={{ fontSize: 11, fontWeight: 600, fill: '#64748B' }}>
+                  <Label value={yAxisTitle} angle={-90} position="insideLeft" offset={0} style={{ textAnchor: 'middle', fill: '#94A3B8', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase' }} />
+                </YAxis>
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" radius={[8, 8, 0, 0]} fill={chartColor} />
+                <Bar dataKey="value" radius={[8, 8, 0, 0]} fill={chartColor}>
+                   <LabelList dataKey="value" position="top" fill="#64748B" fontSize={11} fontWeight={900} offset={12} />
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           ) : (

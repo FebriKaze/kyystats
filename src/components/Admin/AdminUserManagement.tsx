@@ -4,7 +4,7 @@ import { User, Trash2, FileText, BarChart3, Search, ShieldCheck, ChevronDown, Ch
 import { fetchArticles, fetchStatistics, deleteArticle, deleteStatistic } from '../../services/portfolioService';
 import SafeImage from '../Common/SafeImage';
 import ProfileAvatar from '../Common/ProfileAvatar';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 
 const AdminUserManagement: React.FC = () => {
   const [users, setUsers] = useState<any[]>([]);
@@ -216,8 +216,24 @@ const AdminUserManagement: React.FC = () => {
                                   onClick={() => setSelectedContent(item)}
                                   className="p-4 bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm group cursor-pointer hover:border-primary/30 transition-all flex items-center gap-4"
                                 >
-                                  <div className="w-14 h-14 rounded-2xl overflow-hidden shrink-0 border border-slate-100 dark:border-slate-700">
-                                    <SafeImage src={item.thumbnail_url || item.image_url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                  <div className="w-14 h-14 rounded-2xl overflow-hidden shrink-0 border border-slate-100 dark:border-slate-700 flex items-center justify-center bg-slate-50 dark:bg-slate-900 relative">
+                                    {item.thumbnail_url || item.image_url ? (
+                                      <SafeImage src={item.thumbnail_url || item.image_url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                    ) : item.chart_data && item.chart_data.data ? (
+                                      <div className="w-full h-full p-1 opacity-80 flex items-end justify-center group-hover:scale-110 transition-transform duration-500">
+                                        <ResponsiveContainer width="100%" height="80%">
+                                          <BarChart data={item.chart_data.data.slice(0, 3)} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                                            <Bar dataKey="value" radius={[2, 2, 0, 0]} barSize={6}>
+                                              {item.chart_data.data.slice(0, 3).map((entry: any, i: number) => (
+                                                <Cell key={i} fill={entry.color || '#8b5cf6'} />
+                                              ))}
+                                            </Bar>
+                                          </BarChart>
+                                        </ResponsiveContainer>
+                                      </div>
+                                    ) : (
+                                      <BarChart3 className="text-slate-300 dark:text-slate-700" size={20} />
+                                    )}
                                   </div>
                                   <div className="flex-1 overflow-hidden">
                                     <div className="flex items-center justify-between gap-2">
@@ -257,9 +273,25 @@ const AdminUserManagement: React.FC = () => {
                 <X size={20} />
               </button>
 
-              <div className="md:w-2/5 relative bg-slate-100 dark:bg-slate-800 min-h-75">
-                 <SafeImage src={selectedContent.thumbnail_url || selectedContent.image_url} className="w-full h-full object-cover" />
-                 <div className="absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-10">
+              <div className="md:w-2/5 relative bg-slate-100 dark:bg-slate-900 min-h-75 flex items-center justify-center overflow-hidden">
+                 {selectedContent.thumbnail_url || selectedContent.image_url ? (
+                   <SafeImage src={selectedContent.thumbnail_url || selectedContent.image_url} className="w-full h-full object-cover absolute inset-0" />
+                 ) : selectedContent.chart_data && selectedContent.chart_data.data ? (
+                   <div className="w-full h-full absolute inset-0 flex items-end justify-center opacity-60 pt-20 px-8 pb-8">
+                     <ResponsiveContainer width="100%" height="60%">
+                       <BarChart data={selectedContent.chart_data.data.slice(0, 5)} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                         <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={24}>
+                           {selectedContent.chart_data.data.slice(0, 5).map((entry: any, i: number) => (
+                             <Cell key={i} fill={entry.color || '#8b5cf6'} />
+                           ))}
+                         </Bar>
+                       </BarChart>
+                     </ResponsiveContainer>
+                   </div>
+                 ) : (
+                   <BarChart3 className="text-slate-200 dark:text-slate-800 absolute opacity-50" size={120} />
+                 )}
+                 <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-10 z-10 pointer-events-none">
                     <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-3">{selectedContent.category}</span>
                     <h2 className="text-2xl font-black text-white tracking-tighter leading-tight italic uppercase">{selectedContent.title}</h2>
                  </div>

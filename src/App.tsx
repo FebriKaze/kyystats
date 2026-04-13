@@ -151,11 +151,11 @@ function AppContent() {
             <Route path="/statistik" element={
               <StatistikPage 
                 statistik={statistics} 
-                onStatClick={(item) => navigate(`/statistik/${item.id}`)}
+                onStatClick={(item) => navigate(`/statistik/${item.slug || item.id}`)}
               />
             } />
 
-            <Route path="/statistik/:id" element={
+            <Route path="/statistik/:slug" element={
               <StatistikDetailWrapper statistics={statistics} />
             } />
 
@@ -228,9 +228,9 @@ function ArticleDetailWrapper({ articles, onBack, onArticleClick }: any) {
 }
 
 function StatistikDetailWrapper({ statistics }: any) {
-  const { id } = useParams();
-  const decodedId = decodeURIComponent(id || '');
-  const statistic = statistics.find((s: any) => s.id === decodedId || s.slug === decodedId);
+  const { slug } = useParams();
+  const decodedSlug = decodeURIComponent(slug || '');
+  const statistic = statistics.find((s: any) => s.slug === decodedSlug || s.id === decodedSlug);
   const navigate = useNavigate();
   if (!statistic) return (
     <div className="pt-32 flex justify-center items-center min-h-[50vh]">
@@ -245,7 +245,7 @@ function StatistikDetailWrapper({ statistics }: any) {
       item={statistic} 
       allStats={statistics}
       onBack={() => navigate('/statistik')} 
-      onStatClick={(s) => navigate(`/statistik/${s.id}`)}
+      onStatClick={(s) => navigate(`/statistik/${s.slug || s.id}`)}
       onFilterChange={() => {}}
       onSearchChange={() => {}}
       searchQuery=""

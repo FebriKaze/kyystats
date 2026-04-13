@@ -4,7 +4,7 @@ import { ArrowLeft, Calendar, User, Clock, Share2, Tag, Link as LinkIcon } from 
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, Label, LabelList 
 } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
@@ -14,6 +14,7 @@ import { useMeta } from '../../hooks/useMeta';
 import { usePageView } from '../../hooks/usePageView';
 import SafeImage from '../Common/SafeImage';
 import { showToast } from '../Common/Toast';
+import { Heart, Download, Info, MessageCircle, DollarSign, X as CloseIcon } from 'lucide-react';
 
 interface StatistikDetailProps {
   item: Statistic;
@@ -49,6 +50,8 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
 
   const [isShareMenuOpen, setIsShareMenuOpen] = React.useState(false);
   const [isChartDropdownOpen, setIsChartDropdownOpen] = React.useState(false);
+  const [isDonationModalOpen, setIsDonationModalOpen] = React.useState(false);
+  const chartRef = React.useRef<HTMLDivElement>(null);
 
   if (!item) return null;
 
@@ -57,7 +60,7 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
     id: s.id,
     created_at: s.created_at,
     title: s.title,
-    slug: s.id,
+    slug: s.slug || s.id,
     summary: s.summary,
     content: s.content,
     category: s.category || 'Statistik',
@@ -89,23 +92,6 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
     window.open(url, '_blank', 'width=600,height=400');
   };
 
-  const copyEmbedCode = () => {
-    if (!item.chart_data) return;
-    const embedCode = `<iframe src="${window.location.origin}/embed/chart/${btoa(JSON.stringify({ title: item.chart_data.title, data: item.chart_data.data }))}" width="800" height="400" frameborder="0"></iframe>`;
-    
-    // Fallback for non-https local dev
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(embedCode).then(() => {
-        showToast('success', 'Embed tag <iframe> berhasil disalin!');
-      }).catch(err => {
-        console.error('Failed to copy: ', err);
-        showToast('error', 'Gagal menyalin, pastikan menggunakan HTTPS.');
-      });
-    } else {
-      showToast('error', 'Gagal menyalin, akses clipboard membutuhkan HTTPS.');
-    }
-  };
-
   const downloadCSV = () => {
     if (!item.chart_data || !item.chart_data.data) return;
     const csvContent = [
@@ -117,13 +103,51 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${item.title.replace(/\\s+/g, '_')}.csv`;
+    a.download = `${item.title.replace(/\s+/g, '_')}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
   const downloadChartImage = () => {
-    showToast('info', 'Fitur download gambar akan segera diimplementasikan.');
+    if (!chartRef.current) return;
+    
+    const svgElement = chartRef.current.querySelector('svg');
+    if (!svgElement) {
+        showToast('error', 'Gagal menemukan grafik untuk diunduh.');
+        return;
+    }
+
+    try {
+        const svgData = new XMLSerializer().serializeToString(svgElement);
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        
+        const svgSize = svgElement.getBoundingClientRect();
+        canvas.width = svgSize.width * 2; // High res
+        canvas.height = svgSize.height * 2;
+        
+        img.onload = () => {
+            if (ctx) {
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.scale(2, 2);
+                ctx.drawImage(img, 0, 0);
+                const pngUrl = canvas.toDataURL('image/png');
+                const downloadLink = document.createElement('a');
+                downloadLink.download = `${item.title.replace(/\s+/g, '_')}.png`;
+                downloadLink.href = pngUrl;
+                downloadLink.click();
+                showToast('success', 'Gambar chart berhasil diunduh!');
+            }
+        };
+
+        const encodedData = window.btoa(unescape(encodeURIComponent(svgData)));
+        img.src = 'data:image/svg+xml;base64,' + encodedData;
+    } catch (err) {
+        console.error('Download error:', err);
+        showToast('error', 'Gagal mengunduh gambar. Silakan coba lagi.');
+    }
   };
 
   // Custom tooltip for chart
@@ -199,28 +223,34 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
             <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
               {item.chart_data.title || 'Data Statistik'}
             </h3>
-            <div className="h-[400px] w-full mt-6">
+            <div className="h-[460px] w-full mt-6 bg-white dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm" ref={chartRef}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={item.chart_data.data} margin={{ top: 20, right: 0, left: -20, bottom: 60 }}>
+                <BarChart data={item.chart_data.data} margin={{ top: 40, right: 30, left: 15, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" opacity={0.5} />
                   <XAxis 
                     dataKey="label" 
                     angle={-45}
                     textAnchor="end"
-                    height={80}
-                    tick={{ fontSize: 12, fill: '#64748B' }}
-                    axisLine={false}
+                    height={60}
+                    tick={{ fontSize: 11, fill: '#64748B', fontWeight: 600 }}
+                    axisLine={{ stroke: '#E2E8F0' }}
                     tickLine={false}
-                  />
+                  >
+                    <Label value={(item.chart_data as any).xAxisTitle || 'Label'} offset={-10} position="insideBottom" fill="#94A3B8" style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }} />
+                  </XAxis>
                   <YAxis 
-                    tick={{ fontSize: 12, fill: '#64748B' }} 
-                    axisLine={false}
+                    tick={{ fontSize: 11, fill: '#64748B', fontWeight: 600 }} 
+                    axisLine={{ stroke: '#E2E8F0' }}
                     tickLine={false}
-                  />
-                  <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
-                  <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={40}>
+                    width={50}
+                  >
+                    <Label value={(item.chart_data as any).yAxisTitle || 'Nilai'} angle={-90} position="insideLeft" offset={0} style={{ textAnchor: 'middle', fill: '#94A3B8', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }} />
+                  </YAxis>
+                  <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(139, 92, 246, 0.05)' }} />
+                  <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={45}>
+                     <LabelList dataKey="value" position="top" fill="#64748B" fontSize={11} fontWeight={900} offset={12} />
                      {item.chart_data.data.map((entry: any, index: number) => (
-                       <Cell key={`cell-${index}`} fill="#EBDCA8" />
+                       <Cell key={`cell-${index}`} fill="#8B5CF6" />
                      ))}
                   </Bar>
                 </BarChart>
@@ -263,18 +293,68 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
               </div>
               
               <button 
-                onClick={copyEmbedCode}
-                className="px-6 py-2 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-sm font-bold text-slate-600 dark:text-slate-300 hover:border-primary hover:text-primary transition-colors"
+                onClick={() => setIsDonationModalOpen(true)}
+                className="px-6 py-2.5 bg-rose-50 dark:bg-rose-500/10 border-2 border-rose-100 dark:border-rose-500/20 rounded-xl text-sm font-black text-rose-500 hover:bg-rose-500 hover:text-white transition-all flex items-center gap-2"
               >
-                Embed Chart
+                <Heart size={16} fill="currentColor" /> Support
               </button>
               
-              <button onClick={() => window.open('https://saweria.co/kyystats', '_blank')} className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold transition-colors ml-auto flex items-center gap-2">
-                Dukungan
+              <button onClick={() => window.open('https://saweria.co/kyystats', '_blank')} className="px-6 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl text-sm font-black transition-all ml-auto flex items-center gap-2 shadow-lg shadow-primary/20">
+                Hubungi Kami
               </button>
             </div>
           </div>
         )}
+
+        {/* Donation Modal */}
+        <AnimatePresence>
+          {isDonationModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsDonationModalOpen(false)}
+                className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+              />
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden border border-white dark:border-slate-800"
+              >
+                <div className="p-8 pb-0 flex justify-end">
+                   <button onClick={() => setIsDonationModalOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+                      <CloseIcon size={20} className="text-slate-400" />
+                   </button>
+                </div>
+                
+                <div className="px-10 pb-12 flex flex-col items-center text-center">
+                   <div className="w-20 h-20 bg-rose-100 dark:bg-rose-500/20 rounded-full flex items-center justify-center mb-6 text-rose-500 animate-bounce">
+                      <Heart size={40} fill="currentColor" />
+                   </div>
+                   
+                   <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic">Dukung <span className="text-primary italic">KyyStats</span></h3>
+                   <p className="text-slate-500 dark:text-slate-400 mt-4 leading-relaxed text-sm font-medium">Bantu kami untuk terus menyajikan data statistik berkualitas yang independen dan mudah dipahami.</p>
+                   
+                   <div className="grid grid-cols-1 w-full gap-4 mt-8">
+                      <button 
+                        onClick={() => window.open('https://saweria.co/kyystats', '_blank')}
+                        className="w-full py-5 bg-primary text-white rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all"
+                      >
+                         <DollarSign size={18} /> Donasi via Saweria
+                      </button>
+                      
+                      <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700 w-full">
+                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Dukungan Anda Berarti</p>
+                         <p className="text-xs text-slate-600 dark:text-slate-300 font-bold">Setiap dukungan akan digunakan untuk biaya server dan riset data.</p>
+                      </div>
+                   </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
         <div className="flex flex-col lg:flex-row gap-12">
           {/* Main Content Area */}

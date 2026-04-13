@@ -44,8 +44,10 @@ const StatistikPage: React.FC<StatistikPageProps> = ({ statistik, onStatClick })
       category: s.category || 'Statistik',
       thumbnail_url: s.image_url,
       author: s.author || 'Admin',
-      is_published: s.is_published
-    }));
+      is_published: s.is_published,
+      views: (s as any).views,
+      chart_data: s.chart_data
+    } as any));
   }, [statistik]);
 
   const categories = useMemo(() => {

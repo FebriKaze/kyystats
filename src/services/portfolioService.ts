@@ -207,18 +207,11 @@ export const fetchStatistics = async (onlyPublished = true): Promise<Statistic[]
     return [];
   }
 
-  const ensureWebp = (url: string) => {
-    if (!url) return '';
-    if (url.includes('supabase.co/storage/v1/object/public')) {
-      return url.replace(/\.(jpg|jpeg|png)$/i, '.webp');
-    }
-    return url;
-  };
 
   return data.map((row: any) => {
     const stat = {
       ...row,
-      image_url: ensureWebp(row.image_url || ''),
+      image_url: row.image_url || '',
       summary: row.short_desc || '',
       slug: row.id,
       author: row.profiles?.full_name || ''
