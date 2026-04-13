@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Save, X, Eye, Image as ImageIcon, Check, Loader2, ArrowLeft, 
   Bold, Italic, List, ListOrdered, Link as LinkIcon, 
@@ -31,51 +31,40 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const contentFileRef = useRef<HTMLInputElement>(null);
 
-  // Existing categories
   const existingCategories = [
-    'Ekonomi',
-    'Sosial', 
-    'Politik',
-    'Kesehatan',
-    'Pendidikan',
-    'Teknologi',
-    'Lingkungan',
-    'Infrastruktur',
-    'Keuangan',
-    'Budaya'
+    'Ekonomi', 'Sosial', 'Politik', 'Kesehatan', 'Pendidikan',
+    'Teknologi', 'Lingkungan', 'Infrastruktur', 'Keuangan', 'Budaya'
   ];
 
-  // Check if current category is custom (not in existing list)
-  React.useEffect(() => {
+  useEffect(() => {
     if (formData.category && !existingCategories.includes(formData.category)) {
       setIsCustomCategory(true);
     }
-  }, [formData.category, existingCategories]);
+  }, [formData.category]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      // Auto-assign user_id for unassigned content
       if (!formData.user_id) {
         const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          formData.user_id = user.id;
-          console.log('Auto-assigned user_id:', user.id);
-        }
+        if (user) formData.user_id = user.id;
       }
       
-      // Include chart data if available
-      // Clean up data before saving to prevent 400 errors
       const cleanedData = { ...formData };
-      
-      // Remove any temporary properties that might confuse Supabase
-      if (cleanedData.image && type !== "portfolio") delete cleanedData.image;
-      if (cleanedData.image_url && type === "articles") delete cleanedData.image_url;
+      delete cleanedData.image;
+      delete cleanedData.image_url;
+
+      if (type === 'articles') {
+        delete cleanedData.chart_data;
+        delete cleanedData.impact_val;
+        delete cleanedData.impact_desc;
+        delete cleanedData.tags;
+      }
       
       const dataToSave = {
         ...cleanedData,
-        chart_data: chartData
+        ...(type === 'statistics' ? { chart_data: chartData } : {})
       };
       
       await onSave(dataToSave);
@@ -84,26 +73,17 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
     }
   };
 
-  const handleChartUpdate = (chartInfo: any) => {
-    setChartData(chartInfo);
-  };
+  const handleChartUpdate = (chartInfo: any) => setChartData(chartInfo);
 
   const insertMarkdown = (before: string, after: string = '') => {
     const textarea = textareaRef.current;
     if (!textarea) return;
-
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const text = type === 'portfolio' ? formData.details?.challenge : formData.content || '';
-    const selected = text.substring(start, end);
-    const newVal = text.substring(0, start) + before + selected + after + text.substring(end);
-
-    if (type === 'portfolio') {
-      setFormData({...formData, details: {...formData.details, challenge: newVal}});
-    } else {
-      setFormData({...formData, content: newVal});
-    }
-
+    const newVal = text.substring(0, start) + before + text.substring(start, end) + after + text.substring(end);
+    if (type === 'portfolio') setFormData({...formData, details: {...formData.details, challenge: newVal}});
+    else setFormData({...formData, content: newVal});
     setTimeout(() => {
       textarea.focus();
       textarea.setSelectionRange(start + before.length, end + before.length);
@@ -113,103 +93,45 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
   const handleInlineImageUpload = async (event: any) => {
     try {
       setInlineUploading(true);
-      if (!event.target.files || event.target.files.length === 0) return;
-
+      if (!event.target.files?.[0]) return;
       const file = event.target.files[0];
-      const fileExt = file.name.split('.').pop();
-      const fileName = `inline-${Math.random()}.${fileExt}`;
-      const filePath = `inline/${fileName}`;
-
-      const bucketName = type === 'portfolio' || type === 'featured' ? 'portfolio-images' : 'article-images';
-
-      const { error: uploadError } = await supabase.storage
-        .from(bucketName)
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from(bucketName)
-        .getPublicUrl(filePath);
-
+      const fileName = `inline-${Math.random()}.${file.name.split('.').pop()}`;
+      const bucket = type === 'portfolio' || type === 'featured' ? 'portfolio-images' : 'article-images';
+      const { error } = await supabase.storage.from(bucket).upload(`inline/${fileName}`, file);
+      if (error) throw error;
+      const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(`inline/${fileName}`);
       insertMarkdown(`\n![Image](${publicUrl})\n`, '');
-      
-    } catch (error: any) {
-      showToast('error', 'Gagal mengupload gambar: ' + error.message);
-    } finally {
-      setInlineUploading(false);
-      if (contentFileRef.current) contentFileRef.current.value = '';
-    }
+    } catch (err: any) { showToast('error', err.message); } finally { setInlineUploading(false); }
   };
 
   const uploadCoverImage = async (event: any) => {
     try {
       setUploading(true);
-      if (!event.target.files || event.target.files.length === 0) return;
-
+      if (!event.target.files?.[0]) return;
       const file = event.target.files[0];
-      const fileExt = file.name.split('.').pop();
-      const fileName = `cover-${Math.random()}.${fileExt}`;
-      const filePath = `covers/${fileName}`;
-
-      const bucketName = type === 'portfolio' || type === 'featured' ? 'portfolio-images' : 'article-images';
-
-      const { error: uploadError } = await supabase.storage
-        .from(bucketName)
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from(bucketName)
-        .getPublicUrl(filePath);
-
+      const fileName = `cover-${Math.random()}.${file.name.split('.').pop()}`;
+      const bucket = type === 'portfolio' || type === 'featured' ? 'portfolio-images' : 'article-images';
+      const { error } = await supabase.storage.from(bucket).upload(`covers/${fileName}`, file);
+      if (error) throw error;
+      const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(`covers/${fileName}`);
       if (type === 'articles') setFormData({...formData, thumbnail_url: publicUrl});
       else if (type === 'portfolio') setFormData({...formData, image: publicUrl});
       else setFormData({...formData, image_url: publicUrl});
-      
-    } catch (error: any) {
-      showToast('error', 'Gagal mengupload gambar sampul: ' + error.message);
-    } finally {
-      setUploading(false);
-    }
+    } catch (err: any) { showToast('error', err.message); } finally { setUploading(false); }
   };
 
-  const title = item.id ? `Edit ${type === 'articles' ? 'Artikel' : type === 'portfolio' ? 'Portfolio' : type === 'statistics' ? 'Statistik' : 'Archive'}` : `Tambah ${type === 'articles' ? 'Artikel' : type === 'portfolio' ? 'Portfolio' : type === 'statistics' ? 'Statistik' : 'Archive'} Baru`;
+  const slugify = (text: string) => text.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w-]+/g, '').replace(/--+/g, '-').replace(/^-+/, '').replace(/-+$/, '');
 
-  const ToolbarButton = ({ icon: Icon, onClick, title, active, loading }: any) => (
-    <button 
-      type="button"
-      onClick={onClick}
-      title={title}
-      disabled={loading}
-      className={`p-2 rounded-xl transition-all flex items-center justify-center ${active ? 'bg-primary text-white shadow-md' : 'text-slate-500 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800'}`}
-    >
-      {loading ? <Loader2 size={16} className="animate-spin text-primary" /> : <Icon size={18} />}
-    </button>
-  );
-
-  const slugify = (text: string) => {
-    return text
-      .toString()
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, '-')     // Ganti spasi dengan -
-      .replace(/[^\w-]+/g, '')   // Hapus karakter non-word
-      .replace(/--+/g, '-')      // Ganti multiple - dengan satu -
-      .replace(/^-+/, '')        // Hapus - di awal
-      .replace(/-+$/, '');       // Hapus - di akhir
-  };
+  const flourishId = formData.thumbnail_url?.match(/visualisation\/(\d+)/)?.[1];
+  const isVideo = /\.(mp4|webm|ogg|mov)$/i.test(formData.thumbnail_url || '');
 
   return (
-    <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500 pb-20">
+    <div className="space-y-8 pb-20">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button type="button" onClick={onCancel} className="p-2.5 rounded-2xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all border border-transparent hover:border-slate-200">
-            <ArrowLeft size={24} />
-          </button>
+          <button type="button" onClick={onCancel} className="p-2.5 rounded-2xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all border border-transparent hover:border-slate-200"><ArrowLeft size={24} /></button>
           <div>
-            <h1 className="text-3xl font-black tracking-tighter dark:text-white uppercase">{title}</h1>
+            <h1 className="text-3xl font-black tracking-tighter dark:text-white uppercase">{item.id ? 'Edit' : 'Tambah'} {type}</h1>
             <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Dashboard / Konten / {type}</p>
           </div>
         </div>
@@ -219,227 +141,47 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white dark:bg-slate-900 p-10 rounded-4xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-8">
              <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Judul Konten <span className="text-primary">*</span></label>
-                <input 
-                  required
-                  value={formData.title || ''} 
-                  onChange={(e) => {
-                    const newTitle = e.target.value;
-                    const newSlug = (type === 'articles' || type === 'statistics') && (!item.id || !formData.slug) ? slugify(newTitle) : formData.slug;
-                    setFormData({...formData, title: newTitle, slug: newSlug});
-                  }}
-                  placeholder="Masukkan judul konten yang menarik..."
-                  className="w-full bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 dark:border-slate-900 rounded-2xl py-5 px-8 text-base dark:text-white focus:outline-none focus:border-primary/50 transition-all font-bold placeholder:text-slate-300"
-                />
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Judul Konten *</label>
+                <input required value={formData.title || ''} onChange={(e) => setFormData({...formData, title: e.target.value, slug: (!item.id || !formData.slug) ? slugify(e.target.value) : formData.slug})} placeholder="Masukkan judul..." className="w-full bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 rounded-2xl py-5 px-8 text-base dark:text-white font-bold" />
              </div>
-
-              {(type === 'articles' || type === 'statistics' || type === 'featured') && (
-                <div className="space-y-3">
-                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Slug Otomatis <span className="text-primary">*</span></label>
-                   <input 
-                     required
-                     value={formData.slug || ''} 
-                     onChange={(e) => setFormData({...formData, slug: e.target.value})}
-                     placeholder="judul-konten-ini"
-                     className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-4 px-8 text-sm dark:text-white font-mono"
-                   />
-                </div>
-              )}
-
-              {type === 'featured' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                   <div className="space-y-3">
-                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Nilai Dampak (Impact Value)</label>
-                      <input 
-                        value={formData.impact_val || ''} 
-                        onChange={(e) => setFormData({...formData, impact_val: e.target.value})}
-                        placeholder="Contoh: 92.5%"
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-4 px-6 text-sm dark:text-white font-bold"
-                      />
-                   </div>
-                   <div className="space-y-3">
-                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Deskripsi Dampak</label>
-                      <input 
-                        value={formData.impact_desc || ''} 
-                        onChange={(e) => setFormData({...formData, impact_desc: e.target.value})}
-                        placeholder="Contoh: Kenaikan total pendapatan"
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-4 px-6 text-sm dark:text-white font-bold"
-                      />
-                   </div>
-                   <div className="space-y-3">
-                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Highlight Tahun</label>
-                      <input 
-                        value={formData.highlight_y || ''} 
-                        onChange={(e) => setFormData({...formData, highlight_y: e.target.value})}
-                        placeholder="Contoh: 2024"
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-4 px-6 text-sm dark:text-white font-bold"
-                      />
-                   </div>
-                   <div className="space-y-3">
-                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Deskripsi Highlight</label>
-                      <input 
-                        value={formData.hightlight_desc || ''} 
-                        onChange={(e) => setFormData({...formData, hightlight_desc: e.target.value})}
-                        placeholder="Contoh: Tahun rilis data pemetaan"
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-4 px-6 text-sm dark:text-white font-bold"
-                      />
-                   </div>
-                   <div className="space-y-3">
-                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Label Gambar</label>
-                      <input 
-                        value={formData.image_label || ''} 
-                        onChange={(e) => setFormData({...formData, image_label: e.target.value})}
-                        placeholder="Contoh: Audit Underwriter"
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-4 px-6 text-sm dark:text-white font-bold"
-                      />
-                   </div>
-                   <div className="space-y-3">
-                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Tags (Pisahkan dengan koma)</label>
-                      <input 
-                        value={Array.isArray(formData.tags) ? formData.tags.join(', ') : formData.tags || ''} 
-                        onChange={(e) => setFormData({...formData, tags: e.target.value.split(',').map((t: string) => t.trim())})}
-                        placeholder="Data, SQL, Research"
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-4 px-6 text-sm dark:text-white font-bold"
-                      />
-                   </div>
-                </div>
-              )}
+             
+             <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Slug Otomatis *</label>
+                <input required value={formData.slug || ''} onChange={(e) => setFormData({...formData, slug: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 rounded-2xl py-4 px-8 text-sm dark:text-white font-mono" />
+             </div>
 
              <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Badan Konten <span className="text-primary">*</span></label>
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Badan Konten *</label>
                 <div className="border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden bg-white dark:bg-slate-950 shadow-inner">
-                  {/* Toolbar */}
-                  <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-wrap items-center gap-2">
-                    <ToolbarButton icon={Heading1} onClick={() => insertMarkdown('# ', '')} title="Judul Utama" />
-                    <ToolbarButton icon={Heading2} onClick={() => insertMarkdown('## ', '')} title="Sub Judul" />
-                    <ToolbarButton icon={Heading3} onClick={() => insertMarkdown('### ', '')} title="Poin Penting" />
-                    <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 mx-1" />
-                    <ToolbarButton icon={Bold} onClick={() => insertMarkdown('**', '**')} title="Teks Tebal" />
-                    <ToolbarButton icon={Italic} onClick={() => insertMarkdown('_', '_')} title="Teks Miring" />
-                    <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 mx-1" />
-                    <ToolbarButton icon={List} onClick={() => insertMarkdown('- ', '')} title="Daftar Poin" />
-                    <ToolbarButton icon={ListOrdered} onClick={() => insertMarkdown('1. ', '')} title="Daftar Nomor" />
-                    <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 mx-1" />
-                    <ToolbarButton icon={LinkIcon} onClick={() => insertMarkdown('[', '](https://)')} title="Sisipkan Link" />
-                    
-                    {/* Inline Image Upload Trigger */}
-                    <div className="relative">
-                      <ToolbarButton 
-                        icon={Upload} 
-                        loading={inlineUploading}
-                        onClick={() => contentFileRef.current?.click()} 
-                        title="Upload Gambar ke Konten" 
-                      />
-                      <input 
-                        type="file" 
-                        ref={contentFileRef} 
-                        onChange={handleInlineImageUpload} 
-                        className="hidden" 
-                        accept="image/*" 
-                      />
-                    </div>
-
-                    <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 mx-1" />
-                    <ToolbarButton icon={Youtube} onClick={() => insertMarkdown('\n<iframe width="100%" height="400" src="https://www.youtube.com/embed/VIDEO_ID"></iframe>\n', '')} title="Embed Youtube" />
+                  <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 flex flex-wrap items-center gap-2">
+                    <button type="button" onClick={() => insertMarkdown('# ', '')} className="p-2"><Heading1 size={18} /></button>
+                    <button type="button" onClick={() => insertMarkdown('## ', '')} className="p-2"><Heading2 size={18} /></button>
+                    <button type="button" onClick={() => insertMarkdown('### ', '')} className="p-2"><Heading3 size={18} /></button>
+                    <button type="button" onClick={() => insertMarkdown('**', '**')} className="p-2"><Bold size={18} /></button>
+                    <button type="button" onClick={() => insertMarkdown('_', '_')} className="p-2"><Italic size={18} /></button>
+                    <button type="button" onClick={() => contentFileRef.current?.click()} className="p-2"><Upload size={18} /></button>
+                    <input type="file" ref={contentFileRef} onChange={handleInlineImageUpload} className="hidden" accept="image/*" />
                     <div className="flex-1"></div>
-                    <button 
-                      type="button" 
-                      onClick={() => setIsPreview(!isPreview)}
-                      className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-[10px] font-black tracking-widest transition-all shadow-sm border ${isPreview ? 'bg-primary text-white border-primary' : 'bg-white dark:bg-slate-900 dark:text-white border-slate-200 dark:border-slate-800 hover:text-primary active:scale-95'}`}
-                    >
-                      {isPreview ? <Save size={14} /> : <Eye size={14} />} {isPreview ? 'KEMBALI KE EDITOR' : 'LIHAT PRATINJAU'}
-                    </button>
+                    <button type="button" onClick={() => setIsPreview(!isPreview)} className={`px-5 py-2.5 rounded-2xl text-[10px] font-black tracking-widest ${isPreview ? 'bg-primary text-white' : 'bg-white border'}`}>{isPreview ? 'EDITOR' : 'PRATINJAU'}</button>
                   </div>
-
                   {isPreview ? (
-                    <div className="w-full min-h-125 bg-white dark:bg-slate-950 py-12 px-14 prose prose-slate dark:prose-invert max-w-none prose-sm md:prose-base overflow-y-auto selection:bg-primary/20">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                        {type === 'portfolio' ? formData.details?.challenge : formData.content || '*Konten masih kosong...*'}
-                      </ReactMarkdown>
-                    </div>
+                    <div className="w-full min-h-100 bg-white dark:bg-slate-950 py-12 px-14 prose prose-slate dark:prose-invert max-w-none"><ReactMarkdown remarkPlugins={[remarkGfm]}>{formData.content || '*Kosong*'}</ReactMarkdown></div>
                   ) : (
-                    <textarea 
-                      ref={textareaRef}
-                      required
-                      rows={20}
-                      placeholder="Mulai menulis cerita Anda di sini..."
-                      value={type === 'portfolio' ? formData.details?.challenge : formData.content || ''} 
-                      onChange={(e) => {
-                        if (type === 'portfolio') {
-                          setFormData({...formData, details: {...formData.details, challenge: e.target.value}});
-                        } else {
-                          setFormData({...formData, content: e.target.value});
-                        }
-                      }}
-                      className="w-full bg-transparent py-10 px-12 text-sm dark:text-white focus:outline-none font-mono leading-relaxed resize-y min-h-100"
-                    />
+                    <textarea ref={textareaRef} required rows={20} value={formData.content || ''} onChange={(e) => setFormData({...formData, content: e.target.value})} className="w-full bg-transparent py-10 px-12 text-sm dark:text-white focus:outline-none font-mono min-h-100" />
                   )}
                 </div>
-                {!isPreview && <p className="text-[10px] text-slate-400 font-medium">✨ Gunakan tombol **Upload (Ikon Panah Atas)** untuk langsung memasukkan gambar dari galeri Anda ke dalam tulisan.</p>}
              </div>
 
-             {type === 'portfolio' && (
-               <div className="space-y-8 pt-8 border-t border-slate-100 dark:border-slate-800">
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Solusi Konten (Solution)</label>
-                    <textarea 
-                      rows={5}
-                      placeholder="Bagaimana solusi yang Anda berikan..."
-                      value={formData.details?.solution || ''} 
-                      onChange={(e) => setFormData({...formData, details: {...formData.details, solution: e.target.value}})}
-                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-5 px-8 text-sm dark:text-white"
-                    />
-                  </div>
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Hasil Akhir (Result)</label>
-                    <textarea 
-                      rows={5}
-                      placeholder="Apa hasil nyata dari project ini..."
-                      value={formData.details?.result || ''} 
-                      onChange={(e) => setFormData({...formData, details: {...formData.details, result: e.target.value}})}
-                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-5 px-8 text-sm dark:text-white"
-                    />
-                  </div>
-               </div>
-             )}
-
-             {/* Chart Editor Section - Only for statistics */}
              {type === 'statistics' && (
                <div className="space-y-6">
-                 <div className="flex items-center justify-between">
-                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Data Visualisasi</label>
-                   <button
-                     type="button"
-                     onClick={() => setShowChartEditor(!showChartEditor)}
-                     className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                   >
-                     <BarChart3 size={16} />
-                     <span className="text-sm font-medium dark:text-white">
-                       {showChartEditor ? 'Sembunyikan' : 'Tampilkan'} Chart
-                     </span>
-                   </button>
-                 </div>
-                 
-                 {showChartEditor && (
-                   <ChartEditor 
-                     onChartUpdate={handleChartUpdate}
-                     initialData={chartData?.data || []}
-                      initialLayout={chartData?.chartLayout || "auto"}
-                      initialType={chartData?.chartType || "bar"}
-                   />
-                 )}
+                 <button type="button" onClick={() => setShowChartEditor(!showChartEditor)} className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl"><BarChart3 size={16} /> <span className="text-sm font-medium">{showChartEditor ? 'Sembunyikan' : 'Tampilkan'} Chart</span></button>
+                 {showChartEditor && <ChartEditor onChartUpdate={handleChartUpdate} initialData={chartData?.data || []} initialLayout={chartData?.chartLayout || 'auto'} initialType={chartData?.chartType || 'bar'} />}
                </div>
              )}
 
              <div className="space-y-3">
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Ringkasan Eksekutif</label>
-                <textarea 
-                  rows={3}
-                  placeholder="Ringkasan singkat untuk tampilan kartu di beranda..."
-                  value={type === 'portfolio' ? formData.description : formData.summary || ''} 
-                  onChange={(e) => setFormData({...formData, [type === 'portfolio' ? 'description' : 'summary']: e.target.value})}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-5 px-8 text-sm dark:text-white resize-none"
-                />
+                <textarea rows={3} value={formData.summary || ''} onChange={(e) => setFormData({...formData, summary: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 rounded-2xl py-5 px-8 text-sm dark:text-white" />
              </div>
           </div>
         </div>
@@ -447,136 +189,53 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
         <div className="space-y-8">
           <div className="bg-white dark:bg-slate-900 p-8 rounded-4xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-8 sticky top-24">
              <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Kategori / Topik</label>
-                {!isCustomCategory ? (
-                  <select
-                    value={formData.category || ''}
-                    onChange={(e) => {
-                      if (e.target.value === 'Lainnya') {
-                        setIsCustomCategory(true);
-                        setFormData({...formData, category: ''});
-                      } else {
-                        setFormData({...formData, category: e.target.value});
-                      }
-                    }}
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-4 px-6 text-sm dark:text-white font-bold"
-                  >
-                    <option value="">Pilih Kategori</option>
-                    {existingCategories.map((category) => (
-                      <option key={category} value={category}>{category}</option>
-                    ))}
-                    <option value="Lainnya">Lainnya</option>
-                  </select>
-                ) : (
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={formData.category || ''}
-                      onChange={(e) => setFormData({...formData, category: e.target.value})}
-                      placeholder="Masukkan kategori baru..."
-                      className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-4 px-6 text-sm dark:text-white font-bold"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsCustomCategory(false);
-                        setFormData({...formData, category: ''});
-                      }}
-                      className="px-4 py-2 bg-slate-200 dark:bg-slate-700 rounded-xl hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
-                    >
-                      Batal
-                    </button>
-                  </div>
-                )}
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Kategori</label>
+                <select value={formData.category || ''} onChange={(e) => setFormData({...formData, category: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 rounded-2xl py-4 px-6 text-sm font-bold">
+                  <option value="">Pilih Kategori</option>
+                  {existingCategories.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
              </div>
 
              <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Status Publikasi</label>
-                <select 
-                  value={formData.is_published ? 'Published' : 'Draft'}
-                  onChange={(e) => setFormData({...formData, is_published: e.target.value === 'Published'})}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 dark:border-slate-800 rounded-2xl py-4 px-6 text-sm dark:text-white font-black"
-                >
-                  <option value="Draft">Simpan Draft</option>
-                  <option value="Published">Diterbitkan Publik</option>
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Status</label>
+                <select value={formData.is_published ? 'Published' : 'Draft'} onChange={(e) => setFormData({...formData, is_published: e.target.value === 'Published'})} className="w-full bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 rounded-2xl py-4 px-6 text-sm font-black">
+                  <option value="Draft">Draft</option>
+                  <option value="Published">Diterbitkan</option>
                 </select>
              </div>
 
              <div className="space-y-4">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Gambar Sampul Utama</label>
-                  <span className="text-[8px] font-bold text-primary px-2 py-0.5 bg-primary/10 rounded">BISA PASTE LINK FLOURISH</span>
-                </div>
-
-                <input 
-                  type="text"
-                  value={formData.thumbnail_url || ""}
-                  onChange={(e) => setFormData({...formData, thumbnail_url: e.target.value})}
-                  placeholder="Paste link Flourish, MP4, atau URL Gambar..."
-                  className="w-full bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 dark:border-slate-800 rounded-2xl py-4 px-6 text-sm dark:text-white font-bold focus:border-primary transition-all outline-none mb-2"
-                />
-                <div className="aspect-16/10 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center gap-3 overflow-hidden group relative transition-all hover:bg-slate-100 dark:hover:bg-slate-900">
+                <div className="flex items-center justify-between"><label className="text-[10px] font-black uppercase text-slate-400">Sampul Utama</label><span className="text-[8px] font-bold text-primary px-2 py-0.5 bg-primary/10 rounded">BISA PASTE LINK FLOURISH</span></div>
+                <input type="text" value={formData.thumbnail_url || ''} onChange={(e) => setFormData({...formData, thumbnail_url: e.target.value})} placeholder="Paste link Flourish/Video/Image..." className="w-full bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold" />
+                <div className={`rounded-3xl border-2 border-dashed bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center overflow-hidden relative shadow-inner ${flourishId ? 'min-h-[450px]' : 'aspect-16/10'}`}>
                    {formData.thumbnail_url ? (
                      <>
-                        {(() => {
-                          const isVideo = /\.(mp4|webm|ogg|mov)$/i.test(formData.thumbnail_url);
-                          const isFlourish = /public\.flourish\.studio\/visualisation\/(\d+)/.test(formData.thumbnail_url);
-                          
-                          if (isFlourish) {
-                            const flourishId = formData.thumbnail_url.match(/visualisation\/(\d+)/)?.[1];
-                            return (
-                              <iframe 
-                                src={`https://public.flourish.studio/visualisation/${flourishId}/embed?auto=1`}
-                                className="w-full h-full border-0 pointer-events-none"
-                                scrolling="no"
-                              />
-                            );
-                          }
-
-                          if (isVideo) {
-                            return <video src={formData.thumbnail_url} className="w-full h-full object-cover" muted autoPlay loop />;
-                          }
-                          
-                          return <img src={formData.thumbnail_url} alt="" className="w-full h-full object-cover" />;
-                        })()}
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        {flourishId ? (
+                          <iframe src={`https://public.flourish.studio/visualisation/${flourishId}/embed?auto=1`} className="w-full h-full border-0 absolute inset-0" scrolling="no" />
+                        ) : isVideo ? (
+                          <video src={formData.thumbnail_url} className="w-full h-full object-cover" muted autoPlay loop />
+                        ) : (
+                          <img src={formData.thumbnail_url} className="w-full h-full object-cover" />
+                        )}
+                        <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
                            <input type="file" onChange={uploadCoverImage} className="absolute inset-0 opacity-0 cursor-pointer" />
-                           <button type="button" className="p-4 bg-white rounded-2xl text-primary font-black text-[10px] uppercase shadow-2xl transition-transform active:scale-90">Ganti Gambar</button>
+                           <button type="button" className="p-4 bg-white rounded-2xl text-[10px] font-black uppercase">Ganti Gambar</button>
                         </div>
                      </>
                    ) : (
-                     <div className="relative w-full h-full flex flex-col items-center justify-center">
-                        <input type="file" onChange={uploadCoverImage} className="absolute inset-0 opacity-0 cursor-pointer" />
-                        <ImageIcon size={40} className="text-slate-300 mb-2" />
-                        <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase text-center px-4">
-                          {uploading ? 'MEMPROSES...' : 'UPLOAD SAMPUL ATAU PASTE LINK DI ATAS'}
-                        </p>
-                     </div>
+                     <div className="relative w-full h-full flex flex-col items-center justify-center"><input type="file" onChange={uploadCoverImage} className="absolute inset-0 opacity-0 cursor-pointer" /><ImageIcon size={40} className="text-slate-300 mb-2" /><p className="text-[10px] font-black text-slate-400 uppercase text-center">{uploading ? 'MEMPROSES...' : 'UPLOAD ATAU PASTE LINK'}</p></div>
                    )}
                 </div>
-
-                <div className="pt-8 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-3">
-                   <button 
-                     type="submit"
-                     disabled={loading}
-                     className="w-full bg-primary text-white py-5 rounded-2xl font-black text-xs tracking-widest uppercase shadow-xl shadow-primary/30 flex items-center justify-center gap-3 hover:-translate-y-0.5 hover:shadow-2xl transition-all active:scale-95"
-                   >
-                     {loading ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
-                     DITERBITKAN SEKARANG
-                   </button>
-                   <button 
-                     type="button" 
-                     onClick={onCancel}
-                     className="w-full bg-slate-100 dark:bg-slate-800 text-slate-500 py-5 rounded-2xl font-black text-xs tracking-widest uppercase transition-all hover:bg-slate-200 dark:hover:bg-slate-700"
-                   >
-                     BATALKAN
-                   </button>
-                </div>
              </div>
-           </div>
-         </div>
-       </form>
-     </div>
+
+             <div className="pt-8 border-t flex flex-col gap-3">
+                <button type="submit" disabled={loading} className="w-full bg-primary text-white py-5 rounded-2xl font-black text-xs uppercase shadow-xl flex items-center justify-center gap-3">{loading ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />} DITERBITKAN SEKARANG</button>
+                <button type="button" onClick={onCancel} className="w-full bg-slate-100 text-slate-500 py-5 rounded-2xl font-black text-xs uppercase">BATALKAN</button>
+             </div>
+          </div>
+        </div>
+      </form>
+    </div>
   );
 };
 
