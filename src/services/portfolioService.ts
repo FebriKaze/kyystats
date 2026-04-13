@@ -52,60 +52,31 @@ export const fetchFeaturedProjects = async (): Promise<FeaturedProject[]> => {
 };
 
 export const fetchArticles = async (onlyPublished = true): Promise<Article[]> => {
-  console.log('Fetching articles, onlyPublished:', onlyPublished);
   let query = supabase.from('articles').select('*, profiles(full_name, avatar_url)');
-  
-  if (onlyPublished) {
-    query = query.eq('is_published', true);
-  }
-
+  if (onlyPublished) query = query.eq('is_published', true);
   const { data, error } = await query.order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('Error fetching articles with profiles:', error);
-    const { data: simpleData } = await supabase.from('articles').select('*').order('created_at', { ascending: false });
-    return (simpleData || []) as Article[];
-  }
-
-  console.log('Total articles fetched:', data?.length);
-  return (data || []).map((row: any) => ({
-    ...row,
-    author: row.profiles?.full_name || 'Admin'
-  })) as Article[];
+  if (error) return (await supabase.from('articles').select('*').order('created_at', { ascending: false })).data as Article[] || [];
+  return (data || []).map((row: any) => ({ ...row, author: row.profiles?.full_name || 'Admin' })) as Article[];
 };
 
 export const fetchArticleBySlug = async (slug: string): Promise<Article | null> => {
-  const { data, error } = await supabase
-    .from('articles')
-    .select('*, profiles(full_name, avatar_url)')
-    .eq('slug', slug)
-    .single();
-
+  const { data, error } = await supabase.from('articles').select('*, profiles(full_name, avatar_url)').eq('slug', slug).single();
   if (error) return null;
-  return {
-    ...data,
-    author: (data as any).profiles?.full_name || 'Admin'
-  } as Article;
+  return { ...data, author: (data as any).profiles?.full_name || 'Admin' } as Article;
 };
 
 export const saveArticle = async (article: Partial<Article>): Promise<Article | null> => {
   const isNew = !article.id;
   const dbData = { ...article };
-  delete (dbData as any).views;
-  delete (dbData as any).profiles;
-  delete (dbData as any).author;
+  
+  // Clean UI fields
+  const uiFields = ['views', 'profiles', 'author', 'chart_data', 'impact_val', 'impact_desc', 'tags', 'image', 'image_url', 'highlight_y', 'hightlight_desc', 'image_label'];
+  uiFields.forEach(f => delete (dbData as any)[f]);
   
   if (isNew && !dbData.user_id) {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) dbData.user_id = user.id;
   }
-
-  // Final sanitization for articles table
-  const fieldsToDelete = [
-    'chart_data', 'impact_val', 'impact_desc', 'tags', 
-    'image', 'image_url', 'highlight_y', 'hightlight_desc', 'image_label'
-  ];
-  fieldsToDelete.forEach(f => delete (dbData as any)[f]);
   
   const { data, error } = isNew
     ? await supabase.from('articles').insert([dbData]).select().single()
@@ -132,23 +103,9 @@ export const savePortfolio = async (project: any): Promise<any> => {
     key_result: project.details?.result,
     user_id: project.user_id
   };
-  
-  if (isNew && !dbData.user_id) {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) dbData.user_id = user.id;
-  }
-
-  // Final sanitization for articles table
-  const fieldsToDelete = [
-    'chart_data', 'impact_val', 'impact_desc', 'tags', 
-    'image', 'image_url', 'highlight_y', 'hightlight_desc', 'image_label'
-  ];
-  fieldsToDelete.forEach(f => delete (dbData as any)[f]);
-
   const { data, error } = isNew
     ? await supabase.from('portfolios').insert([dbData]).select().single()
     : await supabase.from('portfolios').update(dbData).eq('id', project.id).select().single();
-
   if (error) throw error;
   return data;
 };
@@ -172,23 +129,9 @@ export const saveFeaturedProject = async (featured: any): Promise<any> => {
     image_label: featured.image_label,
     user_id: featured.user_id
   };
-  
-  if (isNew && !dbData.user_id) {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) dbData.user_id = user.id;
-  }
-
-  // Final sanitization for articles table
-  const fieldsToDelete = [
-    'chart_data', 'impact_val', 'impact_desc', 'tags', 
-    'image', 'image_url', 'highlight_y', 'hightlight_desc', 'image_label'
-  ];
-  fieldsToDelete.forEach(f => delete (dbData as any)[f]);
-
   const { data, error } = isNew
     ? await supabase.from('featured_project').insert([dbData]).select().single()
     : await supabase.from('featured_project').update(dbData).eq('id', featured.id).select().single();
-
   if (error) throw error;
   return data;
 };
@@ -199,43 +142,18 @@ export const deleteFeaturedProject = async (id: string): Promise<boolean> => {
 };
 
 export const fetchStatistics = async (onlyPublished = true): Promise<Statistic[]> => {
-  console.log('Fetching statistics, onlyPublished:', onlyPublished);
   let query = supabase.from('statistics').select('*, profiles(full_name, avatar_url)');
   if (onlyPublished) query = query.eq('is_published', true);
-  
   const { data, error } = await query.order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('Error fetching statistics:', error);
-    const { data: simpleData } = await supabase.from('statistics').select('*').order('created_at', { ascending: false });
-    return (simpleData || []).map((row: any) => ({
-      ...row,
-      author: 'Admin'
-    })) as Statistic[];
-  }
-
-  console.log('Total statistics fetched:', data?.length);
-
-  return (data || []).map((row: any) => {
-    const stat = {
-      ...row,
-      image_url: row.image_url || '',
-      summary: row.short_desc || '',
-      slug: row.id,
-      author: row.profiles?.full_name || 'Admin'
-    };
-    if (row.title) {
-      stat.slug = row.title.toString().toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w-]+/g, '').replace(/--+/g, '-');
-    }
-    if (row.chart_data) {
-      try {
-        stat.chart_data = typeof row.chart_data === 'string' ? JSON.parse(row.chart_data) : row.chart_data;
-      } catch (e) {
-        stat.chart_data = null;
-      }
-    }
-    return stat as Statistic;
-  });
+  if (error) return [];
+  return (data || []).map((row: any) => ({
+    ...row,
+    image_url: row.image_url || '',
+    summary: row.short_desc || '',
+    slug: row.title?.toString().toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w-]+/g, '').replace(/--+/g, '-') || row.id,
+    author: row.profiles?.full_name || 'Admin',
+    chart_data: typeof row.chart_data === 'string' ? JSON.parse(row.chart_data) : row.chart_data
+  })) as Statistic[];
 };
 
 export const saveStatistic = async (stat: Partial<Statistic>): Promise<Statistic | null> => {
@@ -246,35 +164,12 @@ export const saveStatistic = async (stat: Partial<Statistic>): Promise<Statistic
   delete (dbData as any).views;
   delete (dbData as any).author;
   delete (dbData as any).slug;
-
-  if (chart_data != null) {
-    dbData.chart_data = typeof chart_data === 'string' ? chart_data : JSON.stringify(chart_data);
-  }
-
-  if (isNew && !dbData.user_id) {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) dbData.user_id = user.id;
-  }
-
-  // Final sanitization for articles table
-  const fieldsToDelete = [
-    'chart_data', 'impact_val', 'impact_desc', 'tags', 
-    'image', 'image_url', 'highlight_y', 'hightlight_desc', 'image_label'
-  ];
-  fieldsToDelete.forEach(f => delete (dbData as any)[f]);
-
+  if (chart_data != null) dbData.chart_data = JSON.stringify(chart_data);
   const { data, error } = isNew
     ? await supabase.from('statistics').insert([dbData]).select().single()
     : await supabase.from('statistics').update(dbData).eq('id', stat.id).select().single();
-
   if (error) throw error;
-  
-  if (data && data.chart_data) {
-    try {
-      data.chart_data = typeof data.chart_data === 'string' ? JSON.parse(data.chart_data) : data.chart_data;
-    } catch (e) { console.error(e); }
-  }
-  
+  if (data && data.chart_data) data.chart_data = JSON.parse(data.chart_data);
   return data as Statistic;
 };
 
@@ -292,32 +187,20 @@ export const fetchWeeklyPageViews = async (pageType: string): Promise<{ name: st
     date.setDate(date.getDate() - i);
     const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate()).toISOString();
     const endOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1).toISOString();
-    const { count, error } = await supabase.from('page_views').select('*', { count: 'exact', head: true }).eq('page_type', pageType).gte('viewed_at', startOfDay).lt('viewed_at', endOfDay);
-    result.push({ name: dayNames[date.getDay()], views: error ? 0 : (count || 0) });
+    const { count } = await supabase.from('page_views').select('*', { count: 'exact', head: true }).eq('page_type', pageType).gte('viewed_at', startOfDay).lt('viewed_at', endOfDay);
+    result.push({ name: dayNames[date.getDay()], views: count || 0 });
   }
   return result;
 };
 
 export const fetchPageViewCount = async (pageType: string, pageId: string): Promise<number> => {
-  const { count, error } = await supabase.from('page_views').select('*', { count: 'exact', head: true }).eq('page_type', pageType).eq('page_id', pageId);
-  return error ? 0 : (count || 0);
-};
-
-export const fetchTotalViews = async (pageType: string): Promise<number> => {
-  const { count, error } = await supabase.from('page_views').select('*', { count: 'exact', head: true }).eq('page_type', pageType);
-  return error ? 0 : (count || 0);
+  const { count } = await supabase.from('page_views').select('*', { count: 'exact', head: true }).eq('page_type', pageType).eq('page_id', pageId);
+  return count || 0;
 };
 
 export const assignOrphanedToOwner = async (ownerId: string): Promise<void> => {
-  try {
-    const ownerIdClean = ownerId.trim();
-    if (!ownerIdClean) throw new Error("Owner ID is required");
-    await supabase.from('articles').update({ user_id: ownerIdClean }).is('user_id', null);
-    await supabase.from('statistics').update({ user_id: ownerIdClean }).is('user_id', null);
-    await supabase.from('portfolios').update({ user_id: ownerIdClean }).is('user_id', null);
-    await supabase.from('featured_project').update({ user_id: ownerIdClean }).is('user_id', null);
-    showToast('success', 'Semua konten lama berhasil diassign ke Owner!');
-  } catch (err: any) {
-    showToast('error', 'Gagal memigrasi konten lama: ' + err.message);
-  }
+  await supabase.from('articles').update({ user_id: ownerId }).is('user_id', null);
+  await supabase.from('statistics').update({ user_id: ownerId }).is('user_id', null);
+  await supabase.from('portfolios').update({ user_id: ownerId }).is('user_id', null);
+  await supabase.from('featured_project').update({ user_id: ownerId }).is('user_id', null);
 };
