@@ -391,16 +391,18 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
             <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm">
               <span className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest mb-4 block">Bagikan Ke Publik</span>
               <div className="flex items-center gap-3">
-                {['facebook', 'whatsapp', 'twitter', 'linkedin'].map((plat) => (
+                {[
+                  { id: 'whatsapp', icon: <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.067 2.877 1.215 3.076.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.446 4.432-9.877 9.888-9.877 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.446-4.435 9.875-9.889 9.875m8.415-18.303A11.826 11.826 0 0012.055 0C5.41 0 .01 5.403.007 12.05a11.842 11.842 0 001.576 6.001L0 24l6.109-1.604a11.815 11.815 0 005.94 1.586h.005c6.644 0 12.045-5.404 12.048-12.05a11.8 11.8 0 00-3.526-8.528z" fill="currentColor"/>, color: 'text-green-500' },
+                  { id: 'facebook', icon: <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="currentColor"/>, color: 'text-blue-600' },
+                  { id: 'twitter', icon: <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932 6.064-6.932zm-1.294 19.497h2.039L6.486 3.24H4.298L17.607 20.65z" fill="currentColor"/>, color: 'text-slate-900 dark:text-white' },
+                  { id: 'linkedin', icon: <path d="M20.447 20.452h-3.554V14.85c0-1.334-.027-3.05-1.858-3.858-1.861 0-2.147 1.453-2.147 2.257v6.695h-3.558V8.975h3.413v1.566h.049c.475-.9 1.636-1.85 3.367-1.85 3.601 0 4.267 2.37 4.267 5.455v6.306zM5.337 7.433c-1.144 0-2.066-.926-2.066-2.065 0-1.142.922-2.067 2.066-2.067 1.141 0 2.065.925 2.065 2.067 0 1.139-.924 2.065-2.065 2.065zM7.119 20.452H3.555V8.975h3.564v11.477z" fill="currentColor"/>, color: 'text-blue-700' }
+                ].map((plat) => (
                   <button
-                    key={plat}
-                    onClick={() => handleShare(plat)}
-                    className="w-12 h-12 rounded-full flex items-center justify-center bg-transparent border-2 border-slate-200 dark:border-slate-700 text-blue-600 hover:bg-slate-50 hover:border-blue-500 hover:scale-105 transition-all outline-none"
+                    key={plat.id}
+                    onClick={() => handleShare(plat.id)}
+                    className={`w-12 h-12 rounded-2xl flex items-center justify-center bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 ${plat.color} hover:bg-slate-50 dark:hover:bg-slate-700 hover:scale-110 shadow-sm transition-all outline-none`}
                   >
-                    {plat === 'facebook' && <span className="font-bold text-xl">f</span>}
-                    {plat === 'whatsapp' && <span className="font-bold text-xl text-green-500">w</span>}
-                    {plat === 'twitter' && <span className="font-bold text-xl text-sky-500">X</span>}
-                    {plat === 'linkedin' && <span className="font-bold text-xl">in</span>}
+                    <svg viewBox="0 0 24 24" className="w-5 h-5">{plat.icon}</svg>
                   </button>
                 ))}
               </div>
