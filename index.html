@@ -97,7 +97,19 @@
       })();
     </script>
 
-    <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "6fad2bbbfa46432cb3d94635d590fc56"}'></script><!-- End Cloudflare Web Analytics -->
+    <!-- Cloudflare Web Analytics -->
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "6fad2bbbfa46432cb3d94635d590fc56"}'></script>
+<script>
+  // Fallback untuk memasturan script load
+  window.addEventListener('load', function() {
+    setTimeout(function() {
+      if (!window._cfBeacon) {
+        console.log('Cloudflare Analytics beacon tidak terdeteksi - cek token dan domain configuration');
+      }
+    }, 3000);
+  });
+</script>
+<!-- End Cloudflare Web Analytics -->
   </head>
   <body>
     <div id="root"></div>

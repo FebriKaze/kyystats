@@ -4,12 +4,13 @@ import {
   Bold, Italic, List, ListOrdered, Link as LinkIcon, 
   Type, Heading1, Heading2, Heading3, 
   Instagram, Twitter, Youtube, Facebook,
-  FileImage, Upload
+  FileImage, Upload, BarChart3
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { supabase } from '../../lib/supabase';
 import { showToast } from '../Common/Toast';
+import ChartEditor from './ChartEditor';
 
 interface AdminEditorProps {
   type: 'articles' | 'portfolio' | 'statistics';
@@ -24,6 +25,8 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
   const [uploading, setUploading] = useState(false);
   const [inlineUploading, setInlineUploading] = useState(false);
   const [isPreview, setIsPreview] = useState(false);
+  const [chartData, setChartData] = useState<any>(item.chart_data || null);
+  const [showChartEditor, setShowChartEditor] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const contentFileRef = useRef<HTMLInputElement>(null);
 
@@ -39,10 +42,21 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
           console.log('Auto-assigned user_id:', user.id);
         }
       }
-      await onSave(formData);
+      
+      // Include chart data if available
+      const dataToSave = {
+        ...formData,
+        chart_data: chartData
+      };
+      
+      await onSave(dataToSave);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleChartUpdate = (chartInfo: any) => {
+    setChartData(chartInfo);
   };
 
   const insertMarkdown = (before: string, after: string = '') => {
@@ -275,6 +289,32 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
                 </div>
                 {!isPreview && <p className="text-[10px] text-slate-400 font-medium">✨ Gunakan tombol **Upload (Ikon Panah Atas)** untuk langsung memasukkan gambar dari galeri Anda ke dalam tulisan.</p>}
              </div>
+
+             {/* Chart Editor Section - Only for articles */}
+             {type === 'articles' && (
+               <div className="space-y-6">
+                 <div className="flex items-center justify-between">
+                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Data Visualisasi</label>
+                   <button
+                     type="button"
+                     onClick={() => setShowChartEditor(!showChartEditor)}
+                     className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                   >
+                     <BarChart3 size={16} />
+                     <span className="text-sm font-medium dark:text-white">
+                       {showChartEditor ? 'Sembunyikan' : 'Tampilkan'} Chart
+                     </span>
+                   </button>
+                 </div>
+                 
+                 {showChartEditor && (
+                   <ChartEditor 
+                     onChartUpdate={handleChartUpdate}
+                     initialData={chartData?.data || []}
+                   />
+                 )}
+               </div>
+             )}
 
              <div className="space-y-3">
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Ringkasan Eksekutif</label>
