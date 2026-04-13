@@ -27,8 +27,30 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
   const [isPreview, setIsPreview] = useState(false);
   const [chartData, setChartData] = useState<any>(item.chart_data || null);
   const [showChartEditor, setShowChartEditor] = useState(false);
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const contentFileRef = useRef<HTMLInputElement>(null);
+
+  // Existing categories
+  const existingCategories = [
+    'Ekonomi',
+    'Sosial', 
+    'Politik',
+    'Kesehatan',
+    'Pendidikan',
+    'Teknologi',
+    'Lingkungan',
+    'Infrastruktur',
+    'Keuangan',
+    'Budaya'
+  ];
+
+  // Check if current category is custom (not in existing list)
+  React.useEffect(() => {
+    if (formData.category && !existingCategories.includes(formData.category)) {
+      setIsCustomCategory(true);
+    }
+  }, [formData.category, existingCategories]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -333,12 +355,46 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
           <div className="bg-white dark:bg-slate-900 p-8 rounded-4xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-8 sticky top-24">
              <div className="space-y-3">
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Kategori / Topik</label>
-                <input 
-                  value={formData.category || ''} 
-                  onChange={(e) => setFormData({...formData, category: e.target.value})}
-                  placeholder="Ekonomi, Sosial, dsb."
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-4 px-6 text-sm dark:text-white font-bold"
-                />
+                {!isCustomCategory ? (
+                  <select
+                    value={formData.category || ''}
+                    onChange={(e) => {
+                      if (e.target.value === 'Lainnya') {
+                        setIsCustomCategory(true);
+                        setFormData({...formData, category: ''});
+                      } else {
+                        setFormData({...formData, category: e.target.value});
+                      }
+                    }}
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-4 px-6 text-sm dark:text-white font-bold"
+                  >
+                    <option value="">Pilih Kategori</option>
+                    {existingCategories.map((category) => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
+                    <option value="Lainnya">Lainnya</option>
+                  </select>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={formData.category || ''}
+                      onChange={(e) => setFormData({...formData, category: e.target.value})}
+                      placeholder="Masukkan kategori baru..."
+                      className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-4 px-6 text-sm dark:text-white font-bold"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsCustomCategory(false);
+                        setFormData({...formData, category: ''});
+                      }}
+                      className="px-4 py-2 bg-slate-200 dark:bg-slate-700 rounded-xl hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
+                    >
+                      Batal
+                    </button>
+                  </div>
+                )}
              </div>
 
              <div className="space-y-3">

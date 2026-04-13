@@ -7,6 +7,7 @@ import {
   Upload, FileSpreadsheet, Download, Share2, Copy, 
   BarChart3, Trash2, Plus, Settings, ChevronDown
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { showToast } from '../Common/Toast';
 
 interface ChartData {
@@ -28,42 +29,76 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chartRef = useRef<HTMLDivElement>(null);
 
-  // Color palette for bars
-  const colorPalette = [
-    '#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', 
-    '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1'
-  ];
+  // Single color for all bars
+  const chartColor = '#8b5cf6';
 
   // Parse CSV file
   const parseCSV = (text: string): ChartData[] => {
+    console.log('Raw CSV text:', text);
+    
     const lines = text.split('\n').filter(line => line.trim());
+    console.log('CSV lines:', lines);
+    
     const data: ChartData[] = [];
     
     lines.forEach((line, index) => {
-      if (index === 0 && line.includes(',')) return; // Skip header
+      // Skip header if it looks like a header
+      if (index === 0 && (line.toLowerCase().includes('label') || line.toLowerCase().includes('value') || line.toLowerCase().includes('nama'))) {
+        console.log('Skipping header line:', line);
+        return;
+      }
       
-      const parts = line.split(',');
+      // Handle both comma and semicolon separators
+      const separator = line.includes(';') ? ';' : ',';
+      const parts = line.split(separator);
+      
+      console.log('Parsing line:', line, 'Parts:', parts);
+      
       if (parts.length >= 2) {
-        const label = parts[0].trim().replace(/"/g, '');
-        const value = parseFloat(parts[1].trim().replace(/"/g, ''));
+        const label = parts[0].trim().replace(/["']/g, '');
+        let valueStr = parts[1].trim().replace(/["']/g, '');
         
-        if (label && !isNaN(value)) {
+        // Handle both decimal separators (comma and dot)
+        // If value contains comma and dot, assume comma is thousands separator
+        if (valueStr.includes(',') && valueStr.includes('.')) {
+          valueStr = valueStr.replace(/,/g, '');
+        } else if (valueStr.includes(',')) {
+          // If only comma, treat as decimal separator
+          valueStr = valueStr.replace(',', '.');
+        }
+        
+        const value = parseFloat(valueStr);
+        
+        console.log('Parsed:', { label, value, originalValueStr: parts[1].trim(), processedValueStr: valueStr });
+        
+        if (label && !isNaN(value) && value !== null) {
           data.push({
             label,
             value,
-            color: colorPalette[data.length % colorPalette.length]
+            color: chartColor
           });
+          console.log('Added data item:', { label, value });
+        } else {
+          console.log('Invalid data - label:', label, 'value:', value, 'isNaN:', isNaN(value));
         }
+      } else {
+        console.log('Not enough parts in line:', line);
       }
     });
     
+    console.log('Final parsed data:', data);
     return data;
   };
 
   // Handle file upload
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    
     const file = event.target.files?.[0];
     if (!file) return;
+
+    console.log('File selected:', file.name, file.type, file.size);
 
     const fileType = file.name.split('.').pop()?.toLowerCase();
     
@@ -73,15 +108,61 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
     }
 
     try {
-      // Parse file data directly (no storage upload)
-      const text = await file.text();
-      const data = parseCSV(text);
+      let data: ChartData[] = [];
+      
+      if (fileType === 'csv') {
+        // Parse CSV file
+        const text = await file.text();
+        console.log('CSV text length:', text.length);
+        data = parseCSV(text);
+      } else if (fileType === 'xlsx' || fileType === 'xls') {
+        // Parse Excel file
+        const buffer = await file.arrayBuffer();
+        const workbook = XLSX.read(buffer, { type: 'buffer' });
+        const sheetName = workbook.SheetNames[0]; // Use first sheet
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        
+        console.log('Excel data:', jsonData);
+        
+        // Convert Excel data to ChartData format
+        data = jsonData
+          .slice(1) // Skip header row
+          .filter((row: any) => row.length >= 2 && row[0] && row[1]) // Filter valid rows
+          .map((row: any, index: number) => {
+            const label = String(row[0]).trim();
+            let valueStr = String(row[1]).trim();
+            
+            // Handle Excel decimal formatting
+            if (valueStr.includes(',') && valueStr.includes('.')) {
+              valueStr = valueStr.replace(/,/g, '');
+            } else if (valueStr.includes(',')) {
+              valueStr = valueStr.replace(',', '.');
+            }
+            
+            const value = parseFloat(valueStr);
+            
+            console.log('Excel parsed:', { label, value, originalValue: row[1], processedValue: valueStr });
+            
+            if (label && !isNaN(value)) {
+              return {
+                label,
+                value,
+                color: chartColor
+              };
+            }
+            return null;
+          })
+          .filter((item: ChartData | null): item is ChartData => item !== null);
+      }
       
       if (data.length === 0) {
-        showToast('warning', 'Tidak ada data yang valid ditemukan di file.');
+        showToast('warning', 'Tidak ada data yang valid ditemukan di file. Periksa format file Anda.');
+        console.log('No valid data found');
         return;
       }
       
+      console.log('Setting chart data:', data);
       setChartData(data);
       setDataSource('upload');
       
@@ -97,8 +178,9 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
       };
       
       onChartUpdate(chartInfo);
-      showToast('success', `Berhasil memuat ${data.length} data dari file.`);
+      showToast('success', `Berhasil memuat ${data.length} data dari file ${fileType.toUpperCase()}.`);
     } catch (error) {
+      console.error('Upload error:', error);
       showToast('error', 'Gagal membaca file. Pastikan format benar.');
     }
     
@@ -113,7 +195,7 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
     const newItem: ChartData = {
       label: `Data ${chartData.length + 1}`,
       value: 0,
-      color: colorPalette[chartData.length % colorPalette.length]
+      color: chartColor
     };
     
     const newData = [...chartData, newItem];
@@ -144,6 +226,8 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
   // Custom tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
+      const value = payload[0].value;
+      
       return (
         <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl">
           <p className="text-[11px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2">
@@ -152,10 +236,10 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
           <div className="flex items-center gap-2">
             <div 
               className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: payload[0].payload.color || '#8b5cf6' }}
+              style={{ backgroundColor: chartColor }}
             />
             <p className="text-lg font-black dark:text-white">
-              {payload[0].value.toLocaleString('id-ID')}
+              {typeof value === 'number' ? value.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : value}
             </p>
           </div>
         </div>
@@ -269,11 +353,7 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
                 />
                 <YAxis tick={{ fontSize: 11, fontWeight: 600, fill: '#64748B' }} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" radius={[8, 8, 0, 0]}>
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color || colorPalette[index % colorPalette.length]} />
-                  ))}
-                </Bar>
+                <Bar dataKey="value" radius={[8, 8, 0, 0]} fill={chartColor} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -318,25 +398,15 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
 
         {dataSource === 'upload' ? (
           <div className="space-y-4">
-            <div 
-              onClick={() => fileInputRef.current?.click()}
-              className="relative border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl p-8 text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all group"
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv,.xlsx,.xls"
-                onChange={handleFileUpload}
-                className="absolute inset-0 opacity-0 cursor-pointer"
-              />
+            <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl p-8 text-center hover:border-primary hover:bg-primary/5 transition-all group">
               <Upload size={48} className="text-slate-400 mx-auto mb-4 group-hover:text-primary transition-colors" />
               <p className="text-slate-600 dark:text-slate-400 font-medium mb-2 group-hover:text-primary transition-colors">
                 Klik untuk upload CSV atau Excel file
               </p>
               <p className="text-sm text-slate-500 dark:text-slate-500 mb-4">
-                Format: label,value (contoh: "Januari,100")
+                Format: label,value atau label;value (contoh: "Januari,100" atau "Januari;100")
               </p>
-              <div className="flex items-center justify-center gap-4 text-xs text-slate-400">
+              <div className="flex items-center justify-center gap-4 text-xs text-slate-400 mb-4">
                 <div className="flex items-center gap-1">
                   <FileSpreadsheet size={12} />
                   <span>CSV</span>
@@ -350,6 +420,20 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
                   <span>XLS</span>
                 </div>
               </div>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="px-6 py-3 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors font-medium"
+              >
+                Pilih File
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv,.xlsx,.xls"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
             </div>
             
             {chartData.length > 0 && (
