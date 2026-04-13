@@ -126,20 +126,12 @@ function AppContent() {
   }, [featuredProjects, session, isOwner, currentUid, ownerId]);
 
   const filteredArticles = useMemo(() => {
-    if (session) {
-      if (isOwner) return articles;
-      return articles.filter(a => a.user_id === currentUid);
-    }
-    return articles.filter(a => a.user_id === ownerId);
-  }, [articles, session, isOwner, currentUid, ownerId]);
+    return articles; // Articles are always public
+  }, [articles]);
 
   const filteredStats = useMemo(() => {
-    if (session) {
-      if (isOwner) return statistics;
-      return statistics.filter(s => s.user_id === currentUid);
-    }
-    return statistics.filter(s => s.user_id === ownerId);
-  }, [statistics, session, isOwner, currentUid, ownerId]);
+    return statistics; // Stats are always public
+  }, [statistics]);
 
   const isAdminPage = location.pathname.startsWith('/admin');
 
