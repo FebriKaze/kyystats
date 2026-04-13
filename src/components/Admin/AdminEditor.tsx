@@ -82,11 +82,17 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
       const file = event.target.files[0];
       const fileName = `cover-${Math.random()}.${file.name.split('.').pop()}`;
       const bucket = type === 'portfolio' || type === 'featured' ? 'portfolio-images' : 'article-images';
-      await supabase.storage.from(bucket).upload(`covers/${fileName}`, file);
+      const { data, error } = await supabase.storage.from(bucket).upload(`covers/${fileName}`, file);
+      if (error) {
+        console.error('Storage Upload Error:', error);
+        throw error;
+      }
       const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(`covers/${fileName}`);
-      if (type === 'articles') setFormData({...formData, thumbnail_url: publicUrl});
-      else if (type === 'portfolio') setFormData({...formData, image: publicUrl});
-      else setFormData({...formData, image_url: publicUrl});
+      console.log('Upload Success - Public URL:', publicUrl);
+      if (type === 'articles') setFormData(prev => ({...prev, thumbnail_url: publicUrl}));
+      else if (type === 'portfolio') setFormData(prev => ({...prev, image: publicUrl}));
+      else setFormData(prev => ({...prev, image_url: publicUrl}));
+      showToast('success', 'Gambar berhasil diunggah!');
     } catch (err: any) { showToast('error', err.message); } finally { setUploading(false); }
   };
 
