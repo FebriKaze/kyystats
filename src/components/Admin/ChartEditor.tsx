@@ -1,7 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  Cell, Legend, Label, LabelList 
+  Cell, Legend, Label, LabelList, LineChart, Line 
 } from 'recharts';
 import { 
   Upload, FileSpreadsheet, Download, Share2, Copy, 
@@ -19,21 +19,39 @@ interface ChartData {
 interface ChartEditorProps {
   onChartUpdate: (chartData: any) => void;
   initialData?: ChartData[];
+  initialLayout?: 'horizontal' | 'vertical' | 'auto';
+  initialType?: 'bar' | 'line';
 }
 
-const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = [] }) => {
+const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = [], initialLayout = 'auto', initialType = 'bar' }) => {
   const [chartData, setChartData] = useState<ChartData[]>(initialData);
   const [chartTitle, setChartTitle] = useState('Statistik Performa');
   const [chartSource, setChartSource] = useState('Data Internal');
-  const [xAxisTitle, setXAxisTitle] = useState('Tahun');
+    const [xAxisTitle, setXAxisTitle] = useState('Tahun');
   const [yAxisTitle, setYAxisTitle] = useState('Inflasi');
   const [dataSource, setDataSource] = useState<'upload' | 'manual'>('manual');
+  const [chartLayout, setChartLayout] = useState<'horizontal' | 'vertical' | 'auto'>(initialLayout || 'auto');
+  const [chartType, setChartType] = useState<'bar' | 'line'>(initialType || 'bar');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chartRef = useRef<HTMLDivElement>(null);
 
   // Single color for all bars
   const chartColor = '#8b5cf6';
+
+  // Central sync effect to ensure all settings are saved
+  useEffect(() => {
+    onChartUpdate({
+      title: chartTitle,
+      sourceText: chartSource,
+      xAxisTitle,
+      yAxisTitle,
+      data: chartData,
+      chartLayout,
+      chartType,
+      source: dataSource
+    });
+  }, [chartData, chartTitle, chartSource, chartLayout, chartType, xAxisTitle, yAxisTitle, dataSource]);
 
   // Parse CSV file
   const parseCSV = (text: string): ChartData[] => {
@@ -179,6 +197,8 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
         xAxisTitle,
         yAxisTitle,
         data,
+        chartLayout,
+        chartType,
         source: 'upload' as const,
         originalFile: {
           name: file.name,
@@ -210,7 +230,7 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
     const newData = [...chartData, newItem];
     setChartData(newData);
     setDataSource('manual');
-    onChartUpdate({ title: chartTitle, sourceText: chartSource, xAxisTitle, yAxisTitle, data: newData, source: 'manual' });
+    onChartUpdate({ title: chartTitle, sourceText: chartSource, xAxisTitle, yAxisTitle, data: newData, chartLayout, chartType, source: 'manual' });
   };
 
   // Update manual data
@@ -222,14 +242,14 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
       newData[index].value = Number(value);
     }
     setChartData(newData);
-    onChartUpdate({ title: chartTitle, sourceText: chartSource, xAxisTitle, yAxisTitle, data: newData, source: 'manual' });
+    onChartUpdate({ title: chartTitle, sourceText: chartSource, xAxisTitle, yAxisTitle, data: newData, chartLayout, chartType, source: 'manual' });
   };
 
   // Delete data
   const deleteData = (index: number) => {
     const newData = chartData.filter((_, i) => i !== index);
     setChartData(newData);
-    onChartUpdate({ title: chartTitle, sourceText: chartSource, xAxisTitle, yAxisTitle, data: newData, source: dataSource });
+    onChartUpdate({ title: chartTitle, sourceText: chartSource, xAxisTitle, yAxisTitle, data: newData, chartLayout, chartType, source: dataSource });
   };
 
   // Custom tooltip
@@ -350,9 +370,48 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
                 />
               </div>
             </div>
+            
+            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-fit mt-2">
+               {[
+                 { id: 'bar', label: 'Bar Chart', icon: <BarChart3 size={14} /> },
+                 { id: 'line', label: 'Line Chart', icon: <Share2 size={14} className="rotate-90" /> }
+               ].map((opt) => (
+                 <button
+                   key={opt.id}
+                   type="button"
+                   onClick={() => {
+                     setChartType(opt.id as any);
+                     onChartUpdate({ title: chartTitle, sourceText: chartSource, xAxisTitle, yAxisTitle, data: chartData, chartLayout, chartType: opt.id, source: dataSource });
+                   }}
+                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${chartType === opt.id ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
+                 >
+                   {opt.icon} {opt.label}
+                 </button>
+               ))}
+            </div>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+               {[
+                 { id: 'vertical', label: 'Tegak', icon: <BarChart3 size={14} className="rotate-0" /> },
+                 { id: 'horizontal', label: 'Miring', icon: <BarChart3 size={14} className="rotate-90" /> },
+                 { id: 'auto', label: 'Auto', icon: <Settings size={14} /> }
+               ].map((opt) => (
+                 <button
+                   key={opt.id}
+                   type="button"
+                   onClick={() => {
+                     setChartLayout(opt.id as any);
+                     onChartUpdate({ title: chartTitle, sourceText: chartSource, xAxisTitle, yAxisTitle, data: chartData, chartLayout: opt.id, source: dataSource });
+                   }}
+                   className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${chartLayout === opt.id ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
+                 >
+                   {opt.icon} {opt.label}
+                 </button>
+               ))}
+            </div>
+
             <div className="relative">
               <button
                 type="button"
@@ -398,30 +457,107 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
         </div>
 
         {/* Chart Display */}
-        <div ref={chartRef} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6 min-h-100">
-          {chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={350}>
-              <BarChart data={chartData} margin={{ top: 30, right: 30, left: 20, bottom: 60 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" opacity={0.3} />
-                <XAxis 
-                  dataKey="label" 
-                  angle={-45}
-                  textAnchor="end"
-                  height={100}
-                  tick={{ fontSize: 11, fontWeight: 600, fill: '#64748B' }}
+        <div ref={chartRef} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6 min-h-100 relative">
+          {chartData.length > 0 ? (() => {
+            const isHorizontal = chartType === 'bar' && (chartLayout === 'horizontal' || (chartLayout === 'auto' && (chartData.length > 10 || window.innerWidth < 768)));
+            const ChartComponent = chartType === 'line' ? LineChart : BarChart;
+            const DataComponent = chartType === 'line' ? Line : Bar;
+
+            return (
+              <ResponsiveContainer width="100%" height={350}>
+                <ChartComponent 
+                  data={chartData} 
+                  layout={isHorizontal ? 'vertical' : 'horizontal'}
+                  margin={{ 
+                    top: 30, 
+                    right: isHorizontal ? 60 : 30, 
+                    left: isHorizontal ? 40 : (yAxisTitle ? 30 : 10), 
+                    bottom: isHorizontal ? 40 : 60 
+                  }}
                 >
-                  <Label value={xAxisTitle} offset={-40} position="insideBottom" fill="#94A3B8" style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase' }} />
-                </XAxis>
-                <YAxis tick={{ fontSize: 11, fontWeight: 600, fill: '#64748B' }}>
-                  <Label value={yAxisTitle} angle={-90} position="insideLeft" offset={0} style={{ textAnchor: 'middle', fill: '#94A3B8', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase' }} />
-                </YAxis>
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" radius={[8, 8, 0, 0]} fill={chartColor}>
-                   <LabelList dataKey="value" position="top" fill="#64748B" fontSize={11} fontWeight={900} offset={12} />
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
+                  <CartesianGrid strokeDasharray="3 3" vertical={isHorizontal} horizontal={!isHorizontal} stroke="#E2E8F0" opacity={0.3} />
+                  
+                  {isHorizontal ? (
+                    <>
+                      <XAxis type="number" height={40} tick={{ fontSize: 10, fill: '#64748B' }}>
+                         {yAxisTitle && (
+                           <Label value={yAxisTitle} offset={-15} position="insideBottom" fill="#94A3B8" style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase' }} />
+                         )}
+                      </XAxis>
+                      <YAxis 
+                        type="category" 
+                        dataKey="label" 
+                        width={90}
+                        tick={{ fontSize: 10, fill: '#64748B', fontWeight: 600 }}
+                        axisLine={{ stroke: '#E2E8F0' }}
+                        tickLine={false}
+                      >
+                         {xAxisTitle && (
+                           <Label value={xAxisTitle} angle={-90} position="insideLeft" offset={-25} style={{ textAnchor: 'middle', fill: '#94A3B8', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase' }} />
+                         )}
+                      </YAxis>
+                    </>
+                  ) : (
+                    <>
+                      <XAxis 
+                        dataKey="label" 
+                        angle={-45}
+                        textAnchor="end"
+                        height={100}
+                        tick={{ fontSize: 11, fontWeight: 600, fill: '#64748B' }}
+                      >
+                        {xAxisTitle && (
+                          <Label value={xAxisTitle} offset={-40} position="insideBottom" fill="#94A3B8" style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase' }} />
+                        )}
+                      </XAxis>
+                      <YAxis tick={{ fontSize: 11, fontWeight: 600, fill: '#64748B' }}>
+                        {yAxisTitle && (
+                          <Label value={yAxisTitle} angle={-90} position="insideLeft" offset={0} style={{ textAnchor: 'middle', fill: '#94A3B8', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase' }} />
+                        )}
+                      </YAxis>
+                    </>
+                  )}
+
+                  <Tooltip content={<CustomTooltip />} />
+                  {chartType === 'line' ? (
+                    <Line 
+                      dataKey="value" 
+                      stroke={chartColor}
+                      strokeWidth={3}
+                      dot={{ r: 6, fill: chartColor, strokeWidth: 2, stroke: '#fff' }}
+                      activeDot={{ r: 8, strokeWidth: 0 }}
+                      type="monotone"
+                    >
+                      <LabelList 
+                        dataKey="value" 
+                        position={isHorizontal ? "right" : "top"} 
+                        fill="#64748B" 
+                        fontSize={10} 
+                        fontWeight={900} 
+                        offset={isHorizontal ? 10 : 12} 
+                      />
+                    </Line>
+                  ) : (
+                    <Bar 
+                      dataKey="value" 
+                      fill={chartColor}
+                      radius={isHorizontal ? [0, 8, 8, 0] : [8, 8, 0, 0]}
+                      barSize={isHorizontal ? 20 : 35}
+                    >
+                      <LabelList 
+                        dataKey="value" 
+                        position={isHorizontal ? "right" : "top"} 
+                        fill="#64748B" 
+                        fontSize={10} 
+                        fontWeight={900} 
+                        offset={isHorizontal ? 10 : 12} 
+                      />
+                    </Bar>
+                  )}
+                </ChartComponent>
+              </ResponsiveContainer>
+            );
+          })() : (
             <div className="flex flex-col items-center justify-center h-87.5 text-center">
               <BarChart3 size={48} className="text-slate-300 mb-4" />
               <p className="text-slate-500 dark:text-slate-400 font-medium mb-4">

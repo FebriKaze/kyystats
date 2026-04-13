@@ -4,7 +4,8 @@ import { ArrowLeft, Calendar, User, Clock, Share2, Tag, Link as LinkIcon } from 
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, Label, LabelList 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, 
+  Cell, Label, LabelList, LineChart, Line 
 } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
@@ -275,89 +276,170 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
           <div className="flex-1 max-w-4xl flex flex-col gap-8">
             
             {/* Chart Section - Now inside the content column */}
-            {item.chart_data && item.chart_data.data && item.chart_data.data.length > 0 && (
-              <div className="mb-4">
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-                  {item.chart_data.title || 'Data Statistik'}
-                </h3>
-                <div className="h-[460px] w-full mt-6 bg-white dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm" ref={chartRef}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={item.chart_data.data} margin={{ top: 40, right: 30, left: 15, bottom: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" opacity={0.5} />
-                      <XAxis 
-                        dataKey="label" 
-                        angle={-45}
-                        textAnchor="end"
-                        height={60}
-                        tick={{ fontSize: 11, fill: '#64748B', fontWeight: 600 }}
-                        axisLine={{ stroke: '#E2E8F0' }}
-                        tickLine={false}
-                      >
-                        <Label value={(item.chart_data as any).xAxisTitle || 'Label'} offset={-10} position="insideBottom" fill="#94A3B8" style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }} />
-                      </XAxis>
-                      <YAxis 
-                        tick={{ fontSize: 11, fill: '#64748B', fontWeight: 600 }} 
-                        axisLine={{ stroke: '#E2E8F0' }}
-                        tickLine={false}
-                        width={50}
-                      >
-                        <Label value={(item.chart_data as any).yAxisTitle || 'Nilai'} angle={-90} position="insideLeft" offset={0} style={{ textAnchor: 'middle', fill: '#94A3B8', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }} />
-                      </YAxis>
-                      <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(139, 92, 246, 0.05)' }} />
-                      <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={45}>
-                         <LabelList dataKey="value" position="top" fill="#64748B" fontSize={11} fontWeight={900} offset={12} />
-                         {item.chart_data.data.map((entry: any, index: number) => (
-                           <Cell key={`cell-${index}`} fill="#8B5CF6" />
-                         ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-                
-                <div className="flex items-center justify-between mt-4">
-                  <p className="text-sm text-slate-500 font-medium pb-4">Sumber: {(item.chart_data as any)?.sourceText || item.author || 'Data Internal'}</p>
-                </div>
+            {item.chart_data && item.chart_data.data && item.chart_data.data.length > 0 && (() => {
+              const dataCount = item.chart_data.data.length;
+              const savedLayout = (item.chart_data as any).chartLayout || 'auto';
+              const chartType = (item.chart_data as any).chartType || 'bar';
+              const isHorizontal = chartType === 'bar' && (savedLayout === 'horizontal' || (savedLayout === 'auto' && (dataCount > 10 || window.innerWidth < 768)));
+              const yTitle = (item.chart_data as any).yAxisTitle;
+              const xTitle = (item.chart_data as any).xAxisTitle;
+              const chartColor = '#8B5CF6';
 
-                <div className="flex flex-wrap items-center gap-4 mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
-                  <div className="relative">
-                    <button 
-                      onClick={() => setIsChartDropdownOpen(!isChartDropdownOpen)}
-                      className="px-6 py-2.5 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-xl text-sm font-black text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center gap-2 shadow-sm"
-                    >
-                      Unduh 
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                    </button>
-                    <AnimatePresence>
-                      {isChartDropdownOpen && (
-                        <>
-                          <div className="fixed inset-0 z-30" onClick={() => setIsChartDropdownOpen(false)} />
-                          <motion.div
-                            initial={{ opacity: 0, y: 5 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 5 }}
-                            className="absolute left-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-2 z-40"
+              const ChartComponent = chartType === 'line' ? LineChart : BarChart;
+              const DataComponent = chartType === 'line' ? Line : Bar;
+
+              return (
+                <div className="mb-4">
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                    {item.chart_data.title || 'Data Statistik'}
+                  </h3>
+                  <div className="h-[350px] md:h-[600px] w-full mt-6 bg-white dark:bg-slate-900/50 p-4 md:p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm relative" ref={chartRef}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <ChartComponent 
+                        data={item.chart_data.data} 
+                        layout={isHorizontal ? "vertical" : "horizontal"}
+                        margin={{ 
+                          top: 20, 
+                          right: isHorizontal ? 60 : 30, 
+                          left: isHorizontal ? 40 : (yTitle ? 40 : 10), 
+                          bottom: isHorizontal ? 40 : 60 
+                        }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" vertical={isHorizontal} horizontal={!isHorizontal} stroke="#E2E8F0" opacity={0.5} />
+                        
+                        {isHorizontal ? (
+                          <>
+                            <XAxis type="number" height={40} tick={{ fontSize: 10, fill: '#64748B' }} axisLine={{ stroke: '#E2E8F0' }}>
+                              {yTitle && (
+                                <Label value={yTitle} offset={-15} position="insideBottom" fill="#94A3B8" style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase' }} />
+                              )}
+                            </XAxis>
+                            <YAxis 
+                              type="category" 
+                              dataKey="label" 
+                              width={90}
+                              tick={{ fontSize: 10, fill: '#64748B', fontWeight: 600 }}
+                              axisLine={{ stroke: '#E2E8F0' }}
+                              tickLine={false}
+                            >
+                              {xTitle && (
+                                <Label value={xTitle} angle={-90} position="insideLeft" offset={-25} style={{ textAnchor: 'middle', fill: '#94A3B8', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase' }} />
+                              )}
+                            </YAxis>
+                          </>
+                        ) : (
+                          <>
+                            <XAxis 
+                              dataKey="label" 
+                              angle={-45}
+                              textAnchor="end"
+                              height={70}
+                              tick={{ fontSize: 11, fill: '#64748B', fontWeight: 600 }}
+                              axisLine={{ stroke: '#E2E8F0' }}
+                              tickLine={false}
+                            >
+                              {xTitle && (
+                                <Label value={xTitle} offset={-45} position="insideBottom" fill="#94A3B8" style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }} />
+                              )}
+                            </XAxis>
+                            <YAxis 
+                              tick={{ fontSize: 11, fill: '#64748B', fontWeight: 600 }} 
+                              axisLine={{ stroke: '#E2E8F0' }}
+                              tickLine={false}
+                              width={yTitle ? 60 : 30}
+                            >
+                              {yTitle && (
+                                <Label value={yTitle} angle={-90} position="insideLeft" offset={-10} style={{ textAnchor: 'middle', fill: '#94A3B8', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }} />
+                              )}
+                            </YAxis>
+                          </>
+                        )}
+
+                        <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(139, 92, 246, 0.05)' }} />
+                        {chartType === 'line' ? (
+                          <Line 
+                            dataKey="value" 
+                            stroke="#8B5CF6"
+                            strokeWidth={3}
+                            dot={{ r: 6, fill: '#8B5CF6', strokeWidth: 2, stroke: '#fff' }}
+                            activeDot={{ r: 8, strokeWidth: 0 }}
+                            type="monotone"
                           >
-                            <button onClick={() => { downloadCSV(); setIsChartDropdownOpen(false); }} className="w-full text-left px-4 py-2 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg mb-1">
-                              Data CSV
-                            </button>
-                            <button onClick={() => { downloadChartImage(); setIsChartDropdownOpen(false); }} className="w-full text-left px-4 py-2 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg">
-                              Gambar (PNG)
-                            </button>
-                          </motion.div>
-                        </>
-                      )}
-                    </AnimatePresence>
+                            <LabelList 
+                              dataKey="value" 
+                              position={isHorizontal ? "right" : "top"} 
+                              fill="#64748B" 
+                              fontSize={10} 
+                              fontWeight={800} 
+                              offset={isHorizontal ? 10 : 15}
+                            />
+                          </Line>
+                        ) : (
+                          <Bar 
+                            dataKey="value" 
+                            fill="#8B5CF6" 
+                            radius={isHorizontal ? [0, 8, 8, 0] : [8, 8, 0, 0]} 
+                            barSize={isHorizontal ? 20 : 35}
+                          >
+                            <LabelList 
+                              dataKey="value" 
+                              position={isHorizontal ? "right" : "top"} 
+                              fill="#64748B" 
+                              fontSize={10} 
+                              fontWeight={800} 
+                              offset={isHorizontal ? 10 : 15}
+                            />
+                          </Bar>
+                        )}
+                      </ChartComponent>
+                    </ResponsiveContainer>
                   </div>
-                  
-                  <button 
-                    onClick={() => setIsDonationModalOpen(true)}
-                    className="px-6 py-2.5 bg-rose-50 dark:bg-rose-500/10 border-2 border-rose-100 dark:border-rose-500/20 rounded-xl text-sm font-black text-rose-500 hover:bg-rose-500 hover:text-white transition-all flex items-center gap-2"
-                  >
-                    <Heart size={16} fill="currentColor" /> Support
-                  </button>
+
+                  <div className="flex items-center justify-between mt-4">
+                    <p className="text-sm text-slate-500 font-medium pb-4">Sumber: {(item.chart_data as any)?.sourceText || item.author || 'Data Internal'}</p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-4 mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
+                    <div className="relative">
+                      <button 
+                        onClick={() => setIsChartDropdownOpen(!isChartDropdownOpen)}
+                        className="px-6 py-2.5 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-xl text-sm font-black text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center gap-2 shadow-sm"
+                      >
+                        Unduh 
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                      </button>
+                      <AnimatePresence>
+                        {isChartDropdownOpen && (
+                          <>
+                            <div className="fixed inset-0 z-30" onClick={() => setIsChartDropdownOpen(false)} />
+                            <motion.div
+                              initial={{ opacity: 0, y: 5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: 5 }}
+                              className="absolute left-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-2 z-40"
+                            >
+                              <button onClick={() => { downloadCSV(); setIsChartDropdownOpen(false); }} className="w-full text-left px-4 py-2 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg mb-1">
+                                Data CSV
+                              </button>
+                              <button onClick={() => { downloadChartImage(); setIsChartDropdownOpen(false); }} className="w-full text-left px-4 py-2 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg">
+                                Gambar (PNG)
+                              </button>
+                            </motion.div>
+                          </>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                    
+                    <button 
+                      onClick={() => setIsDonationModalOpen(true)}
+                      className="px-6 py-2.5 bg-rose-50 dark:bg-rose-500/10 border-2 border-rose-100 dark:border-rose-500/20 rounded-xl text-sm font-black text-rose-500 hover:bg-rose-500 hover:text-white transition-all flex items-center gap-2"
+                    >
+                      <Heart size={16} fill="currentColor" /> Support
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Markdown Text Content */}
             <article className="flex-1 mt-6">

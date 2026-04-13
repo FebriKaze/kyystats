@@ -197,15 +197,52 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({
           {/* Main Article Content */}
           <div className="flex-1 max-w-4xl">
             <article>
-              {/* Centered, much smaller image with full aspect ratio */}
-              <div className="w-full md:w-1/2 lg:w-3/5 mx-auto mb-12">
-                <div className="rounded-3xl overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40">
-                  <SafeImage 
-                    src={article.thumbnail_url} 
-                    alt={article.title} 
-                    className="w-full h-auto object-contain" 
-                  />
+              {/* Hero Section - Centered & Ramped Size */}
+              <div className="max-w-2xl mx-auto mb-12">
+                <div className="relative rounded-3xl overflow-hidden bg-slate-50 dark:bg-slate-900/50 shadow-2xl border border-slate-100 dark:border-slate-800">
+                  {article.thumbnail_url && (
+                    (() => {
+                      const isVideo = /\.(mp4|webm|ogg|mov)$/i.test(article.thumbnail_url);
+                    const isFlourish = /public\.flourish\.studio\/visualisation\/(\d+)/.test(article.thumbnail_url);
+
+                    if (isFlourish) {
+                      const flourishId = article.thumbnail_url.match(/visualisation\/(\d+)/)?.[1];
+                      return (
+                        <div className="w-full h-full min-h-[450px] md:min-h-[600px] bg-white dark:bg-slate-900">
+                          <iframe 
+                            src={`https://public.flourish.studio/visualisation/${flourishId}/embed?auto=1`}
+                            className="w-full h-full border-0 absolute inset-0"
+                            scrolling="no"
+                            style={{ width: '100%', height: '100%' }}
+                          />
+                        </div>
+                      );
+                    }
+                      if (isVideo) {
+                        return (
+                          <video 
+                            src={article.thumbnail_url}
+                            className="w-full h-auto block"
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                            onMouseEnter={(e) => (e.target as HTMLVideoElement).pause()}
+                            onMouseLeave={(e) => (e.target as HTMLVideoElement).play()}
+                          />
+                        );
+                      }
+                      return (
+                        <SafeImage 
+                          src={article.thumbnail_url} 
+                          alt={article.title} 
+                          className="w-full h-auto block" 
+                        />
+                      );
+                    })()
+                  )}
                 </div>
+              </div>
                 
                 {/* Image Actions Like Statistik */}
                 <div className="flex flex-wrap items-center gap-4 mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
@@ -223,7 +260,6 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({
                     <Heart size={16} fill="currentColor" /> Support
                   </button>
                 </div>
-              </div>
 
               <div className="prose prose-slate dark:prose-invert max-w-none prose-headings:font-black prose-headings:tracking-tighter prose-p:text-slate-600 dark:prose-p:text-slate-400 prose-p:leading-relaxed prose-p:text-lg prose-img:rounded-3xl prose-img:shadow-xl prose-img:border prose-img:border-slate-100 dark:prose-img:border-slate-800">
                 <div className="text-xl md:text-2xl font-black text-slate-700 dark:text-slate-300 leading-relaxed mb-12 italic border-l-4 border-primary pl-6 py-4 bg-slate-50 dark:bg-slate-900/50 rounded-r-2xl">

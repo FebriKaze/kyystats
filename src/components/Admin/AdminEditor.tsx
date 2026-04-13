@@ -417,6 +417,8 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
                    <ChartEditor 
                      onChartUpdate={handleChartUpdate}
                      initialData={chartData?.data || []}
+                      initialLayout={chartData?.chartLayout || "auto"}
+                      initialType={chartData?.chartType || "bar"}
                    />
                  )}
                </div>
