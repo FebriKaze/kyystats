@@ -208,7 +208,7 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({
                     if (isFlourish) {
                       const flourishId = article.thumbnail_url.match(/visualisation\/(\d+)/)?.[1];
                       return (
-                        <div className="w-full h-full min-h-[450px] md:min-h-[600px] bg-white dark:bg-slate-900">
+                        <div className="relative w-full h-full min-h-[500px] md:min-h-[650px] bg-white dark:bg-slate-900">
                           <iframe 
                             src={`https://public.flourish.studio/visualisation/${flourishId}/embed?auto=1`}
                             className="w-full h-full border-0 absolute inset-0"

@@ -99,6 +99,13 @@ export const saveArticle = async (article: Partial<Article>): Promise<Article | 
     const { data: { user } } = await supabase.auth.getUser();
     if (user) dbData.user_id = user.id;
   }
+
+  // Final sanitization for articles table
+  const fieldsToDelete = [
+    'chart_data', 'impact_val', 'impact_desc', 'tags', 
+    'image', 'image_url', 'highlight_y', 'hightlight_desc', 'image_label'
+  ];
+  fieldsToDelete.forEach(f => delete (dbData as any)[f]);
   
   const { data, error } = isNew
     ? await supabase.from('articles').insert([dbData]).select().single()
@@ -130,6 +137,13 @@ export const savePortfolio = async (project: any): Promise<any> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) dbData.user_id = user.id;
   }
+
+  // Final sanitization for articles table
+  const fieldsToDelete = [
+    'chart_data', 'impact_val', 'impact_desc', 'tags', 
+    'image', 'image_url', 'highlight_y', 'hightlight_desc', 'image_label'
+  ];
+  fieldsToDelete.forEach(f => delete (dbData as any)[f]);
 
   const { data, error } = isNew
     ? await supabase.from('portfolios').insert([dbData]).select().single()
@@ -163,6 +177,13 @@ export const saveFeaturedProject = async (featured: any): Promise<any> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) dbData.user_id = user.id;
   }
+
+  // Final sanitization for articles table
+  const fieldsToDelete = [
+    'chart_data', 'impact_val', 'impact_desc', 'tags', 
+    'image', 'image_url', 'highlight_y', 'hightlight_desc', 'image_label'
+  ];
+  fieldsToDelete.forEach(f => delete (dbData as any)[f]);
 
   const { data, error } = isNew
     ? await supabase.from('featured_project').insert([dbData]).select().single()
@@ -234,6 +255,13 @@ export const saveStatistic = async (stat: Partial<Statistic>): Promise<Statistic
     const { data: { user } } = await supabase.auth.getUser();
     if (user) dbData.user_id = user.id;
   }
+
+  // Final sanitization for articles table
+  const fieldsToDelete = [
+    'chart_data', 'impact_val', 'impact_desc', 'tags', 
+    'image', 'image_url', 'highlight_y', 'hightlight_desc', 'image_label'
+  ];
+  fieldsToDelete.forEach(f => delete (dbData as any)[f]);
 
   const { data, error } = isNew
     ? await supabase.from('statistics').insert([dbData]).select().single()
