@@ -91,8 +91,8 @@ function AppContent() {
     const [p, f, a, s] = await Promise.all([
       fetchPortfolios(),
       fetchFeaturedProjects(),
-      fetchArticles(),
-      fetchStatistics()
+      fetchArticles(false),
+      fetchStatistics(false)
     ]);
     setProjects(p);
     setFeaturedProjects(f);

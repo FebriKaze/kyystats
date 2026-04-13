@@ -52,7 +52,8 @@ export const fetchFeaturedProjects = async (): Promise<FeaturedProject[]> => {
 };
 
 export const fetchArticles = async (onlyPublished = true): Promise<Article[]> => {
-  let query = supabase.from('articles').select('*, profiles:user_id(full_name, avatar_url)');
+  console.log('Fetching articles, onlyPublished:', onlyPublished);
+  let query = supabase.from('articles').select('*, profiles(full_name, avatar_url)');
   
   if (onlyPublished) {
     query = query.eq('is_published', true);
@@ -66,6 +67,7 @@ export const fetchArticles = async (onlyPublished = true): Promise<Article[]> =>
     return (simpleData || []) as Article[];
   }
 
+  console.log('Total articles fetched:', data?.length);
   return (data || []).map((row: any) => ({
     ...row,
     author: row.profiles?.full_name || 'Admin'
@@ -75,7 +77,7 @@ export const fetchArticles = async (onlyPublished = true): Promise<Article[]> =>
 export const fetchArticleBySlug = async (slug: string): Promise<Article | null> => {
   const { data, error } = await supabase
     .from('articles')
-    .select('*, profiles:user_id(full_name, avatar_url)')
+    .select('*, profiles(full_name, avatar_url)')
     .eq('slug', slug)
     .single();
 
@@ -176,19 +178,22 @@ export const deleteFeaturedProject = async (id: string): Promise<boolean> => {
 };
 
 export const fetchStatistics = async (onlyPublished = true): Promise<Statistic[]> => {
-  let query = supabase.from('statistics').select('*, profiles:user_id(full_name, avatar_url)');
+  console.log('Fetching statistics, onlyPublished:', onlyPublished);
+  let query = supabase.from('statistics').select('*, profiles(full_name, avatar_url)');
   if (onlyPublished) query = query.eq('is_published', true);
   
   const { data, error } = await query.order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching stats with profiles:', error);
+    console.error('Error fetching statistics:', error);
     const { data: simpleData } = await supabase.from('statistics').select('*').order('created_at', { ascending: false });
     return (simpleData || []).map((row: any) => ({
       ...row,
       author: 'Admin'
     })) as Statistic[];
   }
+
+  console.log('Total statistics fetched:', data?.length);
 
   return (data || []).map((row: any) => {
     const stat = {
@@ -236,7 +241,6 @@ export const saveStatistic = async (stat: Partial<Statistic>): Promise<Statistic
 
   if (error) throw error;
   
-  // Parse chart_data back for frontend
   if (data && data.chart_data) {
     try {
       data.chart_data = typeof data.chart_data === 'string' ? JSON.parse(data.chart_data) : data.chart_data;
