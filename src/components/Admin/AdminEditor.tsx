@@ -10,6 +10,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { supabase } from '../../lib/supabase';
 import { showToast } from '../Common/Toast';
+import SafeImage from '../Common/SafeImage';
 import ChartEditor from './ChartEditor';
 
 interface AdminEditorProps {
@@ -160,7 +161,7 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
                 <div className="relative aspect-video rounded-2xl overflow-hidden border-2 border-dashed bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center">
                    {formData.thumbnail_url ? (
                      <>
-                        <img src={formData.thumbnail_url} className="w-full h-full object-cover" />
+                        <SafeImage src={formData.thumbnail_url} className="w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
                            <input type="file" onChange={uploadCoverImage} className="absolute inset-0 opacity-0 cursor-pointer" />
                            <button type="button" className="p-3 bg-white rounded-xl text-[10px] font-black uppercase">Ganti Gambar</button>
