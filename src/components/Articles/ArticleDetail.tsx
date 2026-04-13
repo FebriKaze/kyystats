@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Calendar, User, Clock, Share2, Tag, Link as LinkIcon, Heart, Download as DownloadIcon, Info, MessageCircle, DollarSign, X as CloseIcon } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { motion } from 'framer-motion';
+import { 
+  ArrowLeft, Calendar, User, Share2, Facebook, Twitter, Link as LinkIcon, 
+  MessageCircle, Linkedin 
+} from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Article } from '../../types';
@@ -26,19 +28,22 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ article, articles, onBack
   useMeta({ title: article.title, description: article.summary });
   usePageView({ pageType: 'articles', pageId: article.id || article.slug, pageTitle: article.title });
 
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: article.title,
-        text: article.summary,
-        url: window.location.href,
-      }).catch(console.error);
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      showToast('success', 'Link berhasil disalin ke clipboard!');
-    }
+  const shareUrl = window.location.href;
+  const shareTitle = article.title;
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(shareUrl);
+    showToast('success', 'Link berhasil disalin!');
   };
 
+  const socialShares = [
+    { icon: <Facebook size={18} />, color: 'hover:bg-[#1877F2]', link: `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}` },
+    { icon: <Twitter size={18} />, color: 'hover:bg-[#1DA1F2]', link: `https://twitter.com/intent/tweet?url=${shareUrl}&text=${shareTitle}` },
+    { icon: <MessageCircle size={18} />, color: 'hover:bg-[#25D366]', link: `https://api.whatsapp.com/send?text=${shareTitle}%20${shareUrl}` },
+    { icon: <Linkedin size={18} />, color: 'hover:bg-[#0077B5]', link: `https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}` },
+  ];
+
+  // Logic: media_url first (Embed), fallback to thumbnail_url (Sampul)
   const heroUrl = (article as any).media_url || article.thumbnail_url;
   const flourishId = heroUrl?.match(/visualisation\/(\d+)/)?.[1];
   const isVideo = /\.(mp4|webm|ogg|mov)$/i.test(heroUrl || '');
@@ -64,21 +69,25 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ article, articles, onBack
 
               <h1 className="text-4xl md:text-6xl font-black tracking-tightest leading-[1.1] dark:text-white">{article.title}</h1>
               
-              <div className="flex items-center gap-4 py-6 border-y border-slate-100 dark:border-slate-800">
-                <ProfileAvatar src={(article as any).profiles?.avatar_url} alt={article.author || 'Admin'} className="w-12 h-12 rounded-full ring-2 ring-white dark:ring-slate-900 shadow-lg" />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 py-6 border-y border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-4">
+                  <ProfileAvatar src={(article as any).profiles?.avatar_url} alt={article.author || 'Admin'} className="w-12 h-12 rounded-full ring-2 ring-white dark:ring-slate-900 shadow-lg" />
+                  <div>
                     <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Penulis Konten</span>
+                    <h4 className="text-sm md:text-base font-black dark:text-white mt-0.5">{article.author || 'Tim KyyStats'}</h4>
                   </div>
-                  <h4 className="text-sm md:text-base font-black dark:text-white mt-0.5">{article.author || 'Tim KyyStats'}</h4>
                 </div>
-                <div className="flex gap-2">
-                   <button 
-                     onClick={handleShare}
-                     className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-400 hover:text-primary transition-all"
-                   >
-                     <Share2 size={16} />
-                   </button>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2 hidden sm:block">BAGIKAN:</span>
+                  {socialShares.map((social, i) => (
+                    <a key={i} href={social.link} target="_blank" rel="noopener noreferrer" className={`p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-400 hover:text-white transition-all ${social.color} shadow-sm`}>
+                      {social.icon}
+                    </a>
+                  ))}
+                  <button onClick={handleCopyLink} className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-400 hover:text-primary transition-all shadow-sm">
+                    <LinkIcon size={18} />
+                  </button>
                 </div>
               </div>
             </header>
@@ -86,7 +95,7 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ article, articles, onBack
             <div className="relative w-full rounded-3xl md:rounded-4xl overflow-hidden bg-slate-50 dark:bg-slate-900/50 shadow-2xl border border-slate-100 dark:border-slate-800">
               {flourishId ? (
                 <div className="relative w-full min-h-[500px] md:min-h-[650px]">
-                  <iframe src={`https://public.flourish.studio/visualisation/${flourishId}/embed?auto=1`} className="w-full h-full border-0 absolute inset-0" scrolling="no" />
+                  <iframe src={`https://public.flourish.studio/visualisation/${flourishId}/embed?auto=1`} className="w-full h-full border-0 absolute inset-0 rounded-3xl" scrolling="no" />
                 </div>
               ) : isVideo ? (
                 <video src={heroUrl} className="w-full h-auto block" autoPlay muted loop playsInline />

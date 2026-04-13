@@ -3,10 +3,9 @@ import { ImageIcon, BarChart3 } from 'lucide-react';
 
 interface SafeImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src?: string;
-  isFlourish?: boolean;
 }
 
-const SafeImage: React.FC<SafeImageProps> = ({ src, alt, className, isFlourish, ...props }) => {
+const SafeImage: React.FC<SafeImageProps> = ({ src, alt, className, ...props }) => {
   const [currentSrc, setCurrentSrc] = useState(src || '');
   const [hasError, setHasError] = useState(false);
 
@@ -15,19 +14,12 @@ const SafeImage: React.FC<SafeImageProps> = ({ src, alt, className, isFlourish, 
     setHasError(false);
   }, [src]);
 
-  // Kalau jelas-jelas link Flourish atau kosong + flourish flag, kasih ikon chart
-  if (isFlourish || (src && src.includes('flourish.studio'))) {
-    return (
-      <div className={`flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/50 text-primary/40 ${className}`}>
-        <BarChart3 size={24} strokeWidth={1.5} />
-      </div>
-    );
-  }
+  const isFlourish = src?.includes('flourish.studio');
 
-  if (!src || hasError) {
+  if (!src || hasError || isFlourish) {
     return (
-      <div className={`flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/50 text-slate-300 dark:text-slate-700 ${className}`}>
-        <ImageIcon size={24} strokeWidth={1.5} />
+      <div className={`flex items-center justify-center bg-slate-50 dark:bg-slate-900/50 text-slate-200 dark:text-slate-800 ${className}`}>
+        {isFlourish ? <BarChart3 size={20} /> : <ImageIcon size={20} />}
       </div>
     );
   }
