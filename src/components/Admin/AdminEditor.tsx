@@ -290,8 +290,8 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
                 {!isPreview && <p className="text-[10px] text-slate-400 font-medium">✨ Gunakan tombol **Upload (Ikon Panah Atas)** untuk langsung memasukkan gambar dari galeri Anda ke dalam tulisan.</p>}
              </div>
 
-             {/* Chart Editor Section - Only for articles */}
-             {type === 'articles' && (
+             {/* Chart Editor Section - Only for statistics */}
+             {type === 'statistics' && (
                <div className="space-y-6">
                  <div className="flex items-center justify-between">
                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Data Visualisasi</label>

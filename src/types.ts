@@ -45,6 +45,10 @@ export interface Article {
       color?: string;
     }>;
     source: 'upload' | 'manual';
+    originalFile?: {
+      name: string;
+      type: string;
+    };
   };
 }
 
@@ -60,4 +64,17 @@ export interface Statistic {
   views: number;
   is_published: boolean;
   user_id?: string;
+  chart_data?: {
+    title: string;
+    data: Array<{
+      label: string;
+      value: number;
+      color?: string;
+    }>;
+    source: 'upload' | 'manual';
+    originalFile?: {
+      name: string;
+      type: string;
+    };
+  };
 }

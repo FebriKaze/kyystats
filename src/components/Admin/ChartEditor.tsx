@@ -73,6 +73,7 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
     }
 
     try {
+      // Parse file data directly (no storage upload)
       const text = await file.text();
       const data = parseCSV(text);
       
@@ -83,7 +84,19 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
       
       setChartData(data);
       setDataSource('upload');
-      onChartUpdate({ title: chartTitle, data, source: 'upload' });
+      
+      // Store only data as JSON
+      const chartInfo = {
+        title: chartTitle,
+        data,
+        source: 'upload' as const,
+        originalFile: {
+          name: file.name,
+          type: fileType
+        }
+      };
+      
+      onChartUpdate(chartInfo);
       showToast('success', `Berhasil memuat ${data.length} data dari file.`);
     } catch (error) {
       showToast('error', 'Gagal membaca file. Pastikan format benar.');
@@ -242,7 +255,7 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
         </div>
 
         {/* Chart Display */}
-        <div ref={chartRef} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6 min-h-[400px]">
+        <div ref={chartRef} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6 min-h-100">
           {chartData.length > 0 ? (
             <ResponsiveContainer width="100%" height={350}>
               <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
@@ -264,7 +277,7 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex flex-col items-center justify-center h-[350px] text-center">
+            <div className="flex flex-col items-center justify-center h-87.5 text-center">
               <BarChart3 size={48} className="text-slate-300 mb-4" />
               <p className="text-slate-500 dark:text-slate-400 font-medium mb-4">
                 Belum ada data untuk chart
@@ -307,28 +320,48 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
           <div className="space-y-4">
             <div 
               onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl p-8 text-center cursor-pointer hover:border-primary transition-colors"
+              className="relative border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl p-8 text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all group"
             >
-              <Upload size={48} className="text-slate-400 mx-auto mb-4" />
-              <p className="text-slate-600 dark:text-slate-400 font-medium mb-2">
-                Upload CSV atau Excel file
-              </p>
-              <p className="text-sm text-slate-500 dark:text-slate-500">
-                Format: label,value (contoh: "Januari,100")
-              </p>
               <input
                 ref={fileInputRef}
                 type="file"
                 accept=".csv,.xlsx,.xls"
                 onChange={handleFileUpload}
-                className="hidden"
+                className="absolute inset-0 opacity-0 cursor-pointer"
               />
+              <Upload size={48} className="text-slate-400 mx-auto mb-4 group-hover:text-primary transition-colors" />
+              <p className="text-slate-600 dark:text-slate-400 font-medium mb-2 group-hover:text-primary transition-colors">
+                Klik untuk upload CSV atau Excel file
+              </p>
+              <p className="text-sm text-slate-500 dark:text-slate-500 mb-4">
+                Format: label,value (contoh: "Januari,100")
+              </p>
+              <div className="flex items-center justify-center gap-4 text-xs text-slate-400">
+                <div className="flex items-center gap-1">
+                  <FileSpreadsheet size={12} />
+                  <span>CSV</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <FileSpreadsheet size={12} />
+                  <span>XLSX</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <FileSpreadsheet size={12} />
+                  <span>XLS</span>
+                </div>
+              </div>
             </div>
             
             {chartData.length > 0 && (
-              <div className="mt-4">
-                <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
-                  Data berhasil diupload: {chartData.length} item
+              <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <p className="text-sm font-medium text-green-700 dark:text-green-300">
+                    File berhasil diupload!
+                  </p>
+                </div>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  {chartData.length} data item berhasil diproses
                 </p>
               </div>
             )}
