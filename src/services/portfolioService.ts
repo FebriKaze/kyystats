@@ -230,39 +230,54 @@ export const fetchStatistics = async (onlyPublished = true): Promise<Statistic[]
 
 export const saveStatistic = async (stat: Partial<Statistic>): Promise<Statistic | null> => {
   const isNew = !stat.id;
-  // Map summary back to short_desc and handle chart_data
-  const { summary, chart_data, ...rest } = stat;
-  const dbData = { 
-    ...rest, 
-    short_desc: summary,
-    chart_data: chart_data ? JSON.stringify(chart_data) : null
-  };
+  
+  try {
+    // Map summary back to short_desc and handle chart_data
+    const { summary, chart_data, ...rest } = stat;
+    const dbData: any = { 
+      ...rest, 
+      short_desc: summary
+    };
 
-  console.log('Saving statistic with data:', dbData);
-
-  // Get current user and add user_id if not present
-  if (isNew && !dbData.user_id) {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      dbData.user_id = user.id;
+    // Only add chart_data if it exists and is valid
+    if (chart_data && typeof chart_data === 'object') {
+      dbData.chart_data = JSON.stringify(chart_data);
     }
-  }
 
-  const { data, error } = isNew
-    ? await supabase.from('statistics').insert([dbData]).select().single()
-    : await supabase.from('statistics').update(dbData).eq('id', stat.id).select().single();
+    console.log('Saving statistic with data:', dbData);
 
-  if (error) {
-    console.error('Error saving statistic:', error);
+    // Get current user and add user_id if not present
+    if (isNew && !dbData.user_id) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        dbData.user_id = user.id;
+      }
+    }
+
+    const { data, error } = isNew
+      ? await supabase.from('statistics').insert([dbData]).select().single()
+      : await supabase.from('statistics').update(dbData).eq('id', stat.id).select().single();
+
+    if (error) {
+      console.error('Error saving statistic:', error);
+      throw error;
+    }
+    
+    // Parse chart_data back if exists
+    if (data && data.chart_data) {
+      try {
+        data.chart_data = JSON.parse(data.chart_data);
+      } catch (parseError) {
+        console.error('Error parsing chart_data:', parseError);
+        data.chart_data = null;
+      }
+    }
+    
+    return data as Statistic;
+  } catch (error) {
+    console.error('Complete error in saveStatistic:', error);
     throw error;
   }
-  
-  // Parse chart_data back if exists
-  if (data && data.chart_data) {
-    data.chart_data = JSON.parse(data.chart_data);
-  }
-  
-  return data as Statistic;
 };
 
 export const deleteStatistic = async (id: string): Promise<boolean> => {

@@ -92,9 +92,6 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
 
   // Handle file upload
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-    
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -422,7 +419,11 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
               </div>
               <button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
                 className="px-6 py-3 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors font-medium"
               >
                 Pilih File
@@ -431,7 +432,11 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
                 ref={fileInputRef}
                 type="file"
                 accept=".csv,.xlsx,.xls"
-                onChange={handleFileUpload}
+                onChange={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleFileUpload(e);
+                }}
                 className="hidden"
               />
             </div>
