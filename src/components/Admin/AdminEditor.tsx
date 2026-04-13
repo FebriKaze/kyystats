@@ -137,12 +137,17 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
                 <label className="text-[10px] font-black uppercase text-slate-400">Badan Konten *</label>
                 <div className="border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden bg-white dark:bg-slate-950">
                   <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 flex flex-wrap items-center gap-2">
-                    <button type="button" onClick={() => insertMarkdown('content', '# ', '')} className="p-2 text-slate-400 hover:text-primary"><Heading1 size={18} /></button>
-                    <button type="button" onClick={() => insertMarkdown('content', '**', '**')} className="p-2 text-slate-400 hover:text-primary"><Bold size={18} /></button>
-                    <button type="button" onClick={() => contentFileRef.current?.click()} className="p-2"><Upload size={18} /></button>
+                    <button type="button" onClick={() => insertMarkdown('content', '# ', '')} className="p-2 text-slate-400 hover:text-primary transition-all"><Heading1 size={18} /></button>
+                    <button type="button" onClick={() => insertMarkdown('content', '## ', '')} className="p-2 text-slate-400 hover:text-primary transition-all"><Heading2 size={18} /></button>
+                    <button type="button" onClick={() => insertMarkdown('content', '**', '**')} className="p-2 text-slate-400 hover:text-primary transition-all"><Bold size={18} /></button>
+                    <button type="button" onClick={() => insertMarkdown('content', '_', '_')} className="p-2 text-slate-400 hover:text-primary transition-all"><Italic size={18} /></button>
+                    <button type="button" onClick={() => insertMarkdown('content', '\n- ', '')} className="p-2 text-slate-400 hover:text-primary transition-all"><List size={18} /></button>
+                    <button type="button" onClick={() => insertMarkdown('content', '\n1. ', '')} className="p-2 text-slate-400 hover:text-primary transition-all"><ListOrdered size={18} /></button>
+                    <button type="button" onClick={() => insertMarkdown('content', '[', '](url)')} className="p-2 text-slate-400 hover:text-primary transition-all"><LinkIcon size={18} /></button>
+                    <button type="button" onClick={() => contentFileRef.current?.click()} className="p-2 text-slate-400 hover:text-primary transition-all"><Upload size={18} /></button>
                     <input type="file" ref={contentFileRef} onChange={handleInlineImageUpload} className="hidden" accept="image/*" />
                     <div className="flex-1"></div>
-                    <button type="button" onClick={() => setIsPreview(!isPreview)} className={`px-5 py-2.5 rounded-2xl text-[10px] font-black ${isPreview ? 'bg-primary text-white' : 'bg-white border'}`}>{isPreview ? 'EDITOR' : 'PRATINJAU'}</button>
+                    <button type="button" onClick={() => setIsPreview(!isPreview)} className={`px-5 py-2.5 rounded-2xl text-[10px] font-black transition-all ${isPreview ? 'bg-primary text-white shadow-lg' : 'bg-white dark:bg-slate-900 border text-slate-500'}`}>{isPreview ? 'EDITOR' : 'PRATINJAU'}</button>
                   </div>
                   {isPreview ? (
                     <div className="w-full min-h-100 bg-white dark:bg-slate-950 py-12 px-14 prose dark:prose-invert max-w-none"><ReactMarkdown remarkPlugins={[remarkGfm]}>{formData.content || '*Kosong*'}</ReactMarkdown></div>
