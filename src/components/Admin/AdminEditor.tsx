@@ -198,7 +198,7 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
     <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500 pb-20">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button onClick={onCancel} className="p-2.5 rounded-2xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all border border-transparent hover:border-slate-200">
+          <button type="button" onClick={onCancel} className="p-2.5 rounded-2xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all border border-transparent hover:border-slate-200">
             <ArrowLeft size={24} />
           </button>
           <div>
@@ -218,7 +218,7 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
                   value={formData.title || ''} 
                   onChange={(e) => {
                     const newTitle = e.target.value;
-                    const newSlug = type === 'articles' && !item.id ? slugify(newTitle) : formData.slug;
+                    const newSlug = (type === 'articles' || type === 'statistics') && (!item.id || !formData.slug) ? slugify(newTitle) : formData.slug;
                     setFormData({...formData, title: newTitle, slug: newSlug});
                   }}
                   placeholder="Masukkan judul konten yang menarik..."
@@ -226,7 +226,7 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
                 />
              </div>
 
-             {type === 'articles' && (
+             {(type === 'articles' || type === 'statistics') && (
                <div className="space-y-3">
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Slug Otomatis <span className="text-primary">*</span></label>
                   <input 
@@ -409,26 +409,28 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
                 </select>
              </div>
 
-             <div className="space-y-4">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Gambar Sampul Utama</label>
-                <div className="aspect-16/10 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center gap-3 overflow-hidden group relative transition-all hover:bg-slate-100 dark:hover:bg-slate-900">
-                   {(formData.thumbnail_url || formData.image || formData.image_url) ? (
-                     <>
-                        <img src={formData.thumbnail_url || formData.image || formData.image_url} alt="" className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                           <input type="file" accept="image/*" onChange={uploadCoverImage} className="absolute inset-0 opacity-0 cursor-pointer" />
-                           <button type="button" className="p-4 bg-white rounded-2xl text-primary font-black text-[10px] uppercase shadow-2xl transition-transform active:scale-90">Ganti Gambar</button>
-                        </div>
-                     </>
-                   ) : (
-                     <div className="relative w-full h-full flex flex-col items-center justify-center">
-                        <input type="file" accept="image/*" onChange={uploadCoverImage} className="absolute inset-0 opacity-0 cursor-pointer" />
-                        <ImageIcon size={40} className="text-slate-300 mb-2" />
-                        <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">{uploading ? 'MEMPROSES...' : 'UPLOAD SAMPUL'}</p>
-                     </div>
-                   )}
-                </div>
-             </div>
+             {type !== 'statistics' && (
+               <div className="space-y-4">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Gambar Sampul Utama</label>
+                  <div className="aspect-16/10 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center gap-3 overflow-hidden group relative transition-all hover:bg-slate-100 dark:hover:bg-slate-900">
+                     {(formData.thumbnail_url || formData.image || formData.image_url) ? (
+                       <>
+                          <img src={formData.thumbnail_url || formData.image || formData.image_url} alt="" className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                             <input type="file" accept="image/*" onChange={uploadCoverImage} className="absolute inset-0 opacity-0 cursor-pointer" />
+                             <button type="button" className="p-4 bg-white rounded-2xl text-primary font-black text-[10px] uppercase shadow-2xl transition-transform active:scale-90">Ganti Gambar</button>
+                          </div>
+                       </>
+                     ) : (
+                       <div className="relative w-full h-full flex flex-col items-center justify-center">
+                          <input type="file" accept="image/*" onChange={uploadCoverImage} className="absolute inset-0 opacity-0 cursor-pointer" />
+                          <ImageIcon size={40} className="text-slate-300 mb-2" />
+                          <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">{uploading ? 'MEMPROSES...' : 'UPLOAD SAMPUL'}</p>
+                       </div>
+                     )}
+                  </div>
+               </div>
+             )}
 
              <div className="pt-8 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-3">
                 <button 

@@ -10,6 +10,7 @@ import ArticleSidebar from './ArticleSidebar';
 import { useMeta } from '../../hooks/useMeta';
 import { usePageView } from '../../hooks/usePageView';
 import SafeImage from '../Common/SafeImage';
+import { showToast } from '../Common/Toast';
 
 interface ArticleDetailProps {
   article: Article;
@@ -68,7 +69,7 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({
       case 'twitter': url = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedText}`; break;
       default:
         navigator.clipboard.writeText(shareUrl);
-        alert('Link berhasil disalin!');
+        showToast('success', 'Link berhasil disalin!');
         return;
     }
     window.open(url, '_blank', 'width=600,height=400');
@@ -108,7 +109,7 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({
                     if (data?.id) {
                       navigate(`/author/${data.id}`);
                     } else {
-                      alert('Profil penulis sedang diperbarui.');
+                      showToast('info', 'Profil penulis sedang diperbarui.');
                     }
                   }
                 }}

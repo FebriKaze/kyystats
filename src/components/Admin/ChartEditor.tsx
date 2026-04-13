@@ -24,7 +24,8 @@ interface ChartEditorProps {
 const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = [] }) => {
   const [chartData, setChartData] = useState<ChartData[]>(initialData);
   const [chartTitle, setChartTitle] = useState('Statistik Performa');
-  const [dataSource, setDataSource] = useState<'upload' | 'manual'>('upload');
+  const [chartSource, setChartSource] = useState('Data Internal');
+  const [dataSource, setDataSource] = useState<'upload' | 'manual'>('manual');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chartRef = useRef<HTMLDivElement>(null);
@@ -50,8 +51,13 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
       
       // Handle both comma and semicolon separators
       const separator = line.includes(';') ? ';' : ',';
-      const parts = line.split(separator);
+      let parts = line.split(separator);
       
+      // If we used comma as separator and got > 2 parts, it's possible the value itself contains a fractional comma (e.g., Label,12,34 or "Label","12,34")
+      if (separator === ',' && parts.length > 2) {
+        parts = [parts[0], parts.slice(1).join(',')];
+      }
+
       console.log('Parsing line:', line, 'Parts:', parts);
       
       if (parts.length >= 2) {
@@ -161,11 +167,13 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
       
       console.log('Setting chart data:', data);
       setChartData(data);
+      setChartData(data);
       setDataSource('upload');
       
       // Store only data as JSON
       const chartInfo = {
         title: chartTitle,
+        sourceText: chartSource,
         data,
         source: 'upload' as const,
         originalFile: {
@@ -198,7 +206,7 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
     const newData = [...chartData, newItem];
     setChartData(newData);
     setDataSource('manual');
-    onChartUpdate({ title: chartTitle, data: newData, source: 'manual' });
+    onChartUpdate({ title: chartTitle, sourceText: chartSource, data: newData, source: 'manual' });
   };
 
   // Update manual data
@@ -210,14 +218,14 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
       newData[index].value = Number(value);
     }
     setChartData(newData);
-    onChartUpdate({ title: chartTitle, data: newData, source: 'manual' });
+    onChartUpdate({ title: chartTitle, sourceText: chartSource, data: newData, source: 'manual' });
   };
 
   // Delete data
   const deleteData = (index: number) => {
     const newData = chartData.filter((_, i) => i !== index);
     setChartData(newData);
-    onChartUpdate({ title: chartTitle, data: newData, source: dataSource });
+    onChartUpdate({ title: chartTitle, sourceText: chartSource, data: newData, source: dataSource });
   };
 
   // Custom tooltip
@@ -282,21 +290,40 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
     <div className="space-y-6">
       {/* Chart Controls */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6">
-        <div className="flex items-center justify-between mb-6">
-          <input
-            type="text"
-            value={chartTitle}
-            onChange={(e) => {
-              setChartTitle(e.target.value);
-              onChartUpdate({ title: e.target.value, data: chartData, source: dataSource });
-            }}
-            className="text-xl font-black bg-transparent border-b-2 border-transparent hover:border-slate-300 dark:hover:border-slate-600 focus:border-primary outline-none transition-colors dark:text-white"
-            placeholder="Judul Chart"
-          />
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
+          <div className="flex flex-col space-y-4 w-full max-w-md">
+            <div>
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-2">Judul Chart Preview</label>
+              <input
+                type="text"
+                value={chartTitle}
+                onChange={(e) => {
+                  setChartTitle(e.target.value);
+                  onChartUpdate({ title: e.target.value, sourceText: chartSource, data: chartData, source: dataSource });
+                }}
+                className="w-full text-xl font-black bg-transparent border-b-2 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600 focus:border-primary outline-none transition-colors dark:text-white pb-1"
+                placeholder="Judul Chart"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-2">Sumber Data (Tampil di Bawah Chart)</label>
+              <input
+                type="text"
+                value={chartSource}
+                onChange={(e) => {
+                  setChartSource(e.target.value);
+                  onChartUpdate({ title: chartTitle, sourceText: e.target.value, data: chartData, source: dataSource });
+                }}
+                className="w-full text-sm font-medium bg-transparent border-b-2 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600 focus:border-primary outline-none transition-colors text-slate-500 pb-1"
+                placeholder="Contoh: BPS RI, 2026"
+              />
+            </div>
+          </div>
           
           <div className="flex items-center gap-2">
             <div className="relative">
               <button
+                type="button"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
               >
@@ -308,6 +335,7 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
               {isDropdownOpen && (
                 <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-lg z-10">
                   <button
+                    type="button"
                     onClick={downloadChartImage}
                     className="w-full px-4 py-3 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center gap-2 dark:text-white"
                   >
@@ -315,6 +343,7 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
                     Unduh Gambar
                   </button>
                   <button
+                    type="button"
                     onClick={downloadCSV}
                     className="w-full px-4 py-3 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center gap-2 dark:text-white"
                   >
@@ -326,6 +355,7 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
             </div>
             
             <button
+              type="button"
               onClick={copyEmbedCode}
               className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors"
             >
@@ -366,140 +396,71 @@ const ChartEditor: React.FC<ChartEditorProps> = ({ onChartUpdate, initialData = 
 
       {/* Data Input Section */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-bold dark:text-white">Data Source</h3>
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+          <h3 className="text-lg font-bold dark:text-white">Data Label & Value</h3>
           
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setDataSource('upload')}
-              className={`px-4 py-2 rounded-xl font-medium transition-colors ${
-                dataSource === 'upload' 
-                  ? 'bg-primary text-white' 
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-              }`}
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl font-medium transition-colors hover:bg-primary/90"
             >
-              Upload File
+              <FileSpreadsheet size={16} />
+              Upload CSV/Excel
             </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv,.xlsx,.xls"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
             <button
-              onClick={() => setDataSource('manual')}
-              className={`px-4 py-2 rounded-xl font-medium transition-colors ${
-                dataSource === 'manual' 
-                  ? 'bg-primary text-white' 
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-              }`}
+              type="button"
+              onClick={addManualData}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl font-medium transition-colors hover:bg-slate-200 dark:hover:bg-slate-700"
             >
+              <Plus size={16} />
               Input Manual
             </button>
           </div>
         </div>
 
-        {dataSource === 'upload' ? (
-          <div className="space-y-4">
-            <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl p-8 text-center hover:border-primary hover:bg-primary/5 transition-all group">
-              <Upload size={48} className="text-slate-400 mx-auto mb-4 group-hover:text-primary transition-colors" />
-              <p className="text-slate-600 dark:text-slate-400 font-medium mb-2 group-hover:text-primary transition-colors">
-                Klik untuk upload CSV atau Excel file
-              </p>
-              <p className="text-sm text-slate-500 dark:text-slate-500 mb-4">
-                Format: label,value atau label;value (contoh: "Januari,100" atau "Januari;100")
-              </p>
-              <div className="flex items-center justify-center gap-4 text-xs text-slate-400 mb-4">
-                <div className="flex items-center gap-1">
-                  <FileSpreadsheet size={12} />
-                  <span>CSV</span>
+        <div className="space-y-4">
+          {chartData.length > 0 ? (
+            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+              {chartData.map((item, index) => (
+                <div key={index} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                  <input
+                    type="text"
+                    value={item.label}
+                    onChange={(e) => updateManualData(index, 'label', e.target.value)}
+                    className="flex-1 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 dark:text-white font-medium"
+                    placeholder="Nama Label..."
+                  />
+                  <input
+                    type="number"
+                    value={item.value}
+                    onChange={(e) => updateManualData(index, 'value', e.target.value)}
+                    className="w-32 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 dark:text-white font-mono"
+                    placeholder="Nilai Data"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => deleteData(index)}
+                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
-                <div className="flex items-center gap-1">
-                  <FileSpreadsheet size={12} />
-                  <span>XLSX</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <FileSpreadsheet size={12} />
-                  <span>XLS</span>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  fileInputRef.current?.click();
-                }}
-                className="px-6 py-3 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors font-medium"
-              >
-                Pilih File
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv,.xlsx,.xls"
-                onChange={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleFileUpload(e);
-                }}
-                className="hidden"
-              />
+              ))}
             </div>
-            
-            {chartData.length > 0 && (
-              <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <p className="text-sm font-medium text-green-700 dark:text-green-300">
-                    File berhasil diupload!
-                  </p>
-                </div>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  {chartData.length} data item berhasil diproses
-                </p>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                Input data secara manual
-              </p>
-              <button
-                onClick={addManualData}
-                className="flex items-center gap-2 px-3 py-1.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
-              >
-                <Plus size={14} />
-                Tambah Data
-              </button>
+          ) : (
+            <div className="text-center py-10 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
+              <p className="text-slate-500 dark:text-slate-400 font-medium">Klik "Upload CSV/Excel" atau "Input Manual" untuk mulai menambah data.</p>
             </div>
-            
-            {chartData.length > 0 && (
-              <div className="space-y-3 max-h-60 overflow-y-auto">
-                {chartData.map((item, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
-                    <input
-                      type="text"
-                      value={item.label}
-                      onChange={(e) => updateManualData(index, 'label', e.target.value)}
-                      className="flex-1 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 dark:text-white"
-                      placeholder="Label"
-                    />
-                    <input
-                      type="number"
-                      value={item.value}
-                      onChange={(e) => updateManualData(index, 'value', e.target.value)}
-                      className="w-24 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 dark:text-white"
-                      placeholder="Value"
-                    />
-                    <button
-                      onClick={() => deleteData(index)}
-                      className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

@@ -229,7 +229,8 @@ function ArticleDetailWrapper({ articles, onBack, onArticleClick }: any) {
 
 function StatistikDetailWrapper({ statistics }: any) {
   const { id } = useParams();
-  const statistic = statistics.find((s: any) => s.id === id);
+  const decodedId = decodeURIComponent(id || '');
+  const statistic = statistics.find((s: any) => s.id === decodedId || s.slug === decodedId);
   const navigate = useNavigate();
   if (!statistic) return (
     <div className="pt-32 flex justify-center items-center min-h-[50vh]">

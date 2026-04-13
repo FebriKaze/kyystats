@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, User, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, User, ArrowRight, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react';
+import { BarChart, Bar, ResponsiveContainer, Cell, XAxis, YAxis, CartesianGrid, LabelList } from 'recharts';
 import { Statistic, Article } from '../../types';
 import ArticleSidebar from '../Articles/ArticleSidebar';
 import { usePageView } from '../../hooks/usePageView';
@@ -109,12 +110,37 @@ const StatistikPage: React.FC<StatistikPageProps> = ({ statistik, onStatClick })
                       onClick={() => onStatClick(item)}
                       className="flex flex-col md:flex-row gap-6 border-b border-slate-100 dark:border-slate-800 pb-8 last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-900/50 p-4 -mx-4 rounded-xl transition-all cursor-pointer group"
                     >
-                      <div className="w-full md:w-64 h-40 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0 flex items-center justify-center p-0 relative">
-                        <SafeImage 
-                          src={item.image_url} 
-                          alt={item.title} 
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                        />
+                      <div className="w-full md:w-64 h-40 bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0 flex flex-col p-4 relative justify-end">
+                        {item.image_url ? (
+                          <SafeImage 
+                            src={item.image_url} 
+                            alt={item.title} 
+                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                          />
+                        ) : item.chart_data && item.chart_data.data && item.chart_data.data.length > 0 ? (
+                          <>
+                            <div className="w-full h-32 mt-auto opacity-70 group-hover:opacity-100 transition-opacity">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={item.chart_data.data.slice(0, 5)} margin={{ top: 15, right: 0, left: -25, bottom: -15 }}>
+                                  <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
+                                  <XAxis dataKey="label" tick={{ fontSize: 9, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                                  <YAxis tick={{ fontSize: 9, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                                  <Bar dataKey="value" radius={[2, 2, 0, 0]} barSize={16}>
+                                    <LabelList dataKey="value" position="top" fill="#64748b" fontSize={9} />
+                                    {item.chart_data.data.slice(0, 5).map((entry: any, index: number) => (
+                                      <Cell key={`cell-${index}`} fill={entry.color || '#8b5cf6'} />
+                                    ))}
+                                  </Bar>
+                                </BarChart>
+                              </ResponsiveContainer>
+                            </div>
+                            <div className="absolute inset-0 bg-linear-to-t from-white/10 dark:from-slate-900/10 to-transparent pointer-events-none" />
+                          </>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center h-full text-slate-300 dark:text-slate-600">
+                            <BarChart3 size={32} />
+                          </div>
+                        )}
                       </div>
                       <div className="flex-1 flex flex-col pt-1">
                         <h2 className="text-xl font-bold dark:text-white leading-snug group-hover:text-primary transition-colors line-clamp-2 md:pr-10">

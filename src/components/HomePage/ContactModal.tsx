@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, CheckCircle2 } from 'lucide-react';
+import { X, Mail, Phone, MapPin, Send, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { showToast } from '../Common/Toast';
 
 interface ContactModalProps {
   isOpen: boolean;
@@ -41,7 +42,7 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
       setFormState({ name: '', email: '', type: 'Konsultasi', message: '' });
     } catch (err) {
       console.error('Error sending message:', err);
-      alert('Gagal mengirim pesan. Silakan coba lagi.');
+      showToast('error', 'Gagal mengirim pesan. Silakan coba lagi.');
     } finally {
       setIsSubmitting(false);
     }

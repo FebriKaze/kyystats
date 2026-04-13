@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { Project, FeaturedProject, Article, Statistic } from '../types';
+import { showToast } from '../components/Common/Toast';
 
 export const fetchPortfolios = async (): Promise<Project[]> => {
   const { data, error } = await supabase
@@ -83,20 +84,27 @@ export const fetchArticleBySlug = async (slug: string): Promise<Article | null> 
 export const saveArticle = async (article: Partial<Article>): Promise<Article | null> => {
   const isNew = !article.id;
   
+  // Clone to avoid mutation and strip virtual properties
+  const dbData = { ...article };
+  delete dbData.views;
+  delete (dbData as any).profiles;
+  delete dbData.author;
+  
   // Get current user and add user_id if not present
-  if (isNew && !article.user_id) {
+  if (isNew && !dbData.user_id) {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      article.user_id = user.id;
+      dbData.user_id = user.id;
     }
   }
   
   const { data, error } = isNew
-    ? await supabase.from('articles').insert([article]).select().single()
-    : await supabase.from('articles').update(article).eq('id', article.id).select().single();
+    ? await supabase.from('articles').insert([dbData]).select().single()
+    : await supabase.from('articles').update(dbData).eq('id', dbData.id).select().single();
 
   if (error) {
     console.error('Error saving article:', error);
+    showToast('error', `Gagal menyimpan artikel: ${error.message}`);
     throw error;
   }
   return data as Article;
@@ -211,8 +219,16 @@ export const fetchStatistics = async (onlyPublished = true): Promise<Statistic[]
     const stat = {
       ...row,
       image_url: ensureWebp(row.image_url || ''),
-      summary: row.short_desc || ''
+      summary: row.short_desc || '',
+      slug: row.id,
+      author: row.profiles?.full_name || ''
     };
+
+    // If title exists, use it for slug but we keep routing by id safe if wanted
+    if (row.title) {
+      const cleanTitle = row.title.toString().toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w-]+/g, '').replace(/--+/g, '-');
+      stat.slug = cleanTitle;
+    }
     
     // Parse chart_data if exists
     if (row.chart_data) {
@@ -238,10 +254,16 @@ export const saveStatistic = async (stat: Partial<Statistic>): Promise<Statistic
       ...rest, 
       short_desc: summary
     };
+    
+    // Strip virtual properties from object before insert/update
+    delete dbData.profiles;
+    delete dbData.views;
+    delete dbData.author;
+    delete dbData.slug;
 
     // Only add chart_data if it exists and is valid
-    if (chart_data && typeof chart_data === 'object') {
-      dbData.chart_data = JSON.stringify(chart_data);
+    if (chart_data != null) {
+      dbData.chart_data = typeof chart_data === 'string' ? chart_data : JSON.stringify(chart_data);
     }
 
     console.log('Saving statistic with data:', dbData);
@@ -260,6 +282,7 @@ export const saveStatistic = async (stat: Partial<Statistic>): Promise<Statistic
 
     if (error) {
       console.error('Error saving statistic:', error);
+      showToast('error', `Gagal menyimpan statistik: ${error.message}`);
       throw error;
     }
     

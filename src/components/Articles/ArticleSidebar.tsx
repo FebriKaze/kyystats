@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Search, TrendingUp, Clock, ChevronRight } from 'lucide-react';
+import { Search, TrendingUp, Clock, ChevronRight, BarChart3 } from 'lucide-react';
 import { Article } from '../../types';
 import SafeImage from '../Common/SafeImage';
+import { BarChart, Bar, ResponsiveContainer, Cell } from 'recharts';
 
 interface ArticleSidebarProps {
   articles: Article[];
@@ -107,12 +108,28 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
               onClick={() => onArticleClick(article)}
               className="flex gap-4 group cursor-pointer"
             >
-              <div className="w-20 h-20 rounded-2xl overflow-hidden shrink-0 border border-slate-200 dark:border-slate-800">
-                <SafeImage
-                  src={article.thumbnail_url}
-                  alt={article.title}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                />
+              <div className="w-20 h-20 bg-slate-50 dark:bg-slate-900 rounded-2xl overflow-hidden shrink-0 border border-slate-200 dark:border-slate-800 flex items-center justify-center relative">
+                {article.thumbnail_url ? (
+                  <SafeImage
+                    src={article.thumbnail_url}
+                    alt={article.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                ) : (article as any).chart_data && (article as any).chart_data.data ? (
+                  <div className="w-full h-full p-2 opacity-80 flex items-end justify-center group-hover:scale-110 transition-transform duration-500">
+                    <ResponsiveContainer width="100%" height="80%">
+                      <BarChart data={(article as any).chart_data.data.slice(0, 3)} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                        <Bar dataKey="value" radius={[2, 2, 0, 0]} barSize={8}>
+                          {(article as any).chart_data.data.slice(0, 3).map((entry: any, index: number) => (
+                            <Cell key={`cell-${index}`} fill={entry.color || '#8b5cf6'} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <BarChart3 className="text-slate-300 dark:text-slate-700" size={24} />
+                )}
               </div>
               <div className="flex flex-col justify-center gap-1">
                 <span className="text-[10px] font-black uppercase tracking-widest text-primary">

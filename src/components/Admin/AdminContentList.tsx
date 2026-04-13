@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Filter, Edit3, Trash2, Eye, ChevronLeft, ChevronRight, Plus, Image as ImageIcon } from 'lucide-react';
 import { fetchPageViewCount } from '../../services/portfolioService';
 import SafeImage from '../Common/SafeImage';
+import { BarChart, Bar, ResponsiveContainer, Cell, XAxis, YAxis, CartesianGrid, LabelList } from 'recharts';
 
 interface AdminContentListProps {
   type: 'articles' | 'portfolio' | 'featured' | 'statistics';
@@ -124,6 +125,18 @@ const AdminContentList: React.FC<AdminContentListProps> = ({ type, data, onEdit,
                             alt="" 
                             className="w-full h-full object-cover" 
                           />
+                        ) : type === 'statistics' && item.chart_data && item.chart_data.data && item.chart_data.data.length > 0 ? (
+                            <div className="w-full h-full p-2 opacity-80 flex items-end justify-center">
+                              <ResponsiveContainer width="100%" height="80%">
+                                <BarChart data={item.chart_data.data.slice(0, 3)} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                                  <Bar dataKey="value" radius={[2, 2, 0, 0]} barSize={6}>
+                                    {item.chart_data.data.slice(0, 3).map((entry: any, index: number) => (
+                                      <Cell key={`cell-${index}`} fill={entry.color || '#8b5cf6'} />
+                                    ))}
+                                  </Bar>
+                                </BarChart>
+                              </ResponsiveContainer>
+                            </div>
                         ) : (
                           <ImageIcon size={20} className="text-slate-400" />
                         )}
