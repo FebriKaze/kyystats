@@ -51,13 +51,16 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ article, articles, onBack
 
               <h1 className="text-4xl md:text-6xl font-black tracking-tightest leading-[1.1] dark:text-white">{article.title}</h1>
               
-              <div className="flex items-center justify-between p-4 md:p-6 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-sm">
-                <div className="flex items-center gap-3 md:gap-4">
-                  <ProfileAvatar src={(article as any).profiles?.avatar_url} alt={article.author || 'Admin'} className="w-10 h-10 rounded-full" />
-                  <div>
-                    <p className="text-[10px] md:text-xs font-black dark:text-white uppercase tracking-widest">DITULIS OLEH</p>
-                    <p className="text-xs md:text-sm font-bold text-slate-500 dark:text-slate-400">{article.author || 'Tim KyyStats'}</p>
+              <div className="flex items-center gap-4 py-6 border-y border-slate-100 dark:border-slate-800">
+                <ProfileAvatar src={(article as any).profiles?.avatar_url} alt={article.author || 'Admin'} className="w-12 h-12 rounded-full ring-2 ring-white dark:ring-slate-900 shadow-lg" />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Penulis Konten</span>
                   </div>
+                  <h4 className="text-sm md:text-base font-black dark:text-white mt-0.5">{article.author || 'Tim KyyStats'}</h4>
+                </div>
+                <div className="flex gap-2">
+                   <button className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-400 hover:text-primary transition-all"><Share2 size={16} /></button>
                 </div>
               </div>
             </header>

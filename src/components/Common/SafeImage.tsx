@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ImageIcon } from 'lucide-react';
 
 interface SafeImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src?: string;
@@ -9,38 +10,23 @@ const SafeImage: React.FC<SafeImageProps> = ({ src, alt, className, ...props }) 
   const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
-    // Sanitasi URL: Cegah error URI malformed jika ada '%' ilegal
-    try {
-      if (src) {
-        // Coba decode untuk validasi, kalau gagal berarti malformed
-        decodeURIComponent(src);
-        setCurrentSrc(src);
-      } else {
-        setCurrentSrc('');
-      }
-    } catch (e) {
-      console.error('Malformed URI detected in SafeImage:', src);
-      setHasError(true);
-    }
+    setCurrentSrc(src || '');
     setHasError(false);
   }, [src]);
 
   if (!src || hasError) {
     return (
-      <div className={`flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-400 ${className}`}>
-        <span className="text-[10px] font-black uppercase opacity-50">No Image</span>
+      <div className={`flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/50 text-slate-300 dark:text-slate-700 ${className}`}>
+        <ImageIcon size={24} strokeWidth={1.5} />
       </div>
     );
   }
 
   const getWebpUrl = (url: string) => {
-    if (hasError) return url;
-    try {
-      if (url.includes('supabase.co/storage/v1/object/public') && 
-          !url.toLowerCase().endsWith('.webp')) {
-        return url.replace(/\.(jpg|jpeg|png|JPG|JPEG|PNG)$/i, '.webp');
-      }
-    } catch (e) {}
+    if (url.includes('supabase.co/storage/v1/object/public') && 
+        !url.toLowerCase().endsWith('.webp')) {
+      return url.replace(/\.(jpg|jpeg|png|JPG|JPEG|PNG)$/i, '.webp');
+    }
     return url;
   };
 
