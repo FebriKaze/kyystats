@@ -66,8 +66,15 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
       }
       
       // Include chart data if available
+      // Clean up data before saving to prevent 400 errors
+      const cleanedData = { ...formData };
+      
+      // Remove any temporary properties that might confuse Supabase
+      if (cleanedData.image && type !== "portfolio") delete cleanedData.image;
+      if (cleanedData.image_url && type === "articles") delete cleanedData.image_url;
+      
       const dataToSave = {
-        ...formData,
+        ...cleanedData,
         chart_data: chartData
       };
       
