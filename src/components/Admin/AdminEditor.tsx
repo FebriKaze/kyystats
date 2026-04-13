@@ -519,7 +519,7 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
                             const flourishId = formData.thumbnail_url.match(/visualisation\/(\d+)/)?.[1];
                             return (
                               <iframe 
-                                src={}
+                                src={`https://public.flourish.studio/visualisation/${flourishId}/embed?auto=1`}
                                 className="w-full h-full border-0 pointer-events-none"
                                 scrolling="no"
                               />
@@ -546,3 +546,31 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
                         </p>
                      </div>
                    )}
+                </div>
+
+                <div className="pt-8 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-3">
+                   <button 
+                     type="submit"
+                     disabled={loading}
+                     className="w-full bg-primary text-white py-5 rounded-2xl font-black text-xs tracking-widest uppercase shadow-xl shadow-primary/30 flex items-center justify-center gap-3 hover:-translate-y-0.5 hover:shadow-2xl transition-all active:scale-95"
+                   >
+                     {loading ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
+                     DITERBITKAN SEKARANG
+                   </button>
+                   <button 
+                     type="button" 
+                     onClick={onCancel}
+                     className="w-full bg-slate-100 dark:bg-slate-800 text-slate-500 py-5 rounded-2xl font-black text-xs tracking-widest uppercase transition-all hover:bg-slate-200 dark:hover:bg-slate-700"
+                   >
+                     BATALKAN
+                   </button>
+                </div>
+             </div>
+           </div>
+         </div>
+       </form>
+     </div>
+  );
+};
+
+export default AdminEditor;
