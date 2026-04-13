@@ -24,37 +24,43 @@ const ProjectArchive: React.FC<ProjectArchiveProps> = ({ projects, onProjectClic
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {projects.map((project, idx) => (
-            <motion.div
-              key={project.id || idx}
-              whileHover={{ y: -10 }}
-              className="group bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300"
-            >
-              <div className="bg-slate-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden border-b border-slate-200 dark:border-slate-800">
-                <SafeImage
-                  src={project.image}
-                  alt={project.title}
-                  className="w-full h-auto block group-hover:scale-105 transition-transform duration-500"
-                />
-              </div>
-              <div className="p-8">
-                <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-primary mb-3 block">{project.category}</span>
-                <h3 className="text-xl font-black tracking-tight mb-4 dark:text-white">{project.title}</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6">{project.description}</p>
-                <button 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onProjectClick(project);
-                  }}
-                  className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:gap-3 transition-all cursor-pointer"
-                >
-                  Read Case Study <ArrowRight size={16} />
-                </button>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+        {projects.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {projects.map((project, idx) => (
+              <motion.div
+                key={project.id || idx}
+                whileHover={{ y: -10 }}
+                className="group bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300"
+              >
+                <div className="bg-slate-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden border-b border-slate-200 dark:border-slate-800">
+                  <SafeImage
+                    src={project.image}
+                    alt={project.title}
+                    className="w-full h-auto block group-hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
+                <div className="p-8">
+                  <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-primary mb-3 block">{project.category}</span>
+                  <h3 className="text-xl font-black tracking-tight mb-4 dark:text-white">{project.title}</h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6">{project.description}</p>
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onProjectClick(project);
+                    }}
+                    className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:gap-3 transition-all cursor-pointer"
+                  >
+                    Read Case Study <ArrowRight size={16} />
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="py-20 text-center border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-[3rem]">
+            <p className="text-slate-400 font-bold italic">Belum ada Project Archive</p>
+          </div>
+        )}
       </div>
     </section>
   );

@@ -51,14 +51,14 @@ const AdminContentList: React.FC<AdminContentListProps> = ({ type, data, onEdit,
     loadViews();
   }, [type, data.length]); // Reload jika data atau tipe berubah
 
-  const title = type === 'articles' ? 'Manajemen Artikel' : type === 'portfolio' ? 'Manajemen Portfolio' : type === 'statistics' ? 'Manajemen Statistik' : 'Manajemen Featured Content';
+  const title = type === 'articles' ? 'Manajemen Artikel' : type === 'portfolio' ? 'Manajemen Portfolio' : type === 'statistics' ? 'Manajemen Statistik' : 'Manajemen Project Archive';
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-black tracking-tighter dark:text-white">{title}</h1>
-          <p className="text-slate-500 dark:text-slate-400">Beranda - {type === 'articles' ? 'Artikel' : 'Statistik'} - Daftar</p>
+          <p className="text-slate-500 dark:text-slate-400">Beranda - {type === 'articles' ? 'Artikel' : type === 'statistics' ? 'Statistik' : type === 'portfolio' ? 'Portfolio' : 'Archive'} - Daftar</p>
         </div>
         <div className="flex items-center gap-3">
           {showManageAssignments && onManageAssignments && type === 'articles' && (
@@ -73,7 +73,7 @@ const AdminContentList: React.FC<AdminContentListProps> = ({ type, data, onEdit,
             onClick={onCreate}
             className="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-2xl font-black text-sm shadow-xl shadow-primary/20 hover:scale-105 transition-transform"
           >
-            <Plus size={20} /> Tambah {type === 'articles' ? 'Artikel' : type === 'portfolio' ? 'Portfolio' : 'Statistik'} Baru
+            <Plus size={20} /> Tambah {type === 'articles' ? 'Artikel' : type === 'portfolio' ? 'Portfolio' : type === 'statistics' ? 'Statistik' : 'Archive'} Baru
           </button>
         </div>
       </div>
@@ -81,7 +81,7 @@ const AdminContentList: React.FC<AdminContentListProps> = ({ type, data, onEdit,
       <div className="bg-white dark:bg-slate-900 rounded-4xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm">
         <div className="p-8 border-b border-slate-50 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <h3 className="text-lg font-black dark:text-white capitalize">
-            {type === 'articles' ? 'Daftar Artikel' : 'Daftar Statistik'} Terpopuler
+            {type === 'articles' ? 'Daftar Artikel' : type === 'statistics' ? 'Daftar Statistik' : type === 'portfolio' ? 'Daftar Portfolio' : 'Daftar Project Archive'}
           </h3>
           
           <div className="flex items-center gap-4">
@@ -146,7 +146,7 @@ const AdminContentList: React.FC<AdminContentListProps> = ({ type, data, onEdit,
                   </td>
                   <td className="px-8 py-6">
                     <span className="inline-block whitespace-nowrap px-3 py-1 bg-primary/10 text-primary text-[10px] font-black uppercase rounded-lg">
-                      {item.category || item.tags?.[0] || 'Umum'}
+                      {item.category || (item.tags && item.tags.length > 0 ? item.tags[0] : 'Umum')}
                     </span>
                   </td>
                   <td className="px-8 py-6">

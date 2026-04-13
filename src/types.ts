@@ -9,6 +9,7 @@ export interface Project {
     solution: string;
     result: string;
   };
+  user_id?: string;
 }
 
 export interface FeaturedProject {
@@ -22,6 +23,7 @@ export interface FeaturedProject {
   highlight_y: string;
   hightlight_desc: string;
   image_label: string;
+  user_id?: string;
 }
 
 export interface Article {
@@ -56,6 +58,7 @@ export interface Statistic {
   id: string;
   created_at: string;
   title: string;
+  slug?: string;
   category: string;
   author: string;
   image_url: string;

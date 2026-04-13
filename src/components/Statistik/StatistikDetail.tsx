@@ -14,6 +14,7 @@ import { useMeta } from '../../hooks/useMeta';
 import { usePageView } from '../../hooks/usePageView';
 import SafeImage from '../Common/SafeImage';
 import { showToast } from '../Common/Toast';
+import ProfileAvatar from '../Common/ProfileAvatar';
 import { Heart, Download, Info, MessageCircle, DollarSign, X as CloseIcon } from 'lucide-react';
 
 interface StatistikDetailProps {
@@ -190,9 +191,10 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
               {item.title}
             </h1>
             
-            <div className="flex flex-wrap items-center gap-4 mt-6 py-4 border-b border-slate-100 dark:border-slate-800">
-              <button 
-                onClick={async () => {
+            <div className="flex flex-wrap items-center gap-6 mt-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest border-y border-slate-100 dark:border-slate-800 py-6">
+              <div 
+                onClick={async (e) => {
+                  e.preventDefault();
                   const authorId = (item as any).user_id;
                   if (authorId) {
                     navigate(`/author/${authorId}`);
@@ -201,165 +203,162 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
                     if (data?.id) navigate(`/author/${data.id}`);
                   }
                 }}
-                className="flex items-center gap-2 hover:text-primary transition-colors cursor-pointer text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide"
+                className="flex items-center gap-2 hover:text-primary transition-all cursor-pointer pr-6 border-r border-slate-100 dark:border-slate-800 group"
               >
-                <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center overflow-hidden">
-                  <User size={16} className="text-slate-500" />
+                <div className="flex items-center gap-2">
+                  <ProfileAvatar 
+                    src={(item as any).profiles?.avatar_url} 
+                    className="w-8 h-8 rounded-full border-2 border-primary/20" 
+                    iconSize={16}
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-[8px] text-slate-400">WRITTEN BY</span>
+                    <span className="text-slate-900 dark:text-white group-hover:text-primary transition-colors">{item.author || 'ADMIN'}</span>
+                  </div>
                 </div>
-                {item.author || 'ADMIN'}
-              </button>
+              </div>
+
+              <span className="flex items-center gap-2"><Calendar size={14} className="text-primary" /> {new Date(item.created_at).toLocaleDateString()}</span>
               
-              <span className="flex items-center gap-2 text-sm text-slate-500 font-medium">
-                <Calendar size={14} /> 
-                {new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Chart Section - Prominent like GoodStats */}
-        {item.chart_data && item.chart_data.data && item.chart_data.data.length > 0 && (
-          <div className="mb-12 max-w-4xl">
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-              {item.chart_data.title || 'Data Statistik'}
-            </h3>
-            <div className="h-[460px] w-full mt-6 bg-white dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm" ref={chartRef}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={item.chart_data.data} margin={{ top: 40, right: 30, left: 15, bottom: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" opacity={0.5} />
-                  <XAxis 
-                    dataKey="label" 
-                    angle={-45}
-                    textAnchor="end"
-                    height={60}
-                    tick={{ fontSize: 11, fill: '#64748B', fontWeight: 600 }}
-                    axisLine={{ stroke: '#E2E8F0' }}
-                    tickLine={false}
-                  >
-                    <Label value={(item.chart_data as any).xAxisTitle || 'Label'} offset={-10} position="insideBottom" fill="#94A3B8" style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }} />
-                  </XAxis>
-                  <YAxis 
-                    tick={{ fontSize: 11, fill: '#64748B', fontWeight: 600 }} 
-                    axisLine={{ stroke: '#E2E8F0' }}
-                    tickLine={false}
-                    width={50}
-                  >
-                    <Label value={(item.chart_data as any).yAxisTitle || 'Nilai'} angle={-90} position="insideLeft" offset={0} style={{ textAnchor: 'middle', fill: '#94A3B8', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }} />
-                  </YAxis>
-                  <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(139, 92, 246, 0.05)' }} />
-                  <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={45}>
-                     <LabelList dataKey="value" position="top" fill="#64748B" fontSize={11} fontWeight={900} offset={12} />
-                     {item.chart_data.data.map((entry: any, index: number) => (
-                       <Cell key={`cell-${index}`} fill="#8B5CF6" />
-                     ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            
-            <div className="flex items-center justify-between mt-4">
-              <p className="text-sm text-slate-500 font-medium pb-4">Sumber: {(item.chart_data as any)?.sourceText || item.author || 'Data Internal'}</p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-4 mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
-              <div className="relative">
+              <div className="ml-auto flex items-center gap-4 relative border-l border-slate-100 dark:border-slate-800 pl-6">
                 <button 
-                  onClick={() => setIsChartDropdownOpen(!isChartDropdownOpen)}
-                  className="px-6 py-2 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-sm font-bold text-slate-600 dark:text-slate-300 hover:border-primary hover:text-primary transition-colors flex items-center gap-2"
+                  onClick={() => setIsShareMenuOpen(!isShareMenuOpen)}
+                  className="p-2.5 rounded-full bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-primary transition-colors flex items-center gap-2 px-5 border border-transparent hover:border-primary/20 shadow-sm"
                 >
-                  Unduh 
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  <Share2 size={16} />
+                  <span className="hidden md:inline font-black tracking-widest text-[10px]">BAGIKAN</span>
                 </button>
+
                 <AnimatePresence>
-                  {isChartDropdownOpen && (
+                  {isShareMenuOpen && (
                     <>
-                      <div className="fixed inset-0 z-30" onClick={() => setIsChartDropdownOpen(false)} />
+                      <div className="fixed inset-0 z-40" onClick={() => setIsShareMenuOpen(false)} />
                       <motion.div
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 5 }}
-                        className="absolute left-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-2 z-40"
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-slate-900 rounded-4xl shadow-2xl border border-slate-100 dark:border-slate-800 p-3 z-50 overflow-hidden"
                       >
-                        <button onClick={() => { downloadCSV(); setIsChartDropdownOpen(false); }} className="w-full text-left px-4 py-2 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg mb-1">
-                          Data CSV
-                        </button>
-                        <button onClick={() => { downloadChartImage(); setIsChartDropdownOpen(false); }} className="w-full text-left px-4 py-2 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg">
-                          Gambar (PNG)
-                        </button>
+                         <div className="grid grid-cols-4 gap-2">
+                           {[
+                             { id: 'whatsapp', icon: <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.067 2.877 1.215 3.076.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.446 4.432-9.877 9.888-9.877 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.446-4.435 9.875-9.889 9.875m8.415-18.303A11.826 11.826 0 0012.055 0C5.41 0 .01 5.403.007 12.05a11.842 11.842 0 001.576 6.001L0 24l6.109-1.604a11.815 11.815 0 005.94 1.586h.005c6.644 0 12.045-5.404 12.048-12.05a11.8 11.8 0 00-3.526-8.528z" fill="currentColor"/>, color: 'text-green-500' },
+                             { id: 'facebook', icon: <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="currentColor"/>, color: 'text-blue-600' },
+                             { id: 'twitter', icon: <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932 6.064-6.932zm-1.294 19.497h2.039L6.486 3.24H4.298L17.607 20.65z" fill="currentColor"/>, color: 'text-slate-900 dark:text-white' },
+                             { id: 'linkedin', icon: <path d="M20.447 20.452h-3.554V14.85c0-1.334-.027-3.05-1.858-3.858-1.861 0-2.147 1.453-2.147 2.257v6.695h-3.558V8.975h3.413v1.566h.049c.475-.9 1.636-1.85 3.367-1.85 3.601 0 4.267 2.37 4.267 5.455v6.306zM5.337 7.433c-1.144 0-2.066-.926-2.066-2.065 0-1.142.922-2.067 2.066-2.067 1.141 0 2.065.925 2.065 2.067 0 1.139-.924 2.065-2.065 2.065zM7.119 20.452H3.555V8.975h3.564v11.477z" fill="currentColor"/>, color: 'text-blue-700' },
+                             { id: 'copy', icon: <LinkIcon size={20} />, color: 'text-slate-500' }
+                           ].map((plat) => (
+                             <button
+                               key={plat.id}
+                               onClick={() => { handleShare(plat.id); setIsShareMenuOpen(false); }}
+                               className={`w-full aspect-square flex items-center justify-center rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800 ${plat.color} transition-all border border-transparent hover:border-slate-100 dark:hover:border-slate-700`}
+                               title={plat.id === 'copy' ? 'Salin Link' : plat.id}
+                             >
+                               {plat.id === 'copy' ? (
+                                 plat.icon
+                               ) : (
+                                 <svg viewBox="0 0 24 24" className="w-5 h-5">{plat.icon}</svg>
+                               )}
+                             </button>
+                           ))}
+                         </div>
                       </motion.div>
                     </>
                   )}
                 </AnimatePresence>
               </div>
-              
-              <button 
-                onClick={() => setIsDonationModalOpen(true)}
-                className="px-6 py-2.5 bg-rose-50 dark:bg-rose-500/10 border-2 border-rose-100 dark:border-rose-500/20 rounded-xl text-sm font-black text-rose-500 hover:bg-rose-500 hover:text-white transition-all flex items-center gap-2"
-              >
-                <Heart size={16} fill="currentColor" /> Support
-              </button>
-              
-              <button onClick={() => window.open('https://saweria.co/kyystats', '_blank')} className="px-6 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl text-sm font-black transition-all ml-auto flex items-center gap-2 shadow-lg shadow-primary/20">
-                Hubungi Kami
-              </button>
             </div>
           </div>
-        )}
-
-        {/* Donation Modal */}
-        <AnimatePresence>
-          {isDonationModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setIsDonationModalOpen(false)}
-                className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
-              />
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden border border-white dark:border-slate-800"
-              >
-                <div className="p-8 pb-0 flex justify-end">
-                   <button onClick={() => setIsDonationModalOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
-                      <CloseIcon size={20} className="text-slate-400" />
-                   </button>
-                </div>
-                
-                <div className="px-10 pb-12 flex flex-col items-center text-center">
-                   <div className="w-20 h-20 bg-rose-100 dark:bg-rose-500/20 rounded-full flex items-center justify-center mb-6 text-rose-500 animate-bounce">
-                      <Heart size={40} fill="currentColor" />
-                   </div>
-                   
-                   <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic">Dukung <span className="text-primary italic">KyyStats</span></h3>
-                   <p className="text-slate-500 dark:text-slate-400 mt-4 leading-relaxed text-sm font-medium">Bantu kami untuk terus menyajikan data statistik berkualitas yang independen dan mudah dipahami.</p>
-                   
-                   <div className="grid grid-cols-1 w-full gap-4 mt-8">
-                      <button 
-                        onClick={() => window.open('https://saweria.co/kyystats', '_blank')}
-                        className="w-full py-5 bg-primary text-white rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all"
-                      >
-                         <DollarSign size={18} /> Donasi via Saweria
-                      </button>
-                      
-                      <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700 w-full">
-                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Dukungan Anda Berarti</p>
-                         <p className="text-xs text-slate-600 dark:text-slate-300 font-bold">Setiap dukungan akan digunakan untuk biaya server dan riset data.</p>
-                      </div>
-                   </div>
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
+        </div>
 
         <div className="flex flex-col lg:flex-row gap-12">
           {/* Main Content Area */}
           <div className="flex-1 max-w-4xl flex flex-col gap-8">
             
+            {/* Chart Section - Now inside the content column */}
+            {item.chart_data && item.chart_data.data && item.chart_data.data.length > 0 && (
+              <div className="mb-4">
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                  {item.chart_data.title || 'Data Statistik'}
+                </h3>
+                <div className="h-[460px] w-full mt-6 bg-white dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm" ref={chartRef}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={item.chart_data.data} margin={{ top: 40, right: 30, left: 15, bottom: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" opacity={0.5} />
+                      <XAxis 
+                        dataKey="label" 
+                        angle={-45}
+                        textAnchor="end"
+                        height={60}
+                        tick={{ fontSize: 11, fill: '#64748B', fontWeight: 600 }}
+                        axisLine={{ stroke: '#E2E8F0' }}
+                        tickLine={false}
+                      >
+                        <Label value={(item.chart_data as any).xAxisTitle || 'Label'} offset={-10} position="insideBottom" fill="#94A3B8" style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }} />
+                      </XAxis>
+                      <YAxis 
+                        tick={{ fontSize: 11, fill: '#64748B', fontWeight: 600 }} 
+                        axisLine={{ stroke: '#E2E8F0' }}
+                        tickLine={false}
+                        width={50}
+                      >
+                        <Label value={(item.chart_data as any).yAxisTitle || 'Nilai'} angle={-90} position="insideLeft" offset={0} style={{ textAnchor: 'middle', fill: '#94A3B8', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }} />
+                      </YAxis>
+                      <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(139, 92, 246, 0.05)' }} />
+                      <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={45}>
+                         <LabelList dataKey="value" position="top" fill="#64748B" fontSize={11} fontWeight={900} offset={12} />
+                         {item.chart_data.data.map((entry: any, index: number) => (
+                           <Cell key={`cell-${index}`} fill="#8B5CF6" />
+                         ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                
+                <div className="flex items-center justify-between mt-4">
+                  <p className="text-sm text-slate-500 font-medium pb-4">Sumber: {(item.chart_data as any)?.sourceText || item.author || 'Data Internal'}</p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-4 mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
+                  <div className="relative">
+                    <button 
+                      onClick={() => setIsChartDropdownOpen(!isChartDropdownOpen)}
+                      className="px-6 py-2.5 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-xl text-sm font-black text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center gap-2 shadow-sm"
+                    >
+                      Unduh 
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <AnimatePresence>
+                      {isChartDropdownOpen && (
+                        <>
+                          <div className="fixed inset-0 z-30" onClick={() => setIsChartDropdownOpen(false)} />
+                          <motion.div
+                            initial={{ opacity: 0, y: 5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 5 }}
+                            className="absolute left-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-2 z-40"
+                          >
+                            <button onClick={() => { downloadCSV(); setIsChartDropdownOpen(false); }} className="w-full text-left px-4 py-2 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg mb-1">
+                              Data CSV
+                            </button>
+                            <button onClick={() => { downloadChartImage(); setIsChartDropdownOpen(false); }} className="w-full text-left px-4 py-2 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg">
+                              Gambar (PNG)
+                            </button>
+                          </motion.div>
+                        </>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  
+                  <button 
+                    onClick={() => setIsDonationModalOpen(true)}
+                    className="px-6 py-2.5 bg-rose-50 dark:bg-rose-500/10 border-2 border-rose-100 dark:border-rose-500/20 rounded-xl text-sm font-black text-rose-500 hover:bg-rose-500 hover:text-white transition-all flex items-center gap-2"
+                  >
+                    <Heart size={16} fill="currentColor" /> Support
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Markdown Text Content */}
             <article className="flex-1 mt-6">
               <div className="text-xl md:text-2xl font-black text-slate-700 dark:text-slate-300 leading-relaxed mb-8 mt-2 italic border-l-4 border-primary pl-6 py-4 bg-slate-50 dark:bg-slate-900/50 rounded-r-2xl">
@@ -387,27 +386,6 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
           </div>
 
           <div className="lg:w-80 space-y-8">
-            {/* Share Sidebar above Search */}
-            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm">
-              <span className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest mb-4 block">Bagikan Ke Publik</span>
-              <div className="flex items-center gap-3">
-                {[
-                  { id: 'whatsapp', icon: <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.067 2.877 1.215 3.076.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.446 4.432-9.877 9.888-9.877 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.446-4.435 9.875-9.889 9.875m8.415-18.303A11.826 11.826 0 0012.055 0C5.41 0 .01 5.403.007 12.05a11.842 11.842 0 001.576 6.001L0 24l6.109-1.604a11.815 11.815 0 005.94 1.586h.005c6.644 0 12.045-5.404 12.048-12.05a11.8 11.8 0 00-3.526-8.528z" fill="currentColor"/>, color: 'text-green-500' },
-                  { id: 'facebook', icon: <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="currentColor"/>, color: 'text-blue-600' },
-                  { id: 'twitter', icon: <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932 6.064-6.932zm-1.294 19.497h2.039L6.486 3.24H4.298L17.607 20.65z" fill="currentColor"/>, color: 'text-slate-900 dark:text-white' },
-                  { id: 'linkedin', icon: <path d="M20.447 20.452h-3.554V14.85c0-1.334-.027-3.05-1.858-3.858-1.861 0-2.147 1.453-2.147 2.257v6.695h-3.558V8.975h3.413v1.566h.049c.475-.9 1.636-1.85 3.367-1.85 3.601 0 4.267 2.37 4.267 5.455v6.306zM5.337 7.433c-1.144 0-2.066-.926-2.066-2.065 0-1.142.922-2.067 2.066-2.067 1.141 0 2.065.925 2.065 2.067 0 1.139-.924 2.065-2.065 2.065zM7.119 20.452H3.555V8.975h3.564v11.477z" fill="currentColor"/>, color: 'text-blue-700' }
-                ].map((plat) => (
-                  <button
-                    key={plat.id}
-                    onClick={() => handleShare(plat.id)}
-                    className={`w-12 h-12 rounded-2xl flex items-center justify-center bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 ${plat.color} hover:bg-slate-50 dark:hover:bg-slate-700 hover:scale-110 shadow-sm transition-all outline-none`}
-                  >
-                    <svg viewBox="0 0 24 24" className="w-5 h-5">{plat.icon}</svg>
-                  </button>
-                ))}
-              </div>
-            </div>
-
             <ArticleSidebar 
               articles={mappedArticles} 
               onArticleClick={(a) => onStatClick(a as any)}
@@ -419,7 +397,57 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
             />
           </div>
         </div>
-      </div>
+        </div>
+
+      {/* Donation Modal */}
+      <AnimatePresence>
+        {isDonationModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsDonationModalOpen(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden border border-white dark:border-slate-800"
+            >
+              <div className="p-8 pb-0 flex justify-end">
+                <button onClick={() => setIsDonationModalOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+                  <CloseIcon size={20} className="text-slate-400" />
+                </button>
+              </div>
+              
+              <div className="px-10 pb-12 flex flex-col items-center text-center">
+                <div className="w-20 h-20 bg-rose-100 dark:bg-rose-500/20 rounded-full flex items-center justify-center mb-6 text-rose-500 animate-bounce">
+                  <Heart size={40} fill="currentColor" />
+                </div>
+                
+                <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic">Dukung <span className="text-primary italic">KyyStats</span></h3>
+                <p className="text-slate-500 dark:text-slate-400 mt-4 leading-relaxed text-sm font-medium">Bantu kami untuk terus menyajikan data statistik berkualitas yang independen dan mudah dipahami.</p>
+                
+                <div className="grid grid-cols-1 w-full gap-4 mt-8">
+                  <button 
+                    onClick={() => window.open('https://saweria.co/kyystats', '_blank')}
+                    className="w-full py-5 bg-primary text-white rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all"
+                  >
+                    <DollarSign size={18} /> Donasi via Saweria
+                  </button>
+                  
+                  <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700 w-full">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Dukungan Anda Berarti</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 font-bold">Setiap dukungan akan digunakan untuk biaya server dan riset data.</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

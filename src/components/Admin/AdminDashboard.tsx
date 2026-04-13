@@ -9,7 +9,10 @@ import {
   savePortfolio,
   deletePortfolio,
   saveStatistic,
-  deleteStatistic
+  deleteStatistic,
+  fetchFeaturedProjects,
+  saveFeaturedProject,
+  deleteFeaturedProject
 } from '../../services/portfolioService';
 import { Article, Project, Statistic } from '../../types';
 import AdminHeader from './AdminHeader';
@@ -21,7 +24,7 @@ import AdminProfile from './AdminProfile';
 import ArticleAssignment from './ArticleAssignment';
 import { showToast } from '../Common/Toast';
 
-type AdminView = 'home' | 'manage-articles' | 'manage-portfolio' | 'manage-statistics' | 'manage-users' | 'edit' | 'create' | 'profile' | 'settings';
+type AdminView = 'home' | 'manage-articles' | 'manage-portfolio' | 'manage-statistics' | 'manage-featured' | 'manage-users' | 'edit' | 'create' | 'profile' | 'settings';
 
 const AdminDashboard: React.FC = () => {
   const [activeView, setActiveView] = useState<AdminView>('home');
@@ -30,9 +33,10 @@ const AdminDashboard: React.FC = () => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [statistics, setStatistics] = useState<Statistic[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [featuredProjects, setFeaturedProjects] = useState<any[]>([]);
   const [rawViews, setRawViews] = useState<any[]>([]);
   const [editingItem, setEditingItem] = useState<any>(null);
-  const [contentType, setContentType] = useState<'articles' | 'portfolio' | 'statistics'>('articles');
+  const [contentType, setContentType] = useState<'articles' | 'portfolio' | 'statistics' | 'featured'>('articles');
   const [lastView, setLastView] = useState<AdminView>('home');
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
 
@@ -46,15 +50,25 @@ const AdminDashboard: React.FC = () => {
       // 1. Ambil Profil User
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        console.log('Auth User found:', user.id);
         const { data: pData } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-        if (pData) setUserProfile(pData);
+        if (pData) {
+          setUserProfile(pData);
+        } else {
+          // Fallback if profile record is missing
+          console.warn('Profile record missing for user:', user.id);
+          // Auto-infer owner if it's the first user or based on email if convenient
+          // For now, just set a temporary profile state
+          setUserProfile({ id: user.id, role: 'owner', full_name: user.email?.split('@')[0] });
+        }
       }
 
-      // 2. Ambil Data Konten (Sama persis logic-nya dengan UserManagement)
-      const [artData, statData, projData] = await Promise.all([
+      // 2. Ambil Data Konten
+      const [artData, statData, projData, featData] = await Promise.all([
         fetchArticles(false),
         fetchStatistics(false),
-        fetchPortfolios()
+        fetchPortfolios(),
+        fetchFeaturedProjects()
       ]);
 
       // 3. Ambil MENTAH Data Views (Penting: Ambil '*' agar semua kolom terangkut)
@@ -86,6 +100,7 @@ const AdminDashboard: React.FC = () => {
       setArticles(mappedArticles);
       setStatistics(mappedStatistics);
       setProjects(projData || []);
+      setFeaturedProjects(featData || []);
 
     } catch (err) {
       console.error('Dashboard Init Error:', err);
@@ -105,17 +120,28 @@ const AdminDashboard: React.FC = () => {
     navigateTo('edit');
   };
 
-  const handleCreate = (type: any) => {
+  const handleCreate = (type: 'articles' | 'portfolio' | 'statistics' | 'featured') => {
     setContentType(type);
-    setEditingItem(type === 'articles' ? { is_published: true, author: userProfile?.full_name } : { is_published: true, author: userProfile?.full_name, category: 'Ekonomi' });
+    let emptyItem = { is_published: true, user_id: userProfile?.id };
+    
+    if (type === 'statistics') {
+      (emptyItem as any).chart_data = { type: 'bar', data: [] };
+    } else if (type === 'portfolio') {
+      (emptyItem as any).details = { challenge: '', solution: '', result: '' };
+    } else if (type === 'featured') {
+      (emptyItem as any).tags = [];
+    }
+    
+    setEditingItem(emptyItem);
     navigateTo('create');
   };
 
   const handleSave = async (item: any) => {
      try {
-       if (contentType === 'articles') await saveArticle(item);
-       if (contentType === 'portfolio') await savePortfolio(item);
-       if (contentType === 'statistics') await saveStatistic(item);
+        if (contentType === 'articles') await saveArticle(item);
+        if (contentType === 'portfolio') await savePortfolio(item);
+        if (contentType === 'statistics') await saveStatistic(item);
+        if (contentType === 'featured') await saveFeaturedProject(item);
        showToast('success', 'Konten berhasil disimpan!');
        initDashboard();
        navigateTo(lastView);
@@ -129,6 +155,7 @@ const AdminDashboard: React.FC = () => {
     if (type === 'articles') success = await deleteArticle(id);
     if (type === 'portfolio') success = await deletePortfolio(id);
     if (type === 'statistics') success = await deleteStatistic(id);
+    if (type === 'featured') success = await deleteFeaturedProject(id);
     if (success) {
       showToast('success', 'Konten berhasil dihapus!');
       initDashboard();
@@ -140,12 +167,22 @@ const AdminDashboard: React.FC = () => {
   const renderContent = () => {
     if (loading) return <div className="flex justify-center py-20"><div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div></div>;
 
-    const isOwner = userProfile?.role?.toLowerCase() === 'owner';
-    const uid = userProfile?.id;
+    const role = userProfile?.role?.toLowerCase() || 'contributor';
+    const isOwner = role === 'owner';
+    const uid = userProfile?.id || '';
+
+    console.log('Admin Dashboard Status:', { 
+      isOwner, 
+      uid, 
+      role, 
+      profileExists: !!userProfile,
+      totalArticles: articles.length 
+    });
 
     const fArticles = isOwner ? articles : articles.filter(a => a.user_id === uid);
     const fStatistics = isOwner ? statistics : statistics.filter(s => s.user_id === uid);
     const fProjects = isOwner ? projects : projects.filter(p => (p as any).user_id === uid);
+    const fFeatured = isOwner ? featuredProjects : featuredProjects.filter(f => f.user_id === uid);
 
     const popularList = [...fArticles].sort((a,b) => (b.views||0) - (a.views||0)).slice(0,5);
 
@@ -154,7 +191,8 @@ const AdminDashboard: React.FC = () => {
         return <AdminHome 
           stats={{
             articles: fArticles.length,
-            statistics: fStatistics.length
+            statistics: fStatistics.length,
+            portfolios: fProjects.length
           }}
           popularArticles={popularList}
           items={{ articles: fArticles, statistics: fStatistics }}
@@ -177,6 +215,8 @@ const AdminDashboard: React.FC = () => {
         return <AdminContentList data={fStatistics} type="statistics" onEdit={(i) => handleEdit('statistics', i)} onCreate={() => handleCreate('statistics')} onDelete={(id) => handleDelete('statistics', id)} />;
       case 'manage-portfolio':
         return <AdminContentList data={fProjects} type="portfolio" onEdit={(i) => handleEdit('portfolio', i)} onCreate={() => handleCreate('portfolio')} onDelete={(id) => handleDelete('portfolio', id)} />;
+      case 'manage-featured':
+        return <AdminContentList data={fFeatured} type="featured" onEdit={(i) => handleEdit('featured', i)} onCreate={() => handleCreate('featured')} onDelete={(id) => handleDelete('featured', id)} />;
       case 'manage-users': return <AdminUserManagement />;
       case 'profile': return <AdminProfile />;
       case 'edit':

@@ -13,7 +13,7 @@ import { showToast } from '../Common/Toast';
 import ChartEditor from './ChartEditor';
 
 interface AdminEditorProps {
-  type: 'articles' | 'portfolio' | 'statistics';
+  type: 'articles' | 'portfolio' | 'statistics' | 'featured';
   item: any;
   onSave: (item: any) => void;
   onCancel: () => void;
@@ -113,7 +113,7 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
       const fileName = `inline-${Math.random()}.${fileExt}`;
       const filePath = `inline/${fileName}`;
 
-      const bucketName = type === 'portfolio' ? 'portfolio-images' : 'article-images';
+      const bucketName = type === 'portfolio' || type === 'featured' ? 'portfolio-images' : 'article-images';
 
       const { error: uploadError } = await supabase.storage
         .from(bucketName)
@@ -145,7 +145,7 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
       const fileName = `cover-${Math.random()}.${fileExt}`;
       const filePath = `covers/${fileName}`;
 
-      const bucketName = type === 'portfolio' ? 'portfolio-images' : 'article-images';
+      const bucketName = type === 'portfolio' || type === 'featured' ? 'portfolio-images' : 'article-images';
 
       const { error: uploadError } = await supabase.storage
         .from(bucketName)
@@ -168,7 +168,7 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
     }
   };
 
-  const title = item.id ? `Edit ${type === 'articles' ? 'Artikel' : type === 'portfolio' ? 'Portfolio' : 'Statistik'}` : `Tambah ${type === 'articles' ? 'Artikel' : type === 'portfolio' ? 'Portfolio' : 'Statistik'} Baru`;
+  const title = item.id ? `Edit ${type === 'articles' ? 'Artikel' : type === 'portfolio' ? 'Portfolio' : type === 'statistics' ? 'Statistik' : 'Archive'}` : `Tambah ${type === 'articles' ? 'Artikel' : type === 'portfolio' ? 'Portfolio' : type === 'statistics' ? 'Statistik' : 'Archive'} Baru`;
 
   const ToolbarButton = ({ icon: Icon, onClick, title, active, loading }: any) => (
     <button 
@@ -226,18 +226,77 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
                 />
              </div>
 
-             {(type === 'articles' || type === 'statistics') && (
-               <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Slug Otomatis <span className="text-primary">*</span></label>
-                  <input 
-                    required
-                    value={formData.slug || ''} 
-                    onChange={(e) => setFormData({...formData, slug: e.target.value})}
-                    placeholder="judul-artikel-ini"
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-4 px-8 text-sm dark:text-white font-mono"
-                  />
-               </div>
-             )}
+              {(type === 'articles' || type === 'statistics' || type === 'featured') && (
+                <div className="space-y-3">
+                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Slug Otomatis <span className="text-primary">*</span></label>
+                   <input 
+                     required
+                     value={formData.slug || ''} 
+                     onChange={(e) => setFormData({...formData, slug: e.target.value})}
+                     placeholder="judul-konten-ini"
+                     className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-4 px-8 text-sm dark:text-white font-mono"
+                   />
+                </div>
+              )}
+
+              {type === 'featured' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                   <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Nilai Dampak (Impact Value)</label>
+                      <input 
+                        value={formData.impact_val || ''} 
+                        onChange={(e) => setFormData({...formData, impact_val: e.target.value})}
+                        placeholder="Contoh: 92.5%"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-4 px-6 text-sm dark:text-white font-bold"
+                      />
+                   </div>
+                   <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Deskripsi Dampak</label>
+                      <input 
+                        value={formData.impact_desc || ''} 
+                        onChange={(e) => setFormData({...formData, impact_desc: e.target.value})}
+                        placeholder="Contoh: Kenaikan total pendapatan"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-4 px-6 text-sm dark:text-white font-bold"
+                      />
+                   </div>
+                   <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Highlight Tahun</label>
+                      <input 
+                        value={formData.highlight_y || ''} 
+                        onChange={(e) => setFormData({...formData, highlight_y: e.target.value})}
+                        placeholder="Contoh: 2024"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-4 px-6 text-sm dark:text-white font-bold"
+                      />
+                   </div>
+                   <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Deskripsi Highlight</label>
+                      <input 
+                        value={formData.hightlight_desc || ''} 
+                        onChange={(e) => setFormData({...formData, hightlight_desc: e.target.value})}
+                        placeholder="Contoh: Tahun rilis data pemetaan"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-4 px-6 text-sm dark:text-white font-bold"
+                      />
+                   </div>
+                   <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Label Gambar</label>
+                      <input 
+                        value={formData.image_label || ''} 
+                        onChange={(e) => setFormData({...formData, image_label: e.target.value})}
+                        placeholder="Contoh: Audit Underwriter"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-4 px-6 text-sm dark:text-white font-bold"
+                      />
+                   </div>
+                   <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Tags (Pisahkan dengan koma)</label>
+                      <input 
+                        value={Array.isArray(formData.tags) ? formData.tags.join(', ') : formData.tags || ''} 
+                        onChange={(e) => setFormData({...formData, tags: e.target.value.split(',').map((t: string) => t.trim())})}
+                        placeholder="Data, SQL, Research"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-4 px-6 text-sm dark:text-white font-bold"
+                      />
+                   </div>
+                </div>
+              )}
 
              <div className="space-y-3">
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Badan Konten <span className="text-primary">*</span></label>
@@ -311,6 +370,31 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
                 </div>
                 {!isPreview && <p className="text-[10px] text-slate-400 font-medium">✨ Gunakan tombol **Upload (Ikon Panah Atas)** untuk langsung memasukkan gambar dari galeri Anda ke dalam tulisan.</p>}
              </div>
+
+             {type === 'portfolio' && (
+               <div className="space-y-8 pt-8 border-t border-slate-100 dark:border-slate-800">
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Solusi Konten (Solution)</label>
+                    <textarea 
+                      rows={5}
+                      placeholder="Bagaimana solusi yang Anda berikan..."
+                      value={formData.details?.solution || ''} 
+                      onChange={(e) => setFormData({...formData, details: {...formData.details, solution: e.target.value}})}
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-5 px-8 text-sm dark:text-white"
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Hasil Akhir (Result)</label>
+                    <textarea 
+                      rows={5}
+                      placeholder="Apa hasil nyata dari project ini..."
+                      value={formData.details?.result || ''} 
+                      onChange={(e) => setFormData({...formData, details: {...formData.details, result: e.target.value}})}
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-5 px-8 text-sm dark:text-white"
+                    />
+                  </div>
+               </div>
+             )}
 
              {/* Chart Editor Section - Only for statistics */}
              {type === 'statistics' && (

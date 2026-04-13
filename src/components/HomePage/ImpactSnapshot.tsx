@@ -26,8 +26,9 @@ const ImpactSnapshot: React.FC<ImpactSnapshotProps> = ({ projects }) => {
     image_label: '10 Tahun Terakhir'
   };
 
-  const data = projects && projects.length > 0 ? projects : [fallbackProject];
-  const currentProject = data[currentIndex];
+  const data = projects && projects.length > 0 ? projects : [];
+  const isEmpty = data.length === 0;
+  const currentProject = isEmpty ? null : data[currentIndex];
 
   const nextSlide = useCallback(() => {
     setCurrentIndex((prev) => (prev + 1) % data.length);
@@ -94,44 +95,54 @@ const ImpactSnapshot: React.FC<ImpactSnapshotProps> = ({ projects }) => {
           onMouseLeave={() => setIsAutoPlaying(true)}
         >
           {/* Main Featured Analysis Slide */}
-          <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden min-h-125 md:min-h-150 flex flex-col">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentProject.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="p-8 md:p-10 flex flex-col h-full"
-              >
-                <div className="flex-1">
-                  <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-primary mb-4 block">Featured Infographic</span>
-                  <h3 className="text-3xl md:text-4xl font-black tracking-tight mb-4 dark:text-white leading-tight">{currentProject.title}</h3>
-                  <p className="text-slate-600 dark:text-slate-400 max-w-xl mb-6 leading-relaxed">
-                    {currentProject.description}
-                  </p>
-                  <div className="flex flex-wrap gap-2 mb-8">
-                    {currentProject.tags?.map(tag => (
-                      <span key={tag} className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold rounded-full uppercase tracking-wider">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
+          <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden min-h-125 md:min-h-150 flex flex-col items-center justify-center">
+            {isEmpty ? (
+              <div className="p-10 text-center space-y-4">
+                <div className="w-20 h-20 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto text-slate-300">
+                   <Database size={40} />
                 </div>
-                
-                <div className="relative mt-8 group">
-                  <div className="relative w-fit mx-auto overflow-hidden rounded-2xl border border-slate-100 dark:border-slate-800 shadow-2xl">
-                    <div className="absolute top-3 right-3 z-10 bg-primary/90 backdrop-blur-md text-white px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-lg">
-                      {currentProject.image_label}
+                <h3 className="text-2xl font-black dark:text-white uppercase tracking-tighter italic">Belum ada Project</h3>
+                <p className="text-slate-500 text-sm max-w-xs mx-auto">Project archive masih kosong. Mulai tambahkan project hebat Anda!</p>
+              </div>
+            ) : (
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentProject?.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="p-8 md:p-10 flex flex-col h-full w-full"
+                >
+                  <div className="flex-1">
+                    <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-primary mb-4 block">Featured Infographic</span>
+                    <h3 className="text-3xl md:text-4xl font-black tracking-tight mb-4 dark:text-white leading-tight">{currentProject?.title}</h3>
+                    <p className="text-slate-600 dark:text-slate-400 max-w-xl mb-6 leading-relaxed">
+                      {currentProject?.description}
+                    </p>
+                    <div className="flex flex-wrap gap-2 mb-8">
+                      {currentProject?.tags?.map(tag => (
+                        <span key={tag} className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold rounded-full uppercase tracking-wider">
+                          {tag}
+                        </span>
+                      ))}
                     </div>
-                    <SafeImage 
-                      src={currentProject.image_url || (currentProject as any).image} 
-                      alt={currentProject.title} 
-                      className="h-[300px] sm:h-[450px] w-auto object-contain block mx-auto"
-                    />
                   </div>
-                </div>
-              </motion.div>
-            </AnimatePresence>
+                  
+                  <div className="relative mt-8 group">
+                    <div className="relative w-fit mx-auto overflow-hidden rounded-2xl border border-slate-100 dark:border-slate-800 shadow-2xl">
+                      <div className="absolute top-3 right-3 z-10 bg-primary/90 backdrop-blur-md text-white px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-lg">
+                        {currentProject?.image_label}
+                      </div>
+                      <SafeImage 
+                        src={currentProject?.image_url || (currentProject as any)?.image} 
+                        alt={currentProject?.title || ''} 
+                        className="h-[300px] sm:h-[450px] w-auto object-contain block mx-auto"
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            )}
           </div>
 
           <div className="flex flex-col gap-6">
@@ -165,19 +176,19 @@ const ImpactSnapshot: React.FC<ImpactSnapshotProps> = ({ projects }) => {
               <div className="space-y-12">
                 <div className="flex flex-col gap-2">
                   <div className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter">
-                     {currentProject.impact_val || '—'}
+                     {currentProject?.impact_val || '—'}
                   </div>
                   <div className="text-xs md:text-sm text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wide">
-                    {currentProject.impact_desc}
+                    {currentProject?.impact_desc || 'No impact recorded'}
                   </div>
                 </div>
                 <div className="h-px bg-slate-100 dark:border-slate-800 w-full" />
                 <div className="flex flex-col gap-2">
                   <div className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter">
-                    {currentProject.highlight_y || '—'}
+                    {currentProject?.highlight_y || '—'}
                   </div>
                   <div className="text-xs md:text-sm text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wide">
-                    {currentProject.hightlight_desc}
+                    {currentProject?.hightlight_desc || 'No highlight recorded'}
                   </div>
                 </div>
               </div>

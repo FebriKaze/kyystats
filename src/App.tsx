@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Send } from 'lucide-react';
@@ -47,6 +47,7 @@ function AppContent() {
   const [articleSearchQuery, setArticleSearchQuery] = useState('');
   const [session, setSession] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [ownerProfile, setOwnerProfile] = useState<any>(null);
 
   useEffect(() => {
     loadData();
@@ -81,6 +82,11 @@ function AppContent() {
     setUserProfile(data);
   };
 
+  const fetchOwnerProfile = async () => {
+    const { data } = await supabase.from('profiles').select('*').eq('role', 'owner').maybeSingle();
+    setOwnerProfile(data);
+  };
+
   const loadData = async () => {
     const [p, f, a, s] = await Promise.all([
       fetchPortfolios(),
@@ -92,7 +98,48 @@ function AppContent() {
     setFeaturedProjects(f);
     setArticles(a);
     setStatistics(s);
+    
+    // Fetch owner once
+    await fetchOwnerProfile();
   };
+
+  // Filter logic for Public Pages
+  const isOwner = userProfile?.role?.toLowerCase() === 'owner';
+  const currentUid = session?.user?.id;
+  const ownerId = ownerProfile?.id;
+
+  // Final filtered data for public view
+  const filteredProjects = useMemo(() => {
+    if (session) {
+      if (isOwner) return projects;
+      return projects.filter(p => (p as any).user_id === currentUid);
+    }
+    return projects.filter(p => (p as any).user_id === ownerId);
+  }, [projects, session, isOwner, currentUid, ownerId]);
+
+  const filteredFeatured = useMemo(() => {
+    if (session) {
+      if (isOwner) return featuredProjects;
+      return featuredProjects.filter(f => f.user_id === currentUid);
+    }
+    return featuredProjects.filter(f => f.user_id === ownerId);
+  }, [featuredProjects, session, isOwner, currentUid, ownerId]);
+
+  const filteredArticles = useMemo(() => {
+    if (session) {
+      if (isOwner) return articles;
+      return articles.filter(a => a.user_id === currentUid);
+    }
+    return articles.filter(a => a.user_id === ownerId);
+  }, [articles, session, isOwner, currentUid, ownerId]);
+
+  const filteredStats = useMemo(() => {
+    if (session) {
+      if (isOwner) return statistics;
+      return statistics.filter(s => s.user_id === currentUid);
+    }
+    return statistics.filter(s => s.user_id === ownerId);
+  }, [statistics, session, isOwner, currentUid, ownerId]);
 
   const isAdminPage = location.pathname.startsWith('/admin');
 
@@ -118,14 +165,14 @@ function AppContent() {
             <Route path="/" element={
               <>
                 <Hero />
-                <ImpactSnapshot projects={featuredProjects} />
+                <ImpactSnapshot projects={filteredFeatured} />
                 <Portfolio 
-                  projects={projects} 
+                  projects={filteredProjects} 
                   onProjectClick={(p) => setSelectedProject(p)} 
                   onBackToHome={() => navigate('/')}
                 />
                 <ProjectArchive 
-                  projects={projects}
+                  projects={filteredProjects}
                   onProjectClick={(p) => setSelectedProject(p)}
                 />
               </>
@@ -133,7 +180,7 @@ function AppContent() {
 
             <Route path="/articles" element={
               <ArticleList 
-                articles={articles}
+                articles={filteredArticles}
                 onArticleClick={(article) => navigate(`/articles/${article.slug}`)}
                 activeFilter={articleFilter}
                 onFilterChange={setArticleFilter}
@@ -142,21 +189,36 @@ function AppContent() {
               />
             } />
 
+            <Route path="/portfolio" element={
+              <div className="pt-20">
+                <ImpactSnapshot projects={filteredFeatured} />
+                <Portfolio 
+                  projects={filteredProjects} 
+                  onProjectClick={(p) => setSelectedProject(p)} 
+                  onBackToHome={() => navigate('/')}
+                />
+                <ProjectArchive 
+                  projects={filteredProjects}
+                  onProjectClick={(p) => setSelectedProject(p)}
+                />
+              </div>
+            } />
+
             <Route path="/articles/:slug" element={
-              <ArticleDetailWrapper articles={articles} onBack={() => navigate('/articles')} onArticleClick={(article) => navigate(`/articles/${article.slug}`)} />
+              <ArticleDetailWrapper articles={filteredArticles} onBack={() => navigate('/articles')} onArticleClick={(article) => navigate(`/articles/${article.slug}`)} />
             } />
 
             <Route path="/author/:id" element={<AuthorPage />} />
 
             <Route path="/statistik" element={
               <StatistikPage 
-                statistik={statistics} 
+                statistik={filteredStats} 
                 onStatClick={(item) => navigate(`/statistik/${item.slug || item.id}`)}
               />
             } />
 
             <Route path="/statistik/:slug" element={
-              <StatistikDetailWrapper statistics={statistics} />
+              <StatistikDetailWrapper statistics={filteredStats} />
             } />
 
             <Route path="/admin" element={

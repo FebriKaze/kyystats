@@ -14,10 +14,12 @@ import {
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import SafeImage from '../Common/SafeImage';
 
+
 interface AdminHomeProps {
   stats: {
     articles: number;
     statistics: number;
+    portfolios: number;
   };
   popularArticles: any[];
   items?: {
@@ -156,15 +158,25 @@ const AdminHome: React.FC<AdminHomeProps> = ({ stats, popularArticles, items, pr
             <div className="p-2.5 md:p-3 bg-purple-50 dark:bg-purple-500/10 rounded-2xl text-purple-500"><BarChart3 size={18} /></div>
           </div>
         </div>
+
+        <div className="p-5 md:p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:border-primary/30 transition-all">
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 italic">Total Portfolio</p>
+              <h3 className="text-2xl md:text-3xl font-black dark:text-white group-hover:text-primary transition-colors">{stats.portfolios}</h3>
+            </div>
+            <div className="p-2.5 md:p-3 bg-rose-50 dark:bg-rose-500/10 rounded-2xl text-rose-500"><ArrowUpRight size={18} /></div>
+          </div>
+        </div>
         
-        <div className="p-5 md:p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm col-span-1 sm:col-span-2 flex items-center justify-between bg-linear-to-r from-primary to-blue-600 font-black">
+        <div className="p-5 md:p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm col-span-1 lg:col-span-1 flex items-center justify-between bg-linear-to-r from-primary to-blue-600 font-black">
            <div className="text-white">
               <p className="text-[9px] uppercase tracking-widest opacity-70">Status Akun</p>
-              <h3 className="text-lg md:text-xl uppercase italic tracking-widest">
+              <h3 className="text-sm md:text-base uppercase italic tracking-widest truncate">
                 {profile?.role === 'owner' ? 'OWNER ACCOUNT' : 'CONTRIBUTOR'}
               </h3>
            </div>
-           <Clock className="text-white/20 hidden sm:block" size={32} />
+           <Clock className="text-white/20 hidden sm:block" size={24} />
         </div>
       </div>
 

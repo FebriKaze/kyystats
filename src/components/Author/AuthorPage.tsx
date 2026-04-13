@@ -6,7 +6,7 @@ import { supabase } from '../../lib/supabase';
 import { Article, Statistic } from '../../types';
 import SafeImage from '../Common/SafeImage';
 import ProfileAvatar from '../Common/ProfileAvatar';
-import { fetchArticles, fetchStatistics } from '../../services/portfolioService';
+import { fetchArticles, fetchStatistics, fetchPortfolios } from '../../services/portfolioService';
 
 const AuthorPage: React.FC = () => {
   const { id } = useParams();
@@ -14,11 +14,12 @@ const AuthorPage: React.FC = () => {
   const [profile, setProfile] = useState<any>(null);
   const [articles, setArticles] = useState<Article[]>([]);
   const [stats, setStats] = useState<Statistic[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
   const [viewCounts, setViewCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   
   // Filter State
-  const [activeTab, setActiveTab] = useState<'Semua' | 'Artikel' | 'Statistik'>('Semua');
+  const [activeTab, setActiveTab] = useState<'Semua' | 'Artikel' | 'Statistik' | 'Portfolio'>('Semua');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   useEffect(() => {
@@ -40,13 +41,15 @@ const AuthorPage: React.FC = () => {
         setProfile(profileData);
 
         // Fetch articles & stats filter by author id
-        const [allArt, allStat] = await Promise.all([
+        const [allArt, allStat, allPort] = await Promise.all([
           fetchArticles(),
-          fetchStatistics()
+          fetchStatistics(),
+          fetchPortfolios()
         ]);
 
         const userArts = allArt.filter((a: any) => a.user_id === id);
         const userStats = allStat.filter((s: any) => s.user_id === id);
+        const userPorts = allPort.filter((p: any) => p.user_id === id);
 
         // Get Views Count
         const { data: viewsData } = await supabase.from('page_views').select('page_id');
@@ -58,6 +61,7 @@ const AuthorPage: React.FC = () => {
 
         setArticles(userArts.map(a => ({...a, views: counts[a.slug] || counts[a.id] || 0})));
         setStats(userStats.map(s => ({...s, views: counts[s.id] || 0})));
+        setProjects(userPorts);
       } catch (err) {
         console.error('Error loading author:', err);
       } finally {
@@ -69,7 +73,8 @@ const AuthorPage: React.FC = () => {
 
   const combinedContent = [
     ...articles.map(a => ({...a, type: 'Artikel'})), 
-    ...stats.map(s => ({...s, type: 'Statistik'}))
+    ...stats.map(s => ({...s, type: 'Statistik'})),
+    ...projects.map(p => ({...p, type: 'Portfolio', thumbnail_url: p.image}))
   ].filter(item => {
     if (activeTab === 'Semua') return true;
     return item.type === activeTab;
@@ -118,7 +123,7 @@ const AuthorPage: React.FC = () => {
 
                       <div className="w-full mt-8 pt-8 border-t border-slate-50 dark:border-slate-800 grid grid-cols-2 gap-4">
                          <div className="bg-primary/5 rounded-2xl py-4 px-4 text-center">
-                            <span className="text-xl font-black text-primary block">{articles.length + stats.length}</span>
+                            <span className="text-xl font-black text-primary block">{articles.length + stats.length + projects.length}</span>
                             <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Konten</span>
                          </div>
                          <div className="bg-primary/5 rounded-2xl py-4 px-4 text-center">
@@ -185,7 +190,7 @@ const AuthorPage: React.FC = () => {
                         exit={{ opacity: 0, y: 10 }}
                         className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-2xl z-20 py-2 overflow-hidden not-italic"
                       >
-                         {['Semua', 'Artikel', 'Statistik'].map((tab) => (
+                         {['Semua', 'Artikel', 'Statistik', 'Portfolio'].map((tab) => (
                            <button 
                             key={tab}
                             onClick={() => { setActiveTab(tab as any); setIsFilterOpen(false); }}
@@ -207,7 +212,11 @@ const AuthorPage: React.FC = () => {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     key={item.id}
-                    onClick={() => navigate(item.type === 'Artikel' ? `/articles/${item.slug}` : `/statistik/${item.id}`)}
+                    onClick={() => {
+                        if (item.type === 'Artikel') navigate(`/articles/${item.slug}`);
+                        else if (item.type === 'Statistik') navigate(`/statistik/${item.id}`);
+                        // Portfolio logic could trigger modal or navigate if we had a dedicated page
+                    }}
                     className="flex flex-col md:flex-row gap-8 lg:gap-12 group cursor-pointer border-b border-slate-100 dark:border-slate-800 pb-12 last:border-0"
                    >
                      <div className="w-full md:w-64 lg:w-80 aspect-video md:aspect-4/3 rounded-4xl overflow-hidden border border-slate-100 dark:border-slate-800 bg-slate-100 shrink-0 shadow-lg group-hover:shadow-primary/10 transition-all">
@@ -231,7 +240,7 @@ const AuthorPage: React.FC = () => {
                 
                 {combinedContent.length === 0 && (
                   <div className="py-32 text-center">
-                    <p className="text-sm font-black text-slate-400 uppercase tracking-widest italic">Belum ada konten untuk kategori ini.</p>
+                    <p className="text-sm font-black text-slate-400 uppercase tracking-widest italic leading-relaxed">Belum ada {activeTab === 'Semua' ? 'konten' : activeTab} untuk penulis ini.</p>
                   </div>
                 )}
              </div>

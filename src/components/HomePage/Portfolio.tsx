@@ -254,8 +254,8 @@ const Portfolio: React.FC<PortfolioProps> = ({ projects, onProjectClick, onBackT
                 <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-slate-100 dark:bg-slate-900 mb-6 text-slate-400">
                   <Search size={32} />
                 </div>
-                <h3 className="text-2xl font-bold dark:text-white mb-2">No projects found</h3>
-                <p className="text-slate-500 mb-8 max-w-xs mx-auto">We couldn't find any projects matching your current filter and search criteria.</p>
+                <h3 className="text-2xl font-bold dark:text-white mb-2">Belum ada portfolio</h3>
+                <p className="text-slate-500 mb-8 max-w-xs mx-auto">Sepertinya belum ada karya yang dipajang di sini.</p>
                 <button 
                   onClick={clearFilters}
                   className="px-8 py-3 bg-primary text-white rounded-full font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-transform"
