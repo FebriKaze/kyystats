@@ -26,6 +26,19 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ article, articles, onBack
   useMeta({ title: article.title, description: article.summary });
   usePageView({ pageType: 'articles', pageId: article.id || article.slug, pageTitle: article.title });
 
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: article.title,
+        text: article.summary,
+        url: window.location.href,
+      }).catch(console.error);
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      showToast('success', 'Link berhasil disalin ke clipboard!');
+    }
+  };
+
   const heroUrl = (article as any).media_url || article.thumbnail_url;
   const flourishId = heroUrl?.match(/visualisation\/(\d+)/)?.[1];
   const isVideo = /\.(mp4|webm|ogg|mov)$/i.test(heroUrl || '');
@@ -60,7 +73,12 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ article, articles, onBack
                   <h4 className="text-sm md:text-base font-black dark:text-white mt-0.5">{article.author || 'Tim KyyStats'}</h4>
                 </div>
                 <div className="flex gap-2">
-                   <button className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-400 hover:text-primary transition-all"><Share2 size={16} /></button>
+                   <button 
+                     onClick={handleShare}
+                     className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-400 hover:text-primary transition-all"
+                   >
+                     <Share2 size={16} />
+                   </button>
                 </div>
               </div>
             </header>

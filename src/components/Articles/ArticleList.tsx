@@ -94,7 +94,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
                     >
                       <div className="w-full md:w-64 h-40 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0 flex items-center justify-center p-0 relative">
                         <SafeImage 
-                          src={article.thumbnail_url} 
+                          src={article.thumbnail_url || (article as any).media_url} 
                           alt={article.title} 
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                         />

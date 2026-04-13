@@ -111,7 +111,7 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
               <div className="w-20 h-20 bg-slate-50 dark:bg-slate-900 rounded-2xl overflow-hidden shrink-0 border border-slate-200 dark:border-slate-800 flex items-center justify-center relative">
                 {article.thumbnail_url ? (
                   <SafeImage
-                    src={article.thumbnail_url}
+                    src={article.thumbnail_url || (article as any).media_url}
                     alt={article.title}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
