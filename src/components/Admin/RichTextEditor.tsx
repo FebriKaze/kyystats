@@ -62,11 +62,13 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           const content = editor.getContent();
           if (content !== valueRef.current) {
             valueRef.current = content;
+            // Immediate update for better responsiveness during typing/pasting
             onChange(content);
           }
         };
 
-        editor.on('Change KeyUp Undo Redo NodeChange input', handleChange);
+        // Comprehensive event list to catch all possible content changes
+        editor.on('Change KeyUp Undo Redo NodeChange input Paste ExecCommand SetContent', handleChange);
       }
     });
 

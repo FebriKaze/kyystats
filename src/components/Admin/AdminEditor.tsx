@@ -71,32 +71,44 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
           <div className="bg-white dark:bg-slate-900 p-10 rounded-4xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-8">
              <div className="space-y-3">
                 <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Judul Konten *</label>
-                <input required value={formData.title || ''} onChange={(e) => setFormData({...formData, title: e.target.value, slug: (!item.id || !formData.slug) ? slugify(e.target.value) : formData.slug})} placeholder="Masukkan judul..." className="w-full bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 dark:border-slate-800 rounded-2xl py-5 px-8 text-base dark:text-white font-bold focus:border-primary transition-all" />
+                <input required value={formData.title || ''} onChange={(e) => {
+                  const newTitle = e.target.value;
+                  setFormData(prev => ({
+                    ...prev, 
+                    title: newTitle, 
+                    slug: (!item.id || !prev.slug) ? slugify(newTitle) : prev.slug
+                  }));
+                }} placeholder="Masukkan judul..." className="w-full bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 dark:border-slate-800 rounded-2xl py-5 px-8 text-base dark:text-white font-bold focus:border-primary transition-all" />
              </div>
 
              <div className="space-y-3">
-                 <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Teks Intro (Di Atas Media)</label>
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Teks Intro (Di Atas Media)</label>
+                  <RichTextEditor 
+                     key={`intro-${item.id || 'new'}`}
+                     value={formData.intro_text || ''} 
+                     onChange={(val) => setFormData(prev => ({...prev, intro_text: val}))}
+                     placeholder="Teks pengantar..."
+                     minHeight={200}
+                  />
+              </div>
+              
+              <div className="space-y-3">
+                 <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Badan Konten *</label>
                  <RichTextEditor 
-                    value={formData.intro_text || ''} 
-                    onChange={(val) => setFormData({...formData, intro_text: val})}
-                    placeholder="Teks pengantar..."
-                    minHeight={200}
+                   key={`content-${item.id || 'new'}`}
+                   value={formData.content || ''} 
+                   onChange={(val) => setFormData(prev => ({...prev, content: val}))}
+                   placeholder="Tulis isi konten kamu di sini..."
+                   minHeight={600}
                  />
-             </div>
-             
-             <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Badan Konten *</label>
-                <RichTextEditor 
-                  value={formData.content || ''} 
-                  onChange={(val) => setFormData({...formData, content: val})}
-                  placeholder="Tulis isi konten kamu di sini..."
-                  minHeight={600}
-                />
-             </div>
+              </div>
 
              <div className="space-y-3">
                 <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Ringkasan Eksekutif</label>
-                <textarea rows={3} value={formData.summary || ''} onChange={(e) => setFormData({...formData, summary: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 rounded-2xl py-5 px-8 text-sm dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-inner" />
+                <textarea rows={3} value={formData.summary || ''} onChange={(e) => {
+                  const val = e.target.value;
+                  setFormData(prev => ({...prev, summary: val}));
+                }} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 rounded-2xl py-5 px-8 text-sm dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-inner" />
              </div>
           </div>
         </div>
@@ -105,7 +117,10 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
           <div className="bg-white dark:bg-slate-900 p-8 rounded-4xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-8 sticky top-24">
              <div className="space-y-3">
                 <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Media Interaktif (Embed/Flourish/Video)</label>
-                <input type="text" value={formData.media_url || ''} onChange={(e) => setFormData({...formData, media_url: e.target.value})} placeholder="Paste link Flourish/Video..." className="w-full bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 rounded-2xl py-4 px-6 text-xs font-bold" />
+                <input type="text" value={formData.media_url || ''} onChange={(e) => {
+                  const val = e.target.value;
+                  setFormData(prev => ({...prev, media_url: val}));
+                }} placeholder="Paste link Flourish/Video..." className="w-full bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 rounded-2xl py-4 px-6 text-xs font-bold" />
                 {formData.media_url && (
                   <div className={`rounded-2xl overflow-hidden relative border border-slate-100 dark:border-slate-800 ${mediaId ? 'min-h-[300px]' : 'aspect-video'}`}>
                     {mediaId ? (
