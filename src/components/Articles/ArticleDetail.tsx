@@ -19,9 +19,21 @@ interface ArticleDetailProps {
   article: Article;
   articles: Article[];
   onBack: () => void;
+  onArticleClick: (article: Article) => void;
+  onFilterChange: (category: string) => void;
+  onSearchChange: (query: string) => void;
+  searchQuery: string;
 }
 
-const ArticleDetail: React.FC<ArticleDetailProps> = ({ article, articles, onBack }) => {
+const ArticleDetail: React.FC<ArticleDetailProps> = ({ 
+  article, 
+  articles, 
+  onBack,
+  onArticleClick,
+  onFilterChange,
+  onSearchChange,
+  searchQuery
+}) => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [isShareMenuOpen, setIsShareMenuOpen] = useState(false);
@@ -136,9 +148,10 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ article, articles, onBack
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           <div className="lg:col-span-8 space-y-8">
             {article.intro_text && (
-              <div className="prose prose-slate dark:prose-invert max-w-none pt-2 pb-6 border-b border-slate-100 dark:border-slate-800 mb-8">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{article.intro_text}</ReactMarkdown>
-              </div>
+              <div 
+                className="prose prose-slate dark:prose-invert max-w-none pt-2 pb-6 border-b border-slate-100 dark:border-slate-800 mb-8"
+                dangerouslySetInnerHTML={{ __html: article.intro_text }}
+              />
             )}
 
             <div className="relative w-full rounded-3xl overflow-hidden bg-slate-50 dark:bg-slate-900/50 shadow-2xl border border-slate-100 dark:border-slate-800">
@@ -153,9 +166,10 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ article, articles, onBack
               )}
             </div>
 
-            <article className="prose prose-slate dark:prose-invert prose-sm md:prose-lg max-w-none prose-headings:font-black prose-headings:tracking-tight prose-a:text-primary prose-img:rounded-3xl prose-pre:bg-slate-900 prose-pre:rounded-2xl selection:bg-primary/20 mt-12">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{article.content}</ReactMarkdown>
-            </article>
+            <article 
+              className="prose prose-slate dark:prose-invert prose-sm md:prose-lg max-w-none prose-headings:font-black prose-headings:tracking-tight prose-a:text-primary prose-img:rounded-3xl prose-pre:bg-slate-900 prose-pre:rounded-2xl selection:bg-primary/20 mt-12"
+              dangerouslySetInnerHTML={{ __html: article.content }}
+            />
           </div>
 
           <aside className="lg:col-span-4">
@@ -163,10 +177,10 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ article, articles, onBack
               articles={articles}
               categories={categories}
               activeFilter="All"
-              onFilterChange={() => {}}
-              onArticleClick={(a) => navigate(`/articles/${a.slug}`)}
-              onSearch={(q) => setSearchTerm(q)}
-              searchValue={searchTerm}
+              onFilterChange={onFilterChange}
+              onArticleClick={onArticleClick}
+              onSearch={onSearchChange}
+              searchValue={searchQuery}
             />
           </aside>
         </div>

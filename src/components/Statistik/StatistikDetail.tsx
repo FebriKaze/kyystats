@@ -441,29 +441,15 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
               );
             })()}
 
-            {/* Markdown Text Content */}
+            {/* HTML Text Content */}
             <article className="flex-1 mt-6">
               <div className="text-xl md:text-2xl font-black text-slate-700 dark:text-slate-300 leading-relaxed mb-8 mt-2 italic border-l-4 border-primary pl-6 py-4 bg-slate-50 dark:bg-slate-900/50 rounded-r-2xl">
                 {item.summary}
               </div>
-              <div className="prose prose-slate dark:prose-invert max-w-none prose-headings:font-black prose-headings:tracking-tight prose-p:text-slate-700 dark:prose-p:text-slate-300 prose-p:leading-8 prose-p:text-[17px] prose-p:mb-6">
-
-                
-                <ReactMarkdown 
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    img: ({node, ...props}) => (
-                      <span className="block my-12">
-                        <SafeImage {...props} className="w-full h-auto rounded-3xl" />
-                      </span>
-                    ),
-                    h2: ({node, ...props}) => <h2 {...props} className="text-2xl md:text-3xl font-black mt-16 mb-8 text-slate-900 dark:text-white" />,
-                    p: ({node, ...props}) => <p {...props} className="mb-6 last:mb-0" />
-                  }}
-                >
-                  {item.content}
-                </ReactMarkdown>
-              </div>
+              <div 
+                className="prose prose-slate dark:prose-invert max-w-none prose-headings:font-black prose-headings:tracking-tight prose-p:text-slate-700 dark:prose-p:text-slate-300 prose-p:leading-8 prose-p:text-[17px] prose-p:mb-6"
+                dangerouslySetInnerHTML={{ __html: item.content }}
+              />
             </article>
           </div>
 
