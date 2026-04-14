@@ -21,6 +21,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<any>(null);
+  const isInternalUpdate = useRef<boolean>(false);
 
   useEffect(() => {
     if (!window.ClassicEditor || !containerRef.current || editorRef.current) return;
@@ -37,19 +38,22 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
             'link', 'blockQuote', 'insertTable', 'mediaEmbed', '|',
             'undo', 'redo'
           ]
-        },
-        language: 'id'
+        }
       })
       .then((editor: any) => {
         editorRef.current = editor;
         
-        // Initial set content
-        editor.setData(value || '');
+        // Load data awal
+        if (value) {
+          editor.setData(value);
+        }
 
-        // Listen for changes
+        // Tangkap perubahan teks
         editor.model.document.on('change:data', () => {
-          const data = editor.getData();
-          onChange(data);
+          if (!isInternalUpdate.current) {
+            const data = editor.getData();
+            onChange(data);
+          }
         });
       })
       .catch((error: any) => {
@@ -62,30 +66,33 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           .then(() => {
             editorRef.current = null;
           })
-          .catch((err: any) => console.error(err));
+          .catch((err: any) => console.error('Destroy error:', err));
       }
     };
-  }, []);
+  }, []); // Cuma jalan sekali pas mount
 
-  // Sync value from parent
+  // Sync data kalau berubah dari luar (misal: ganti artikel)
   useEffect(() => {
     if (editorRef.current && value !== editorRef.current.getData()) {
+      isInternalUpdate.current = true;
       editorRef.current.setData(value || '');
+      // Kasih delay dikit biar gak bentrok sama event listener
+      setTimeout(() => {
+        isInternalUpdate.current = false;
+      }, 50);
     }
   }, [value]);
 
   return (
-    <div className="ckeditor-wrapper rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm">
+    <div className="ckeditor-wrapper rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900">
       <div ref={containerRef} />
       
       <style>{`
-        /* Menyesuaikan Tinggi Minimal */
         .ck-editor__editable_inline {
           min-height: ${minHeight}px !important;
           padding: 30px 40px !important;
         }
 
-        /* Styling Toolbar agar Premium */
         .ck.ck-toolbar {
           background: #f8fafc !important;
           border: none !important;
@@ -98,7 +105,6 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           border-bottom: 1px solid #1e293b !important;
         }
 
-        /* Styling Konten Gelap/Terang */
         .ck.ck-editor__main > .ck-editor__editable {
           background: white !important;
           border: none !important;
@@ -112,17 +118,18 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           color: #f1f5f9 !important;
         }
 
-        /* Rapiin Border Fokus */
         .ck.ck-editor__editable.ck-focused:not(.ck-editor__nested-editable) {
           border: none !important;
-          box-shadow: inset 0 0 0 2px rgba(139, 92, 246, 0.1) !important;
+          box-shadow: none !important;
+          outline: none !important;
         }
 
-        /* Warna Ikon di Dark Mode */
-        .dark .ck.ck-toolbar .ck-icon {
+        /* Dark Mode Icons */
+        .dark .ck.ck-toolbar .ck-icon, 
+        .dark .ck.ck-toolbar .ck-button {
           color: #94a3b8 !important;
         }
-
+        
         .dark .ck.ck-button:hover {
           background: #1e293b !important;
         }
@@ -132,8 +139,17 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           color: #8b5cf6 !important;
         }
 
-        .ck-reset_all :not(.ck-reset_all-excluded) {
-            font-family: inherit !important;
+        .dark .ck.ck-dropdown__panel {
+          background: #0f172a !important;
+          border-color: #1e293b !important;
+        }
+
+        .dark .ck.ck-list {
+          background: #0f172a !important;
+        }
+
+        .dark .ck.ck-list__item:hover > .ck-button {
+          background: #1e293b !important;
         }
       `}</style>
     </div>
