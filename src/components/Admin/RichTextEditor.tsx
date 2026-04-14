@@ -82,9 +82,19 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   // Sync external changes (only if it's a real external update like switching articles)
   useEffect(() => {
-    if (editorRef.current && value !== valueRef.current) {
+    const syncContent = () => {
+      if (editorRef.current && value !== valueRef.current) {
+        valueRef.current = value;
+        editorRef.current.setContent(value || '');
+      }
+    };
+
+    // If editor is already ready, sync now
+    if (editorRef.current) {
+      syncContent();
+    } else {
+      // If not ready, TinyMCE 'init' event in setup will handle it using valueRef
       valueRef.current = value;
-      editorRef.current.setContent(value || '');
     }
   }, [value]);
 

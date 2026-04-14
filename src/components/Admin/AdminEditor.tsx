@@ -54,7 +54,7 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
 
   const slugify = (text: string) => text.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w-]+/g, '').replace(/--+/g, '-').replace(/^-+/, '').replace(/-+$/, '');
 
-  const mediaId = formData.media_url?.match(/visualisation\/(\d+)/)?.[1];
+  const mediaId = formData.media_url?.match(/visualisation\/(\d+)/)?.[1] || formData.media_url?.match(/id=(\d+)/)?.[1];
   const isVideoMedia = /\.(mp4|webm|ogg|mov)$/i.test(formData.media_url || '');
 
   return (
@@ -122,9 +122,17 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
                   setFormData(prev => ({...prev, media_url: val}));
                 }} placeholder="Paste link Flourish/Video..." className="w-full bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 rounded-2xl py-4 px-6 text-xs font-bold" />
                 {formData.media_url && (
-                  <div className={`rounded-2xl overflow-hidden relative border border-slate-100 dark:border-slate-800 ${mediaId ? 'min-h-[300px]' : 'aspect-video'}`}>
+                  <div className={`rounded-2xl overflow-hidden relative border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 ${mediaId ? 'aspect-video' : 'aspect-video flex items-center justify-center'}`}>
                     {mediaId ? (
-                      <iframe src={`https://public.flourish.studio/visualisation/${mediaId}/embed?auto=1`} className="w-full h-full border-0 absolute inset-0" scrolling="no" />
+                      <div className="absolute inset-0 w-full h-full overflow-hidden">
+                        <div className="absolute top-0 left-0 w-[400%] h-[400%] origin-top-left scale-[0.25] pointer-events-none">
+                          <iframe 
+                            src={`https://public.flourish.studio/visualisation/${mediaId}/embed?auto=1`} 
+                            className="w-full h-full border-0" 
+                            scrolling="no" 
+                          />
+                        </div>
+                      </div>
                     ) : isVideoMedia ? (
                       <video src={formData.media_url} className="w-full h-full object-cover" muted autoPlay loop />
                     ) : null}
