@@ -9,7 +9,7 @@ interface RichTextEditorProps {
 
 declare global {
   interface Window {
-    Quill: any;
+    ClassicEditor: any;
   }
 }
 
@@ -23,91 +23,118 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const editorRef = useRef<any>(null);
 
   useEffect(() => {
-    if (!window.Quill || !containerRef.current || editorRef.current) return;
+    if (!window.ClassicEditor || !containerRef.current || editorRef.current) return;
 
-    // Initialize Quill
-    editorRef.current = new window.Quill(containerRef.current, {
-      theme: 'snow',
-      placeholder: placeholder,
-      modules: {
-        toolbar: [
-          [{ 'header': [1, 2, 3, false] }],
-          ['bold', 'italic', 'underline', 'strike'],
-          [{ 'color': [] }, { 'background': [] }],
-          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-          [{ 'align': [] }],
-          ['link', 'image', 'video'],
-          ['clean']
-        ]
-      }
-    });
+    window.ClassicEditor
+      .create(containerRef.current, {
+        placeholder: placeholder || 'Tulis sesuatu...',
+        toolbar: {
+          items: [
+            'heading', '|',
+            'bold', 'italic', 'underline', 'strikethrough', '|',
+            'bulletedList', 'numberedList', '|',
+            'alignment', 'outdent', 'indent', '|',
+            'link', 'blockQuote', 'insertTable', 'mediaEmbed', '|',
+            'undo', 'redo'
+          ]
+        },
+        language: 'id'
+      })
+      .then((editor: any) => {
+        editorRef.current = editor;
+        
+        // Initial set content
+        editor.setData(value || '');
 
-    // Set initial value
-    if (value) {
-      editorRef.current.root.innerHTML = value;
-    }
-
-    // Listen for changes
-    editorRef.current.on('text-change', () => {
-      const html = editorRef.current.root.innerHTML;
-      // Normalizing empty content to avoid unnecessary updates
-      const cleanHtml = html === '<p><br></p>' ? '' : html;
-      onChange(cleanHtml);
-    });
+        // Listen for changes
+        editor.model.document.on('change:data', () => {
+          const data = editor.getData();
+          onChange(data);
+        });
+      })
+      .catch((error: any) => {
+        console.error('CKEditor Error:', error);
+      });
 
     return () => {
-      // Quill doesn't have a formal destroy method in 1.3.6, but we can clean up the toolbar
-      const toolbar = containerRef.current?.parentElement?.querySelector('.ql-toolbar');
-      if (toolbar) {
-        toolbar.remove();
+      if (editorRef.current) {
+        editorRef.current.destroy()
+          .then(() => {
+            editorRef.current = null;
+          })
+          .catch((err: any) => console.error(err));
       }
     };
   }, []);
 
-  // Sync value from parent if it changes externally
+  // Sync value from parent
   useEffect(() => {
-    if (editorRef.current && value !== editorRef.current.root.innerHTML) {
-      // Only update if the content actually differs (ignoring <p><br></p> vs empty)
-      const currentHtml = editorRef.current.root.innerHTML;
-      if (!(value === '' && currentHtml === '<p><br></p>')) {
-        editorRef.current.root.innerHTML = value || '';
-      }
+    if (editorRef.current && value !== editorRef.current.getData()) {
+      editorRef.current.setData(value || '');
     }
   }, [value]);
 
   return (
-    <div className="rich-text-editor-wrapper bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-inner">
-      <div ref={containerRef} style={{ minHeight: `${minHeight}px`, fontSize: '16px' }} />
+    <div className="ckeditor-wrapper rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm">
+      <div ref={containerRef} />
       
       <style>{`
-        .ql-toolbar.ql-snow {
+        /* Menyesuaikan Tinggi Minimal */
+        .ck-editor__editable_inline {
+          min-height: ${minHeight}px !important;
+          padding: 30px 40px !important;
+        }
+
+        /* Styling Toolbar agar Premium */
+        .ck.ck-toolbar {
+          background: #f8fafc !important;
           border: none !important;
           border-bottom: 1px solid #f1f5f9 !important;
-          background: #f8fafc;
-          padding: 12px 20px !important;
+          padding: 8px 15px !important;
         }
-        .dark .ql-toolbar.ql-snow {
-          background: #0f172a;
+
+        .dark .ck.ck-toolbar {
+          background: #0f172a !important;
           border-bottom: 1px solid #1e293b !important;
         }
-        .ql-container.ql-snow {
+
+        /* Styling Konten Gelap/Terang */
+        .ck.ck-editor__main > .ck-editor__editable {
+          background: white !important;
           border: none !important;
-          font-family: inherit !important;
-        }
-        .ql-editor {
-          padding: 30px 40px !important;
+          color: #1e293b !important;
+          font-size: 16px !important;
           line-height: 1.8 !important;
-          color: inherit !important;
         }
-        .ql-editor.ql-blank::before {
+
+        .dark .ck.ck-editor__main > .ck-editor__editable {
+          background: #020617 !important;
+          color: #f1f5f9 !important;
+        }
+
+        /* Rapiin Border Fokus */
+        .ck.ck-editor__editable.ck-focused:not(.ck-editor__nested-editable) {
+          border: none !important;
+          box-shadow: inset 0 0 0 2px rgba(139, 92, 246, 0.1) !important;
+        }
+
+        /* Warna Ikon di Dark Mode */
+        .dark .ck.ck-toolbar .ck-icon {
           color: #94a3b8 !important;
-          font-style: italic !important;
-          left: 40px !important;
         }
-        .dark .ql-toolbar .ql-stroke { stroke: #94a3b8 !important; }
-        .dark .ql-toolbar .ql-fill { fill: #94a3b8 !important; }
-        .dark .ql-toolbar .ql-picker { color: #94a3b8 !important; }
-        .dark .ql-editor { color: #f1f5f9 !important; }
+
+        .dark .ck.ck-button:hover {
+          background: #1e293b !important;
+        }
+        
+        .dark .ck.ck-button.ck-on {
+          background: #1e293b !important;
+          color: #8b5cf6 !important;
+        }
+
+        .ck-reset_all :not(.ck-reset_all-excluded) {
+            font-family: inherit !important;
+        }
       `}</style>
     </div>
   );
