@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, Bell, User, LayoutDashboard, FileText, Settings, LogOut } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
 import ProfileAvatar from '../Common/ProfileAvatar';
 
@@ -63,52 +64,65 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onNavigate, activeView }) => 
               Beranda
             </button>
 
-            <div className="relative">
+            <div 
+              className="relative py-4"
+              onMouseEnter={() => setIsKontenOpen(true)}
+              onMouseLeave={() => setIsKontenOpen(false)}
+            >
               <button 
-                onMouseEnter={() => { setIsKontenOpen(true); setIsPengaturanOpen(false); }}
                 className={`flex items-center gap-1 text-sm font-bold transition-colors ${['manage-articles', 'manage-statistics', 'manage-portfolio'].includes(activeView) ? 'text-primary' : 'text-slate-500 hover:text-primary'}`}
               >
                 Konten <ChevronDown size={16} />
               </button>
               
-              {isKontenOpen && (
-                <div 
-                  onMouseLeave={() => setIsKontenOpen(false)}
-                  className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-2xl py-2 overflow-hidden animate-in fade-in slide-in-from-top-2"
-                >
-                  <button onClick={() => { onNavigate('manage-articles'); setIsKontenOpen(false); }} className="w-full text-left px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary transition-all">Artikel</button>
-                  <button onClick={() => { onNavigate('manage-statistics'); setIsKontenOpen(false); }} className="w-full text-left px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary transition-all">Statistik</button>
-                  <button onClick={() => { onNavigate('manage-portfolio'); setIsKontenOpen(false); }} className="w-full text-left px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary transition-all">Portfolio</button>
-                  <button onClick={() => { onNavigate('manage-featured'); setIsKontenOpen(false); }} className="w-full text-left px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary transition-all">Project Archive</button>
-                </div>
-              )}
+              <AnimatePresence>
+                {isKontenOpen && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute top-full left-0 mt-0 w-48 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-2xl py-2 overflow-hidden z-50"
+                  >
+                    <button onClick={() => { onNavigate('manage-articles'); setIsKontenOpen(false); }} className="w-full text-left px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary transition-all">Artikel</button>
+                    <button onClick={() => { onNavigate('manage-statistics'); setIsKontenOpen(false); }} className="w-full text-left px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary transition-all">Statistik</button>
+                    <button onClick={() => { onNavigate('manage-portfolio'); setIsKontenOpen(false); }} className="w-full text-left px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary transition-all">Portfolio</button>
+                    <button onClick={() => { onNavigate('manage-featured'); setIsKontenOpen(false); }} className="w-full text-left px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary transition-all">Project Archive</button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
-            <div className="relative">
+            <div 
+              className="relative py-4"
+              onMouseEnter={() => setIsPengaturanOpen(true)}
+              onMouseLeave={() => setIsPengaturanOpen(false)}
+            >
               <button 
-                onMouseEnter={() => { setIsKontenOpen(false); setIsPengaturanOpen(true); }}
                 className={`flex items-center gap-1 text-sm font-bold transition-colors ${['profile', 'manage-users'].includes(activeView) ? 'text-primary' : 'text-slate-500 hover:text-primary'}`}
               >
                 Pengaturan <ChevronDown size={16} />
               </button>
               
-              {isPengaturanOpen && (
-                <div 
-                  onMouseLeave={() => setIsPengaturanOpen(false)}
-                  className="absolute top-full left-0 mt-2 w-56 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-2xl py-2 overflow-hidden animate-in fade-in slide-in-from-top-2"
-                >
-                  <button onClick={() => { onNavigate('profile'); setIsPengaturanOpen(false); }} className="w-full text-left px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary transition-all">Profil Saya</button>
-                  {/* UNTUK OWNER: Tampilkan tombol manajemen user */}
-                  {profile?.role === 'owner' && (
-                    <button 
-                      onClick={() => { onNavigate('manage-users'); setIsPengaturanOpen(false); }} 
-                      className="w-full text-left px-4 py-3 text-sm font-black text-primary hover:bg-primary/5 transition-all border-t border-slate-50 dark:border-slate-800 mt-1"
-                    >
-                      Kelola User
-                    </button>
-                  )}
-                </div>
-              )}
+              <AnimatePresence>
+                {isPengaturanOpen && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute top-full left-0 mt-0 w-56 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-2xl py-2 overflow-hidden z-50"
+                  >
+                    <button onClick={() => { onNavigate('profile'); setIsPengaturanOpen(false); }} className="w-full text-left px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary transition-all">Profil Saya</button>
+                    {profile?.role === 'owner' && (
+                      <button 
+                        onClick={() => { onNavigate('manage-users'); setIsPengaturanOpen(false); }} 
+                        className="w-full text-left px-4 py-3 text-sm font-black text-primary hover:bg-primary/5 transition-all border-t border-slate-50 dark:border-slate-800 mt-1"
+                      >
+                        Kelola User
+                      </button>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </nav>
         </div>
