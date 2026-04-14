@@ -64,6 +64,8 @@ const ArticleList: React.FC<ArticleListProps> = ({
     setCurrentPage(1);
   };
 
+  const getFlourishId = (url: string) => url?.match(/visualisation\/(\d+)/)?.[1];
+
   return (
     <section className="pt-32 pb-24 px-6 bg-white dark:bg-[#020617] transition-colors duration-300" id="articles">
       <div className="max-w-7xl mx-auto">
@@ -82,24 +84,39 @@ const ArticleList: React.FC<ArticleListProps> = ({
             <div className="space-y-8">
               <AnimatePresence mode="wait">
                 {paginatedArticles.length > 0 ? (
-                  paginatedArticles.map((article, idx) => (
-                    <motion.div
-                      key={article.id || idx}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.3 }}
-                      className="flex flex-col md:flex-row gap-6 border-b border-slate-100 dark:border-slate-800 pb-8 last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-900/50 p-4 md:-mx-4 rounded-xl transition-all cursor-pointer group"
-                      onClick={() => onArticleClick(article)}
-                    >
-                      <div className="w-full md:w-64 h-40 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0 flex items-center justify-center p-0 relative">
-                        <SafeImage 
-                          src={article.thumbnail_url || (article as any).media_url} 
-                          alt={article.title} 
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                        />
-                      </div>
-                      <div className="flex-1 flex flex-col pt-1">
+                  paginatedArticles.map((article, idx) => {
+                    const flourishId = getFlourishId((article as any).media_url);
+                    
+                    return (
+                      <motion.div
+                        key={article.id || idx}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.3 }}
+                        className="flex flex-col md:flex-row gap-6 border-b border-slate-100 dark:border-slate-800 pb-8 last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-900/50 p-4 md:-mx-4 rounded-xl transition-all cursor-pointer group"
+                        onClick={() => onArticleClick(article)}
+                      >
+                        <div className="w-full md:w-64 h-40 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0 flex items-center justify-center p-0 relative shadow-inner">
+                          {flourishId ? (
+                             <div className="absolute inset-0 w-full h-full overflow-hidden">
+                               <div className="absolute top-0 left-0 w-[1000px] h-[625px] origin-top-left scale-[0.256] pointer-events-none">
+                                 <iframe 
+                                  src={`https://public.flourish.studio/visualisation/${flourishId}/embed?auto=1`} 
+                                  className="w-full h-full border-0" 
+                                  scrolling="no" 
+                                 />
+                               </div>
+                             </div>
+                          ) : (
+                            <SafeImage 
+                              src={article.thumbnail_url} 
+                              alt={article.title} 
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                            />
+                          )}
+                        </div>
+                        <div className="flex-1 flex flex-col pt-1">
                         <h2 className="text-xl font-bold dark:text-white leading-snug group-hover:text-primary transition-colors line-clamp-2 md:pr-10">
                           {article.title}
                         </h2>
@@ -129,8 +146,9 @@ const ArticleList: React.FC<ArticleListProps> = ({
                           </button>
                         </div>
                       </div>
-                    </motion.div>
-                  ))
+                      </motion.div>
+                    );
+                  })
                 ) : (
                   <div className="col-span-full py-24 text-center">
                     <p className="text-slate-500 dark:text-slate-400 text-lg">No articles found matching your criteria.</p>

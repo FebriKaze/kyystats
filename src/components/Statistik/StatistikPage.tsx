@@ -102,87 +102,101 @@ const StatistikPage: React.FC<StatistikPageProps> = ({ statistik, onStatClick })
             <div className="space-y-8">
               <AnimatePresence mode="wait">
                 {paginatedStats.length > 0 ? (
-                  paginatedStats.map((item, idx) => (
-                    <motion.div
-                      key={item.id || idx}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.3 }}
-                      onClick={() => onStatClick(item)}
-                      className="flex flex-col md:flex-row gap-6 border-b border-slate-100 dark:border-slate-800 pb-8 last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-900/50 p-4 -mx-4 rounded-xl transition-all cursor-pointer group"
-                    >
-                      <div className="w-full md:w-64 h-40 bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0 flex flex-col p-4 relative justify-end">
-                        {item.image_url ? (
-                          <SafeImage 
-                            src={item.image_url} 
-                            alt={item.title} 
-                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                          />
-                        ) : item.chart_data && item.chart_data.data && item.chart_data.data.length > 0 ? (
-                          <>
-                            <div className="w-full h-32 mt-auto opacity-70 group-hover:opacity-100 transition-opacity">
-                              <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={item.chart_data.data.slice(0, 5)} margin={{ top: 15, right: 0, left: -25, bottom: -15 }}>
-                                  <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
-                                  <XAxis dataKey="label" tick={{ fontSize: 9, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                                  <YAxis tick={{ fontSize: 9, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                                  <Bar dataKey="value" radius={[2, 2, 0, 0]} barSize={16}>
-                                    <LabelList dataKey="value" position="top" fill="#64748b" fontSize={9} />
-                                    {item.chart_data.data.slice(0, 5).map((entry: any, index: number) => (
-                                      <Cell key={`cell-${index}`} fill={entry.color || '#8b5cf6'} />
-                                    ))}
-                                  </Bar>
-                                </BarChart>
-                              </ResponsiveContainer>
+                  paginatedStats.map((item, idx) => {
+                    const flourishId = (item as any).media_url?.match(/visualisation\/(\d+)/)?.[1];
+                    
+                    return (
+                      <motion.div
+                        key={item.id || idx}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.3 }}
+                        onClick={() => onStatClick(item)}
+                        className="flex flex-col md:flex-row gap-6 border-b border-slate-100 dark:border-slate-800 pb-8 last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-900/50 p-4 -mx-4 rounded-xl transition-all cursor-pointer group"
+                      >
+                        <div className="w-full md:w-64 h-40 bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0 flex flex-col p-0 relative justify-end shadow-inner">
+                          {flourishId ? (
+                             <div className="absolute inset-0 w-full h-full overflow-hidden">
+                               <div className="absolute top-0 left-0 w-[1000px] h-[625px] origin-top-left scale-[0.256] pointer-events-none">
+                                 <iframe 
+                                   src={`https://public.flourish.studio/visualisation/${flourishId}/embed?auto=1`} 
+                                   className="w-full h-full border-0" 
+                                   scrolling="no" 
+                                 />
+                               </div>
+                             </div>
+                          ) : item.image_url ? (
+                            <SafeImage 
+                              src={item.image_url} 
+                              alt={item.title} 
+                              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                            />
+                          ) : item.chart_data && item.chart_data.data && item.chart_data.data.length > 0 ? (
+                            <>
+                              <div className="w-full h-32 mt-auto opacity-70 group-hover:opacity-100 transition-opacity p-4">
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <BarChart data={item.chart_data.data.slice(0, 5)} margin={{ top: 15, right: 0, left: -25, bottom: -15 }}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
+                                    <XAxis dataKey="label" tick={{ fontSize: 9, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                                    <YAxis tick={{ fontSize: 9, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                                    <Bar dataKey="value" radius={[2, 2, 0, 0]} barSize={16}>
+                                      <LabelList dataKey="value" position="top" fill="#64748b" fontSize={9} />
+                                      {item.chart_data.data.slice(0, 5).map((entry: any, index: number) => (
+                                        <Cell key={`cell-${index}`} fill={entry.color || '#8b5cf6'} />
+                                      ))}
+                                    </Bar>
+                                  </BarChart>
+                                </ResponsiveContainer>
+                              </div>
+                              <div className="absolute inset-0 bg-linear-to-t from-white/10 dark:from-slate-900/10 to-transparent pointer-events-none" />
+                            </>
+                          ) : (
+                            <div className="flex flex-col items-center justify-center h-full text-slate-300 dark:text-slate-600">
+                              <BarChart3 size={32} />
                             </div>
-                            <div className="absolute inset-0 bg-linear-to-t from-white/10 dark:from-slate-900/10 to-transparent pointer-events-none" />
-                          </>
-                        ) : (
-                          <div className="flex flex-col items-center justify-center h-full text-slate-300 dark:text-slate-600">
-                            <BarChart3 size={32} />
+                          )}
+                        </div>
+                        <div className="flex-1 flex flex-col pt-1">
+                          <h2 className="text-xl font-bold dark:text-white leading-snug group-hover:text-primary transition-colors line-clamp-2 md:pr-10">
+                            {item.title}
+                          </h2>
+                          
+                          <div className="flex flex-wrap items-center gap-y-2 mt-3 mb-4">
+                             <span className="bg-primary/10 text-primary px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                               <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                               {item.category}
+                             </span>
+                             <span className="flex items-center gap-1.5 text-xs text-slate-500 font-medium ml-3 border-l border-slate-300 dark:border-slate-700 pl-3">
+                               <Calendar size={12} className="text-primary" /> {new Date(item.created_at).toLocaleDateString('id-ID')}
+                             </span>
+                              <button 
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 const authorId = (item as any).user_id;
+                                 if (authorId) window.location.href = `/author/${authorId}`;
+                               }}
+                               className="flex items-center gap-1.5 text-xs text-slate-500 font-bold ml-3 border-l border-slate-300 dark:border-slate-700 pl-3 hover:text-primary transition-colors cursor-pointer"
+                             >
+                               <User size={12} className="text-primary" /> {item.author}
+                             </button>
                           </div>
-                        )}
-                      </div>
-                      <div className="flex-1 flex flex-col pt-1">
-                        <h2 className="text-xl font-bold dark:text-white leading-snug group-hover:text-primary transition-colors line-clamp-2 md:pr-10">
-                          {item.title}
-                        </h2>
-                        
-                        <div className="flex flex-wrap items-center gap-y-2 mt-3 mb-4">
-                           <span className="bg-primary/10 text-primary px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
-                             <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
-                             {item.category}
-                           </span>
-                           <span className="flex items-center gap-1.5 text-xs text-slate-500 font-medium ml-3 border-l border-slate-300 dark:border-slate-700 pl-3">
-                             <Calendar size={12} className="text-primary" /> {new Date(item.created_at).toLocaleDateString('id-ID')}
-                           </span>
+                          
+                          <p className="text-sm text-slate-500 leading-relaxed line-clamp-2 mb-3">
+                            {stripMarkdown(item.summary || item.content || '')}
+                          </p>
+  
+                          <div className="mt-auto">
                             <button 
-                             onClick={(e) => {
-                               e.stopPropagation();
-                               const authorId = (item as any).user_id;
-                               if (authorId) window.location.href = `/author/${authorId}`;
-                             }}
-                             className="flex items-center gap-1.5 text-xs text-slate-500 font-bold ml-3 border-l border-slate-300 dark:border-slate-700 pl-3 hover:text-primary transition-colors cursor-pointer"
-                           >
-                             <User size={12} className="text-primary" /> {item.author}
-                           </button>
+                              className="inline-flex items-center gap-2 text-xs font-black text-primary hover:gap-3 transition-all group-hover:translate-x-1 uppercase tracking-widest mt-2"
+                            >
+                              Lihat Detail <ArrowRight size={14} />
+                            </button>
+                          </div>
                         </div>
-                        
-                        <p className="text-sm text-slate-500 leading-relaxed line-clamp-2 mb-3">
-                          {stripMarkdown(item.summary || item.content || '')}
-                        </p>
-
-                        <div className="mt-auto">
-                          <button 
-                            className="inline-flex items-center gap-2 text-xs font-black text-primary hover:gap-3 transition-all group-hover:translate-x-1 uppercase tracking-widest mt-2"
-                          >
-                            Lihat Detail <ArrowRight size={14} />
-                          </button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))
+                      </motion.div>
+                    );
+                  })
                 ) : (
                   <div className="col-span-full py-24 text-center">
                     <p className="text-slate-500 dark:text-slate-400 text-lg">Tidak ada data statistik yang ditemukan.</p>
