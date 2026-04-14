@@ -277,7 +277,7 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
             
             {/* Featured Media (Flourish/Video) */}
             {(item as any).media_url && (
-              <div className="w-full rounded-4xl overflow-hidden border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 shadow-2xl relative aspect-video">
+              <div className="w-full rounded-4xl overflow-hidden border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 shadow-2xl relative min-h-[450px] md:min-h-[650px]">
                 {(() => {
                   const flourishId = (item as any).media_url?.match(/visualisation\/(\d+)/)?.[1];
                   const isVideo = /\.(mp4|webm|ogg|mov)$/i.test((item as any).media_url || '');
