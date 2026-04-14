@@ -118,7 +118,7 @@ const StatistikPage: React.FC<StatistikPageProps> = ({ statistik, onStatClick })
                         <div className="w-full md:w-64 h-40 bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0 flex flex-col p-0 relative justify-end shadow-inner">
                           {flourishId ? (
                              <div className="absolute inset-0 w-full h-full overflow-hidden">
-                               <div className="absolute top-0 left-0 w-[1000px] h-[625px] origin-top-left scale-[0.256] pointer-events-none">
+                               <div className="absolute top-0 left-0 w-[400%] h-[400%] origin-top-left scale-[0.25] pointer-events-none">
                                  <iframe 
                                    src={`https://public.flourish.studio/visualisation/${flourishId}/embed?auto=1`} 
                                    className="w-full h-full border-0" 
