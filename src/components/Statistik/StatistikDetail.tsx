@@ -275,6 +275,37 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
           {/* Main Content Area */}
           <div className="flex-1 max-w-4xl flex flex-col gap-8">
             
+            {/* Featured Media (Flourish/Video) */}
+            {(item as any).media_url && (
+              <div className="w-full rounded-4xl overflow-hidden border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 shadow-2xl relative aspect-video">
+                {(() => {
+                  const flourishId = (item as any).media_url?.match(/visualisation\/(\d+)/)?.[1];
+                  const isVideo = /\.(mp4|webm|ogg|mov)$/i.test((item as any).media_url || '');
+                  
+                  if (flourishId) {
+                    return (
+                      <iframe 
+                        src={`https://public.flourish.studio/visualisation/${flourishId}/embed?auto=1`} 
+                        className="w-full h-full border-0 absolute inset-0" 
+                        scrolling="no" 
+                      />
+                    );
+                  } else if (isVideo) {
+                    return (
+                      <video 
+                        src={(item as any).media_url} 
+                        className="w-full h-full object-cover" 
+                        controls 
+                        autoPlay 
+                        muted 
+                        loop 
+                      />
+                    );
+                  }
+                  return null;
+                })()}
+              </div>
+            )}
             {/* Chart Section - Now inside the content column */}
             {item.chart_data && item.chart_data.data && item.chart_data.data.length > 0 && (() => {
               const dataCount = item.chart_data.data.length;
@@ -443,9 +474,12 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
 
             {/* HTML Text Content */}
             <article className="flex-1 mt-6">
-              <div className="text-xl md:text-2xl font-black text-slate-700 dark:text-slate-300 leading-relaxed mb-8 mt-2 italic border-l-4 border-primary pl-6 py-4 bg-slate-50 dark:bg-slate-900/50 rounded-r-2xl">
-                {item.summary}
-              </div>
+              {((item as any).intro_text || item.summary) && (
+                <div 
+                  className="text-xl md:text-2xl font-black text-slate-700 dark:text-slate-300 leading-relaxed mb-8 mt-2 italic border-l-4 border-primary pl-6 py-4 bg-slate-50 dark:bg-slate-900/50 rounded-r-2xl prose-p:mb-0"
+                  dangerouslySetInnerHTML={{ __html: (item as any).intro_text || item.summary }}
+                />
+              )}
               <div 
                 className="prose prose-slate dark:prose-invert max-w-none prose-headings:font-black prose-headings:tracking-tight prose-p:text-slate-700 dark:prose-p:text-slate-300 prose-p:leading-8 prose-p:text-[17px] prose-p:mb-6"
                 dangerouslySetInnerHTML={{ __html: item.content }}
