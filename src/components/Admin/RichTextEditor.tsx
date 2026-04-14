@@ -21,7 +21,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 }) => {
   const containerRef = useRef<HTMLTextAreaElement>(null);
   const editorRef = useRef<any>(null);
-  const isInternalChange = useRef(false);
+  const valueRef = useRef(value); // Tracking value without re-renders
 
   useEffect(() => {
     if (!window.tinymce || !containerRef.current) return;
@@ -54,17 +54,19 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         editorRef.current = editor;
         
         editor.on('init', () => {
-          editor.setContent(value || '');
+          editor.setContent(valueRef.current || '');
         });
 
+        // Trigger onChange on any change
         const handleChange = () => {
-          if (!isInternalChange.current) {
-            const content = editor.getContent();
+          const content = editor.getContent();
+          if (content !== valueRef.current) {
+            valueRef.current = content;
             onChange(content);
           }
         };
 
-        editor.on('Change KeyUp Undo Redo', handleChange);
+        editor.on('Change KeyUp Undo Redo NodeChange input', handleChange);
       }
     });
 
@@ -76,15 +78,11 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     };
   }, []);
 
-  // Sync external changes
+  // Sync external changes (only if it's a real external update like switching articles)
   useEffect(() => {
-    if (editorRef.current && value !== editorRef.current.getContent()) {
-      isInternalChange.current = true;
+    if (editorRef.current && value !== valueRef.current) {
+      valueRef.current = value;
       editorRef.current.setContent(value || '');
-      // Use small timeout to release the lock after TinyMCE finishes updating
-      setTimeout(() => {
-        isInternalChange.current = false;
-      }, 10);
     }
   }, [value]);
 
