@@ -109,27 +109,49 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
               className="flex gap-4 group cursor-pointer"
             >
               <div className="w-20 h-20 bg-slate-50 dark:bg-slate-900 rounded-2xl overflow-hidden shrink-0 border border-slate-200 dark:border-slate-800 flex items-center justify-center relative">
-                {article.thumbnail_url ? (
-                  <SafeImage
-                    src={article.thumbnail_url || (article as any).media_url}
-                    alt={article.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                ) : (article as any).chart_data && (article as any).chart_data.data ? (
-                  <div className="w-full h-full p-2 opacity-80 flex items-end justify-center group-hover:scale-110 transition-transform duration-500">
-                    <ResponsiveContainer width="100%" height="80%">
-                      <BarChart data={(article as any).chart_data.data.slice(0, 3)} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                        <Bar dataKey="value" radius={[2, 2, 0, 0]} barSize={8}>
-                          {(article as any).chart_data.data.slice(0, 3).map((entry: any, index: number) => (
-                            <Cell key={`cell-${index}`} fill={entry.color || '#8b5cf6'} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <BarChart3 className="text-slate-300 dark:text-slate-700" size={24} />
-                )}
+                {(() => {
+                  const mediaUrl = (article as any).media_url || article.thumbnail_url || (article as any).image_url;
+                  if (!mediaUrl) {
+                     if ((article as any).chart_data && (article as any).chart_data.data) {
+                       return (
+                        <div className="w-full h-full p-2 opacity-80 flex items-end justify-center group-hover:scale-110 transition-transform duration-500">
+                          <ResponsiveContainer width="100%" height="80%">
+                            <BarChart data={(article as any).chart_data.data.slice(0, 3)} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                              <Bar dataKey="value" radius={[2, 2, 0, 0]} barSize={8}>
+                                {(article as any).chart_data.data.slice(0, 3).map((entry: any, index: number) => (
+                                  <Cell key={`cell-${index}`} fill={entry.color || '#8b5cf6'} />
+                                ))}
+                              </Bar>
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                       );
+                     }
+                     return <BarChart3 className="text-slate-300 dark:text-slate-700" size={24} />;
+                  }
+
+                  const flourishId = mediaUrl.match(/visualisation\/(\d+)/)?.[1] || mediaUrl.match(/id=(\d+)/)?.[1];
+                  const isImage = /\.(jpg|jpeg|png|webp|gif|avif)$/i.test(mediaUrl);
+
+                  if (flourishId || mediaUrl.trim().startsWith('<iframe') || mediaUrl.startsWith('http')) {
+                    const isRawIframe = mediaUrl.trim().startsWith('<iframe');
+                    if (!isImage) {
+                      return (
+                        <div className="absolute inset-0 w-full h-full overflow-hidden">
+                          <div className="absolute top-0 left-0 w-[400%] h-[400%] origin-top-left scale-[0.25] pointer-events-none">
+                            {isRawIframe ? (
+                              <div className="w-full h-full [&>iframe]:w-full [&>iframe]:h-full" dangerouslySetInnerHTML={{ __html: mediaUrl }} />
+                            ) : (
+                              <iframe src={flourishId ? `https://public.flourish.studio/visualisation/${flourishId}/embed?auto=1` : mediaUrl} className="w-full h-full border-0" scrolling="no" />
+                            )}
+                          </div>
+                        </div>
+                      );
+                    }
+                  }
+
+                  return <SafeImage src={mediaUrl} alt={article.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />;
+                })()}
               </div>
               <div className="flex flex-col justify-center gap-1">
                 <span className="text-[10px] font-black uppercase tracking-widest text-primary">

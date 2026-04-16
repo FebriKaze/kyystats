@@ -9,7 +9,8 @@ import {
   ChevronRight,
   ChevronLeft,
   ArrowUpRight,
-  Filter
+  Filter,
+  Image as ImageIcon
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import SafeImage from '../Common/SafeImage';
@@ -274,12 +275,34 @@ const AdminHome: React.FC<AdminHomeProps> = ({ stats, popularArticles, items, pr
                 }}
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0 border border-slate-100 dark:border-slate-800 shadow-sm relative">
-                    <SafeImage 
-                      src={item.thumbnail_url || item.image_url} 
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
-                    />
-                    <div className="absolute top-0 right-0 p-1 bg-primary text-white scale-0 group-hover:scale-100 transition-transform rounded-bl-lg">
+                  <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0 border border-slate-100 dark:border-slate-800 shadow-sm relative flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+                    {(() => {
+                      const mediaUrl = (item as any).media_url || item.thumbnail_url || item.image_url;
+                      if (!mediaUrl) return <ImageIcon size={14} className="text-slate-400" />;
+
+                      const flourishId = mediaUrl.match(/visualisation\/(\d+)/)?.[1] || mediaUrl.match(/id=(\d+)/)?.[1];
+                      const isImage = /\.(jpg|jpeg|png|webp|gif|avif)$/i.test(mediaUrl);
+
+                      if (flourishId || mediaUrl.trim().startsWith('<iframe') || mediaUrl.startsWith('http')) {
+                        const isRawIframe = mediaUrl.trim().startsWith('<iframe');
+                        if (!isImage) {
+                          return (
+                            <div className="absolute inset-0 w-full h-full overflow-hidden">
+                              <div className="absolute top-0 left-0 w-[400%] h-[400%] origin-top-left scale-[0.25] pointer-events-none">
+                                {isRawIframe ? (
+                                  <div className="w-full h-full [&>iframe]:w-full [&>iframe]:h-full" dangerouslySetInnerHTML={{ __html: mediaUrl }} />
+                                ) : (
+                                  <iframe src={flourishId ? `https://public.flourish.studio/visualisation/${flourishId}/embed?auto=1` : mediaUrl} className="w-full h-full border-0" scrolling="no" />
+                                )}
+                              </div>
+                            </div>
+                          );
+                        }
+                      }
+
+                      return <SafeImage src={mediaUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />;
+                    })()}
+                    <div className="absolute top-0 right-0 p-1 bg-primary text-white scale-0 group-hover:scale-100 transition-transform rounded-bl-lg z-10">
                        <ArrowUpRight size={10} />
                     </div>
                   </div>

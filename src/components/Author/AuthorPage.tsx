@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Mail, MapPin, Briefcase, Calendar, FileText, BarChart3, Globe, Instagram, Twitter, Linkedin, Facebook, Eye, Filter, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Mail, MapPin, Calendar, Twitter, Instagram, Linkedin, ChevronDown, Image as ImageIcon, BarChart3, Eye } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Article, Statistic } from '../../types';
 import SafeImage from '../Common/SafeImage';
@@ -219,8 +219,33 @@ const AuthorPage: React.FC = () => {
                     }}
                     className="flex flex-col md:flex-row gap-8 lg:gap-12 group cursor-pointer border-b border-slate-100 dark:border-slate-800 pb-12 last:border-0"
                    >
-                     <div className="w-full md:w-64 lg:w-80 aspect-video md:aspect-4/3 rounded-4xl overflow-hidden border border-slate-100 dark:border-slate-800 bg-slate-100 shrink-0 shadow-lg group-hover:shadow-primary/10 transition-all">
-                        <SafeImage src={item.thumbnail_url || item.image_url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                     <div className="w-full md:w-64 lg:w-80 aspect-video md:aspect-4/3 rounded-4xl overflow-hidden border border-slate-100 dark:border-slate-800 shrink-0 shadow-lg group-hover:shadow-primary/10 transition-all relative flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+                        {(() => {
+                          const mediaUrl = item.media_url || item.thumbnail_url || item.image_url;
+                          if (!mediaUrl) return <ImageIcon size={24} className="text-slate-300 dark:text-slate-700" />;
+
+                          const flourishId = mediaUrl.match(/visualisation\/(\d+)/)?.[1] || mediaUrl.match(/id=(\d+)/)?.[1];
+                          const isImage = /\.(jpg|jpeg|png|webp|gif|avif)$/i.test(mediaUrl);
+
+                          if (flourishId || mediaUrl.trim().startsWith('<iframe') || mediaUrl.startsWith('http')) {
+                            const isRawIframe = mediaUrl.trim().startsWith('<iframe');
+                            if (!isImage) {
+                              return (
+                                <div className="absolute inset-0 w-full h-full overflow-hidden">
+                                  <div className="absolute top-0 left-0 w-[400%] h-[400%] origin-top-left scale-[0.25] pointer-events-none">
+                                    {isRawIframe ? (
+                                      <div className="w-full h-full [&>iframe]:w-full [&>iframe]:h-full" dangerouslySetInnerHTML={{ __html: mediaUrl }} />
+                                    ) : (
+                                      <iframe src={flourishId ? `https://public.flourish.studio/visualisation/${flourishId}/embed?auto=1` : mediaUrl} className="w-full h-full border-0" scrolling="no" />
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            }
+                          }
+
+                          return <SafeImage src={mediaUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />;
+                        })()}
                      </div>
                      <div className="flex-1 space-y-6 flex flex-col justify-center">
                         <div className="flex items-center gap-3">

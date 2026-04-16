@@ -118,28 +118,50 @@ const AdminContentList: React.FC<AdminContentListProps> = ({ type, data, onEdit,
                 <tr key={item.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/10 transition-colors group">
                   <td className="px-8 py-6">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0 flex items-center justify-center">
-                        {(item.thumbnail_url || item.image || item.image_url) ? (
-                          <SafeImage 
-                            src={item.thumbnail_url || item.image || item.image_url} 
-                            alt="" 
-                            className="w-full h-full object-cover" 
-                          />
-                        ) : type === 'statistics' && item.chart_data && item.chart_data.data && item.chart_data.data.length > 0 ? (
-                            <div className="w-full h-full p-2 opacity-80 flex items-end justify-center">
-                              <ResponsiveContainer width="100%" height="80%">
-                                <BarChart data={item.chart_data.data.slice(0, 3)} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                                  <Bar dataKey="value" radius={[2, 2, 0, 0]} barSize={6}>
-                                    {item.chart_data.data.slice(0, 3).map((entry: any, index: number) => (
-                                      <Cell key={`cell-${index}`} fill={entry.color || '#8b5cf6'} />
-                                    ))}
-                                  </Bar>
-                                </BarChart>
-                              </ResponsiveContainer>
-                            </div>
-                        ) : (
-                          <ImageIcon size={20} className="text-slate-400" />
-                        )}
+                      <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0 flex items-center justify-center relative">
+                        {(() => {
+                          const mediaUrl = (item as any).media_url || item.thumbnail_url || item.image || item.image_url;
+                          if (!mediaUrl) {
+                            if (type === 'statistics' && item.chart_data && item.chart_data.data && item.chart_data.data.length > 0) {
+                              return (
+                                <div className="w-full h-full p-2 opacity-80 flex items-end justify-center">
+                                  <ResponsiveContainer width="100%" height="80%">
+                                    <BarChart data={item.chart_data.data.slice(0, 3)} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                                      <Bar dataKey="value" radius={[2, 2, 0, 0]} barSize={6}>
+                                        {item.chart_data.data.slice(0, 3).map((entry: any, index: number) => (
+                                          <Cell key={`cell-${index}`} fill={entry.color || '#8b5cf6'} />
+                                        ))}
+                                      </Bar>
+                                    </BarChart>
+                                  </ResponsiveContainer>
+                                </div>
+                              );
+                            }
+                            return <ImageIcon size={20} className="text-slate-400" />;
+                          }
+
+                          const flourishId = mediaUrl.match(/visualisation\/(\d+)/)?.[1] || mediaUrl.match(/id=(\d+)/)?.[1];
+                          const isImage = /\.(jpg|jpeg|png|webp|gif|avif)$/i.test(mediaUrl);
+
+                          if (flourishId || mediaUrl.trim().startsWith('<iframe') || mediaUrl.startsWith('http')) {
+                            const isRawIframe = mediaUrl.trim().startsWith('<iframe');
+                            if (!isImage) {
+                              return (
+                                <div className="absolute inset-0 w-full h-full overflow-hidden">
+                                  <div className="absolute top-0 left-0 w-[400%] h-[400%] origin-top-left scale-[0.25] pointer-events-none">
+                                    {isRawIframe ? (
+                                      <div className="w-full h-full [&>iframe]:w-full [&>iframe]:h-full" dangerouslySetInnerHTML={{ __html: mediaUrl }} />
+                                    ) : (
+                                      <iframe src={flourishId ? `https://public.flourish.studio/visualisation/${flourishId}/embed?auto=1` : mediaUrl} className="w-full h-full border-0" scrolling="no" />
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            }
+                          }
+
+                          return <SafeImage src={mediaUrl} alt="" className="w-full h-full object-cover" />;
+                        })()}
                       </div>
                       <span className="text-sm font-bold dark:text-white line-clamp-2">{item.title}</span>
                     </div>

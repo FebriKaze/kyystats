@@ -154,7 +154,7 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({
               />
             )}
 
-            <div className="relative w-full rounded-3xl overflow-hidden bg-slate-50 dark:bg-slate-900/50 shadow-2xl border border-slate-100 dark:border-slate-800 min-h-[450px] md:min-h-[600px]">
+            <div className="relative w-full rounded-3xl overflow-hidden bg-slate-50 dark:bg-slate-900/50 shadow-2xl border border-slate-100 dark:border-slate-800 min-h-[550px] md:min-h-[700px]">
               {(() => {
                 const mediaUrl = article.media_url || article.image_url || '';
                 if (!mediaUrl) return <SafeImage src={heroUrl} alt={article.title} className="w-full h-full object-cover aspect-video" />;
@@ -163,7 +163,7 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({
                 if (mediaUrl.trim().startsWith('<iframe')) {
                   return (
                     <div 
-                      className="w-full h-full absolute inset-0 [&>iframe]:w-full [&>iframe]:h-full" 
+                      className="w-full h-full absolute inset-0 flex items-center justify-center [&>iframe]:w-full [&>iframe]:h-full" 
                       dangerouslySetInnerHTML={{ __html: mediaUrl }} 
                     />
                   );
