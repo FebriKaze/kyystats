@@ -84,7 +84,7 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
              <div className="space-y-3">
                   <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Teks Intro (Di Atas Media)</label>
                   <RichTextEditor 
-                     key={`intro-${item.id || 'new'}`}
+                     id={`intro-${item.id || 'new'}`}
                      value={formData.intro_text || ''} 
                      onChange={(val) => setFormData(prev => ({...prev, intro_text: val}))}
                      placeholder="Teks pengantar..."
@@ -95,7 +95,7 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
               <div className="space-y-3">
                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Badan Konten *</label>
                  <RichTextEditor 
-                   key={`content-${item.id || 'new'}`}
+                   id={`content-${item.id || 'new'}`}
                    value={formData.content || ''} 
                    onChange={(val) => setFormData(prev => ({...prev, content: val}))}
                    placeholder="Tulis isi konten kamu di sini..."
