@@ -98,23 +98,51 @@ const ArticleList: React.FC<ArticleListProps> = ({
                         onClick={() => onArticleClick(article)}
                       >
                         <div className="w-full md:w-64 h-40 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0 flex items-center justify-center p-0 relative shadow-inner">
-                          {flourishId ? (
-                             <div className="absolute inset-0 w-full h-full overflow-hidden">
-                               <div className="absolute top-0 left-0 w-[400%] h-[400%] origin-top-left scale-[0.25] pointer-events-none">
-                                 <iframe 
-                                  src={`https://public.flourish.studio/visualisation/${flourishId}/embed?auto=1`} 
-                                  className="w-full h-full border-0" 
-                                  scrolling="no" 
-                                 />
-                               </div>
-                             </div>
-                          ) : (
-                            <SafeImage 
-                              src={article.thumbnail_url} 
-                              alt={article.title} 
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                            />
-                          )}
+                          {(() => {
+                            const mediaUrl = (article as any).media_url || article.image_url || (article as any).thumbnail_url;
+                            if (!mediaUrl) return null;
+
+                            if (mediaUrl.trim().startsWith('<iframe')) {
+                              return (
+                                <div className="absolute inset-0 w-full h-full overflow-hidden">
+                                  <div className="absolute top-0 left-0 w-[400%] h-[400%] origin-top-left scale-[0.25] pointer-events-none [&>iframe]:w-full [&>iframe]:h-full" dangerouslySetInnerHTML={{ __html: mediaUrl }} />
+                                </div>
+                              );
+                            }
+
+                            const flourishId = mediaUrl.match(/visualisation\/(\d+)/)?.[1] || mediaUrl.match(/id=(\d+)/)?.[1];
+                            const isImage = /\.(jpg|jpeg|png|webp|gif|avif)$/i.test(mediaUrl);
+
+                            if (flourishId) {
+                              return (
+                                <div className="absolute inset-0 w-full h-full overflow-hidden">
+                                  <div className="absolute top-0 left-0 w-[400%] h-[400%] origin-top-left scale-[0.25] pointer-events-none">
+                                    <iframe src={`https://public.flourish.studio/visualisation/${flourishId}/embed?auto=1`} className="w-full h-full border-0" scrolling="no" />
+                                  </div>
+                                </div>
+                              );
+                            }
+
+                            if (isImage) return null;
+
+                            if (mediaUrl.startsWith('http')) {
+                              return (
+                                <div className="absolute inset-0 w-full h-full overflow-hidden">
+                                  <div className="absolute top-0 left-0 w-[400%] h-[400%] origin-top-left scale-[0.25] pointer-events-none">
+                                    <iframe src={mediaUrl} className="w-full h-full border-0" scrolling="no" />
+                                  </div>
+                                </div>
+                              );
+                            }
+
+                            return null;
+                          })()}
+
+                          <SafeImage 
+                            src={article.image_url || (article as any).thumbnail_url} 
+                            alt={article.title} 
+                            className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 ${(article as any).media_url ? 'opacity-0' : 'opacity-100'}`} 
+                          />
                         </div>
                         <div className="flex-1 flex flex-col pt-1">
                         <h2 className="text-xl font-bold dark:text-white leading-snug group-hover:text-primary transition-colors line-clamp-2 md:pr-10">

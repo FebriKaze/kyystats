@@ -275,34 +275,57 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
           {/* Main Content Area */}
           <div className="flex-1 max-w-4xl flex flex-col gap-8">
             
-            {/* Featured Media (Flourish/Video) */}
+            {/* Featured Media (Flourish/Video/External) */}
             {(item as any).media_url && (
               <div className="w-full rounded-4xl overflow-hidden border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 shadow-2xl relative min-h-[450px] md:min-h-[650px]">
                 {(() => {
-                  const flourishId = (item as any).media_url?.match(/visualisation\/(\d+)/)?.[1];
-                  const isVideo = /\.(mp4|webm|ogg|mov)$/i.test((item as any).media_url || '');
+                  const mediaUrl = (item as any).media_url;
                   
+                  // 1. If it's a raw iframe string
+                  if (mediaUrl.trim().startsWith('<iframe')) {
+                    return (
+                      <div 
+                        className="w-full h-full absolute inset-0 [&>iframe]:w-full [&>iframe]:h-full" 
+                        dangerouslySetInnerHTML={{ __html: mediaUrl }} 
+                      />
+                    );
+                  }
+
+                  const flourishId = mediaUrl.match(/visualisation\/(\d+)/)?.[1] || mediaUrl.match(/id=(\d+)/)?.[1];
+                  const isVideo = /\.(mp4|webm|ogg|mov)$/i.test(mediaUrl || '');
+                  const isImage = /\.(jpg|jpeg|png|webp|gif|avif)$/i.test(mediaUrl || '');
+                  
+                  // 2. If it's Flourish
                   if (flourishId) {
                     return (
                       <iframe 
                         src={`https://public.flourish.studio/visualisation/${flourishId}/embed?auto=1`} 
-                        className="w-full h-full border-0 absolute inset-0" 
+                        className="w-full h-full border-0 absolute inset-0 md:min-h-[650px]" 
                         scrolling="no" 
                       />
                     );
-                  } else if (isVideo) {
+                  } 
+                  // 3. If it's a Video
+                  else if (isVideo) {
                     return (
-                      <video 
-                        src={(item as any).media_url} 
-                        className="w-full h-full object-cover" 
-                        controls 
-                        autoPlay 
-                        muted 
-                        loop 
-                      />
+                      <video src={mediaUrl} className="w-full h-full object-cover" controls autoPlay muted loop />
                     );
                   }
-                  return null;
+                  // 4. If it's an Image
+                  else if (isImage) {
+                    return (
+                      <img src={mediaUrl} alt="Chart" className="w-full h-full object-cover" />
+                    );
+                  }
+                  // 5. Default for regular URLs (Our World In Data, etc)
+                  return (
+                    <iframe 
+                      src={mediaUrl} 
+                      className="w-full h-full border-0 absolute inset-0" 
+                      loading="lazy"
+                      allow="web-share; clipboard-write"
+                    />
+                  );
                 })()}
               </div>
             )}

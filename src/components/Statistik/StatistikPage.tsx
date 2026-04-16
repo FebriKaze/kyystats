@@ -116,23 +116,49 @@ const StatistikPage: React.FC<StatistikPageProps> = ({ statistik, onStatClick })
                         className="flex flex-col md:flex-row gap-6 border-b border-slate-100 dark:border-slate-800 pb-8 last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-900/50 p-4 -mx-4 rounded-xl transition-all cursor-pointer group"
                       >
                         <div className="w-full md:w-64 h-40 bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0 flex flex-col p-0 relative justify-end shadow-inner">
-                          {flourishId ? (
-                             <div className="absolute inset-0 w-full h-full overflow-hidden">
-                               <div className="absolute top-0 left-0 w-[400%] h-[400%] origin-top-left scale-[0.25] pointer-events-none">
-                                 <iframe 
-                                   src={`https://public.flourish.studio/visualisation/${flourishId}/embed?auto=1`} 
-                                   className="w-full h-full border-0" 
-                                   scrolling="no" 
-                                 />
-                               </div>
-                             </div>
-                          ) : item.image_url ? (
-                            <SafeImage 
-                              src={item.image_url} 
-                              alt={item.title} 
-                              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                            />
-                          ) : item.chart_data && item.chart_data.data && item.chart_data.data.length > 0 ? (
+                          {(() => {
+                            const mediaUrl = (item as any).media_url || item.image_url;
+                            if (!mediaUrl) return null;
+
+                            if (mediaUrl.trim().startsWith('<iframe')) {
+                              return (
+                                <div className="absolute inset-0 w-full h-full overflow-hidden">
+                                  <div className="absolute top-0 left-0 w-[400%] h-[400%] origin-top-left scale-[0.25] pointer-events-none [&>iframe]:w-full [&>iframe]:h-full" dangerouslySetInnerHTML={{ __html: mediaUrl }} />
+                                </div>
+                              );
+                            }
+
+                            const flourishId = mediaUrl.match(/visualisation\/(\d+)/)?.[1] || mediaUrl.match(/id=(\d+)/)?.[1];
+                            const isImage = /\.(jpg|jpeg|png|webp|gif|avif)$/i.test(mediaUrl);
+
+                            if (flourishId) {
+                              return (
+                                <div className="absolute inset-0 w-full h-full overflow-hidden">
+                                  <div className="absolute top-0 left-0 w-[400%] h-[400%] origin-top-left scale-[0.25] pointer-events-none">
+                                    <iframe src={`https://public.flourish.studio/visualisation/${flourishId}/embed?auto=1`} className="w-full h-full border-0" scrolling="no" />
+                                  </div>
+                                </div>
+                              );
+                            }
+
+                            if (isImage) {
+                              return (
+                                <SafeImage src={mediaUrl} alt={item.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                              );
+                            }
+
+                            if (mediaUrl.startsWith('http')) {
+                              return (
+                                <div className="absolute inset-0 w-full h-full overflow-hidden">
+                                  <div className="absolute top-0 left-0 w-[400%] h-[400%] origin-top-left scale-[0.25] pointer-events-none">
+                                    <iframe src={mediaUrl} className="w-full h-full border-0" scrolling="no" />
+                                  </div>
+                                </div>
+                              );
+                            }
+
+                            return null;
+                          })() || (item.chart_data && item.chart_data.data && item.chart_data.data.length > 0 ? (
                             <>
                               <div className="w-full h-32 mt-auto opacity-70 group-hover:opacity-100 transition-opacity p-4">
                                 <ResponsiveContainer width="100%" height="100%">
@@ -155,7 +181,7 @@ const StatistikPage: React.FC<StatistikPageProps> = ({ statistik, onStatClick })
                             <div className="flex flex-col items-center justify-center h-full text-slate-300 dark:text-slate-600">
                               <BarChart3 size={32} />
                             </div>
-                          )}
+                          ))}
                         </div>
                         <div className="flex-1 flex flex-col pt-1">
                           <h2 className="text-xl font-bold dark:text-white leading-snug group-hover:text-primary transition-colors line-clamp-2 md:pr-10">

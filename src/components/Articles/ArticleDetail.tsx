@@ -154,16 +154,61 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({
               />
             )}
 
-            <div className="relative w-full rounded-3xl overflow-hidden bg-slate-50 dark:bg-slate-900/50 shadow-2xl border border-slate-100 dark:border-slate-800">
-              {flourishId ? (
-                <div className="relative w-full min-h-[500px] md:min-h-[650px]">
-                  <iframe src={`https://public.flourish.studio/visualisation/${flourishId}/embed?auto=1`} className="w-full h-full border-0 absolute inset-0" scrolling="no" />
-                </div>
-              ) : isVideo ? (
-                <video src={heroUrl} className="w-full h-auto block" autoPlay muted loop playsInline />
-              ) : (
-                <SafeImage src={heroUrl} alt={article.title} className="w-full h-full object-cover aspect-video" />
-              )}
+            <div className="relative w-full rounded-3xl overflow-hidden bg-slate-50 dark:bg-slate-900/50 shadow-2xl border border-slate-100 dark:border-slate-800 min-h-[450px] md:min-h-[600px]">
+              {(() => {
+                const mediaUrl = article.media_url || article.image_url || '';
+                if (!mediaUrl) return <SafeImage src={heroUrl} alt={article.title} className="w-full h-full object-cover aspect-video" />;
+
+                // 1. Raw Iframe
+                if (mediaUrl.trim().startsWith('<iframe')) {
+                  return (
+                    <div 
+                      className="w-full h-full absolute inset-0 [&>iframe]:w-full [&>iframe]:h-full" 
+                      dangerouslySetInnerHTML={{ __html: mediaUrl }} 
+                    />
+                  );
+                }
+
+                const flourishId = mediaUrl.match(/visualisation\/(\d+)/)?.[1] || mediaUrl.match(/id=(\d+)/)?.[1];
+                const isVideo = /\.(mp4|webm|ogg|mov)$/i.test(mediaUrl);
+                const isImage = /\.(jpg|jpeg|png|webp|gif|avif)$/i.test(mediaUrl);
+
+                // 2. Flourish
+                if (flourishId) {
+                  return (
+                    <div className="relative w-full h-full min-h-[500px] md:min-h-[650px]">
+                      <iframe 
+                        src={`https://public.flourish.studio/visualisation/${flourishId}/embed?auto=1`} 
+                        className="w-full h-full border-0 absolute inset-0" 
+                        scrolling="no" 
+                      />
+                    </div>
+                  );
+                } 
+                // 3. Video
+                if (isVideo) {
+                  return <video src={mediaUrl} className="w-full h-auto block" autoPlay muted loop playsInline controls />;
+                }
+                
+                // 4. If it's an Image (But not an iframe string)
+                if (isImage) {
+                  return <SafeImage src={mediaUrl} alt={article.title} className="w-full h-full object-cover aspect-video" />;
+                }
+
+                // 5. Default Iframe for other URLs (Our World In Data, etc)
+                if (mediaUrl.startsWith('http')) {
+                  return (
+                    <iframe 
+                      src={mediaUrl} 
+                      className="w-full h-full border-0 absolute inset-0" 
+                      loading="lazy"
+                      allow="web-share; clipboard-write"
+                    />
+                  );
+                }
+
+                return <SafeImage src={heroUrl} alt={article.title} className="w-full h-full object-cover aspect-video" />;
+              })()}
             </div>
 
             <article 

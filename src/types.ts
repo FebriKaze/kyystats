@@ -34,7 +34,9 @@ export interface Article {
   summary: string;
   content: string;
   category: string;
-  thumbnail_url: string;
+  image_url?: string;
+  thumbnail_url?: string;
+  media_url?: string;
   intro_text?: string;
   author: string;
   is_published: boolean;
@@ -63,6 +65,7 @@ export interface Statistic {
   category: string;
   author: string;
   image_url: string;
+  media_url?: string;
   summary: string;
   content: string;
   views: number;

@@ -56,13 +56,21 @@ export const fetchArticles = async (onlyPublished = true): Promise<Article[]> =>
   if (onlyPublished) query = query.eq('is_published', true);
   const { data, error } = await query.order('created_at', { ascending: false });
   if (error) return (await supabase.from('articles').select('*').order('created_at', { ascending: false })).data as Article[] || [];
-  return (data || []).map((row: any) => ({ ...row, author: row.profiles?.full_name || 'Admin' })) as Article[];
+  return (data || []).map((row: any) => ({ 
+    ...row, 
+    image_url: row.thumbnail_url || '',
+    author: row.profiles?.full_name || 'Admin' 
+  })) as Article[];
 };
 
 export const fetchArticleBySlug = async (slug: string): Promise<Article | null> => {
   const { data, error } = await supabase.from('articles').select('*, profiles(full_name, avatar_url)').eq('slug', slug).single();
   if (error) return null;
-  return { ...data, author: (data as any).profiles?.full_name || 'Admin' } as Article;
+  return { 
+    ...data, 
+    image_url: (data as any).thumbnail_url || '',
+    author: (data as any).profiles?.full_name || 'Admin' 
+  } as Article;
 };
 
 export const saveArticle = async (article: Partial<Article>): Promise<Article | null> => {

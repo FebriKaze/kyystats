@@ -122,20 +122,33 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
                   setFormData(prev => ({...prev, media_url: val}));
                 }} placeholder="Paste link Flourish/Video..." className="w-full bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 rounded-2xl py-4 px-6 text-xs font-bold" />
                 {formData.media_url && (
-                  <div className={`rounded-2xl overflow-hidden relative border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 ${mediaId ? 'aspect-video' : 'aspect-video flex items-center justify-center'}`}>
-                    {mediaId ? (
-                      <div className="absolute inset-0 w-full h-full overflow-hidden">
-                        <div className="absolute top-0 left-0 w-[400%] h-[400%] origin-top-left scale-[0.25] pointer-events-none">
-                          <iframe 
-                            src={`https://public.flourish.studio/visualisation/${mediaId}/embed?auto=1`} 
-                            className="w-full h-full border-0" 
-                            scrolling="no" 
-                          />
-                        </div>
-                      </div>
-                    ) : isVideoMedia ? (
-                      <video src={formData.media_url} className="w-full h-full object-cover" muted autoPlay loop />
-                    ) : null}
+                  <div className={`rounded-2xl overflow-hidden relative border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 ${mediaId || isVideoMedia || formData.media_url.trim().startsWith('<iframe') || formData.media_url.startsWith('http') ? 'aspect-video' : 'aspect-video flex items-center justify-center'}`}>
+                    {(() => {
+                      const url = formData.media_url.trim();
+                      if (url.startsWith('<iframe')) {
+                        return <div className="w-full h-full [&>iframe]:w-full [&>iframe]:h-full" dangerouslySetInnerHTML={{ __html: url }} />;
+                      }
+                      if (mediaId) {
+                        return (
+                          <div className="absolute inset-0 w-full h-full overflow-hidden">
+                            <div className="absolute top-0 left-0 w-[400%] h-[400%] origin-top-left scale-[0.25] pointer-events-none">
+                              <iframe 
+                                src={`https://public.flourish.studio/visualisation/${mediaId}/embed?auto=1`} 
+                                className="w-full h-full border-0" 
+                                scrolling="no" 
+                              />
+                            </div>
+                          </div>
+                        );
+                      }
+                      if (isVideoMedia) {
+                        return <video src={formData.media_url} className="w-full h-full object-cover" muted autoPlay loop />;
+                      }
+                      if (url.startsWith('http')) {
+                        return <iframe src={url} className="w-full h-full border-0" loading="lazy" />;
+                      }
+                      return null;
+                    })()}
                   </div>
                 )}
              </div>
