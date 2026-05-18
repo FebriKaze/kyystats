@@ -68,38 +68,31 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({
   const categories = ['All', ...new Set(articles.map(a => a.category))];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#020617] transition-colors duration-500">
+    <div className="min-h-screen bg-white dark:bg-slate-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 md:pt-32 pb-20">
-        <button onClick={onBack} className="group mb-8 flex items-center gap-2 text-slate-500 dark:text-slate-400 font-bold text-sm hover:text-primary transition-colors">
-          <ArrowLeft size={18} /> Kembali ke Arsip
+        <button onClick={onBack} className="mb-8 flex items-center gap-1.5 text-slate-500 text-sm hover:text-[#0d2137] transition-colors">
+          <ArrowLeft size={16} /> Back to Articles
         </button>
 
-        <div className="flex flex-col gap-6 mb-12">
-            <span className="px-3 py-1 w-fit rounded-lg bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest border border-primary/20">
+        <div className="flex flex-col gap-4 mb-10 border-b-2 border-slate-900 dark:border-white pb-8">
+            <span className="text-[10px] font-black uppercase tracking-widest text-[#c0392b]">
               {article.category}
             </span>
-            <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-slate-900 dark:text-white leading-[1.2] max-w-4xl mt-4">
+            <h1 className="text-3xl md:text-5xl font-serif font-bold text-slate-900 dark:text-white leading-snug max-w-4xl">
               {article.title}
             </h1>
             
-            <div className="flex flex-wrap items-center gap-6 mt-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest border-y border-slate-100 dark:border-slate-800 py-6">
-              <div 
-                className="flex items-center gap-2 pr-6 border-r border-slate-100 dark:border-slate-800 group"
-              >
-                <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-4 mt-3 text-[11px] text-slate-500 dark:text-slate-400">
+              <div className="flex items-center gap-2">
                   <ProfileAvatar 
                     src={(article as any).profiles?.avatar_url} 
-                    className="w-8 h-8 rounded-full border-2 border-primary/20" 
-                    iconSize={16}
+                    className="w-7 h-7 rounded-full" 
+                    iconSize={14}
                   />
-                  <div className="flex flex-col">
-                    <span className="text-[8px] text-slate-400">WRITTEN BY</span>
-                    <span className="text-slate-900 dark:text-white transition-colors">{article.author || 'ADMIN'}</span>
-                  </div>
-                </div>
+                  <span>{article.author || 'Admin'}</span>
               </div>
-
-              <span className="flex items-center gap-2"><Calendar size={14} className="text-primary" /> {new Date(article.created_at).toLocaleDateString()}</span>
+              <span className="text-slate-300">·</span>
+              <span className="flex items-center gap-1"><Calendar size={12} /> {new Date(article.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
               
               <div className="ml-auto flex items-center gap-4 relative border-l border-slate-100 dark:border-slate-800 pl-6">
                 <button 
@@ -154,7 +147,7 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({
               />
             )}
 
-            <div className="relative w-full rounded-3xl overflow-hidden bg-slate-50 dark:bg-slate-900/50 shadow-2xl border border-slate-100 dark:border-slate-800 min-h-[550px] md:min-h-[700px]">
+            <div className="relative w-full overflow-hidden bg-slate-50 border border-slate-200 min-h-[400px] md:min-h-[600px]">
               {(() => {
                 const mediaUrl = article.media_url || article.image_url || '';
                 if (!mediaUrl) return <SafeImage src={heroUrl} alt={article.title} className="w-full h-full object-cover aspect-video" />;
@@ -163,7 +156,7 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({
                 if (mediaUrl.trim().startsWith('<iframe')) {
                   return (
                     <div 
-                      className="w-full h-full absolute inset-0 flex items-center justify-center [&>iframe]:w-full [&>iframe]:h-full" 
+                      className="w-full [&>iframe]:w-full [&>iframe]:h-[600px] [&>iframe]:border-0 [&>iframe]:block" 
                       dangerouslySetInnerHTML={{ __html: mediaUrl }} 
                     />
                   );
@@ -176,11 +169,12 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({
                 // 2. Flourish
                 if (flourishId) {
                   return (
-                    <div className="relative w-full h-full min-h-[500px] md:min-h-[650px]">
+                    <div className="relative w-full" style={{ height: '600px' }}>
                       <iframe 
-                        src={`https://public.flourish.studio/visualisation/${flourishId}/embed?auto=1`} 
-                        className="w-full h-full border-0 absolute inset-0" 
-                        scrolling="no" 
+                        src={`https://flo.uri.sh/visualisation/${flourishId}/embed?auto=1`} 
+                        className="absolute inset-0 w-full h-full border-0" 
+                        scrolling="no"
+                        allowFullScreen
                       />
                     </div>
                   );
@@ -195,15 +189,18 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({
                   return <SafeImage src={mediaUrl} alt={article.title} className="w-full h-full object-cover aspect-video" />;
                 }
 
-                // 5. Default Iframe for other URLs (Our World In Data, etc)
+                // 5. Default Iframe for other URLs
                 if (mediaUrl.startsWith('http')) {
                   return (
-                    <iframe 
-                      src={mediaUrl} 
-                      className="w-full h-full border-0 absolute inset-0" 
-                      loading="lazy"
-                      allow="web-share; clipboard-write"
-                    />
+                    <div className="relative w-full" style={{ height: '600px' }}>
+                      <iframe 
+                        src={mediaUrl} 
+                        className="absolute inset-0 w-full h-full border-0"
+                        loading="lazy"
+                        allow="web-share; clipboard-write"
+                        allowFullScreen
+                      />
+                    </div>
                   );
                 }
 
@@ -212,7 +209,7 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({
             </div>
 
             <article 
-              className="prose prose-slate dark:prose-invert prose-sm md:prose-lg max-w-none prose-headings:font-black prose-headings:tracking-tight prose-a:text-primary prose-img:rounded-3xl prose-pre:bg-slate-900 prose-pre:rounded-2xl selection:bg-primary/20 mt-12"
+              className="prose prose-slate prose-sm md:prose-base max-w-none prose-headings:font-bold prose-headings:font-serif prose-a:text-[#0d2137] prose-img:rounded-none prose-pre:bg-slate-900 selection:bg-[#0d2137]/10 mt-10"
               dangerouslySetInnerHTML={{ __html: article.content }}
             />
           </div>

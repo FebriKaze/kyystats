@@ -1,9 +1,8 @@
-import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, User, ArrowRight, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react';
-import { BarChart, Bar, ResponsiveContainer, Cell, XAxis, YAxis, CartesianGrid, LabelList } from 'recharts';
-import { Statistic, Article } from '../../types';
-import ArticleSidebar from '../Articles/ArticleSidebar';
+import React, { useState, useMemo, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Search, BarChart3, X, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
+import { BarChart, Bar, ResponsiveContainer, Cell } from 'recharts';
+import { Statistic } from '../../types';
 import { usePageView } from '../../hooks/usePageView';
 import SafeImage from '../Common/SafeImage';
 
@@ -12,278 +11,251 @@ interface StatistikPageProps {
   onStatClick: (item: Statistic) => void;
 }
 
-const stripMarkdown = (text: string) => {
-  return text
-    .replace(/[#*`_~]/g, '') // Remove simple markdown chars
-    .replace(/!\[.*?\]\(.*?\)/g, '') // Remove images
-    .replace(/\[.*?\]\(.*?\)/g, '$1') // Remove links but keep text
-    .trim();
+// Smart chart thumbnail
+const DataThumb: React.FC<{ item: Statistic }> = ({ item }) => {
+  const mediaUrl = (item as any).media_url || item.image_url || '';
+  const flourishId = mediaUrl.match(/visualisation\/(\d+)/)?.[1] || mediaUrl.match(/id=(\d+)/)?.[1];
+  const isImage = /\.(jpg|jpeg|png|webp|gif|avif)$/i.test(mediaUrl);
+  const isIframe = mediaUrl.trim().startsWith('<iframe');
+
+  if (mediaUrl && !isImage) {
+    return (
+      <div className="absolute inset-0 w-full h-full overflow-hidden bg-white">
+        <div className="absolute top-0 left-0 w-[200%] h-[200%] origin-top-left scale-[0.5] pointer-events-none">
+          {isIframe
+            ? <div className="w-full h-full [&>iframe]:w-full [&>iframe]:h-full" dangerouslySetInnerHTML={{ __html: mediaUrl }} />
+            : <iframe src={flourishId ? `https://flo.uri.sh/visualisation/${flourishId}/embed?auto=1` : mediaUrl} className="w-full h-full border-0" scrolling="no" />
+          }
+        </div>
+      </div>
+    );
+  }
+
+  if (isImage && mediaUrl) {
+    return <SafeImage src={mediaUrl} alt={item.title} className="absolute inset-0 w-full h-full object-cover" />;
+  }
+
+  // Fallback: mini bar chart from chart_data
+  if (item.chart_data?.data?.length) {
+    return (
+      <div className="w-full h-full flex items-end p-4 bg-slate-50">
+        <ResponsiveContainer width="100%" height="80%">
+          <BarChart data={item.chart_data.data.slice(0, 5)} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+            <Bar dataKey="value" radius={[2, 2, 0, 0]} barSize={10}>
+              {item.chart_data.data.slice(0, 5).map((entry: any, i: number) => (
+                <Cell key={i} fill={entry.color || '#c0392b'} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full h-full flex items-center justify-center bg-slate-100">
+      <BarChart3 size={28} className="text-slate-300" />
+    </div>
+  );
 };
 
-const STATISTIK_PER_PAGE = 8;
+const PER_PAGE = 12;
 
 const StatistikPage: React.FC<StatistikPageProps> = ({ statistik, onStatClick }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [localSearch, setLocalSearch] = useState('');
 
-  usePageView({
-    pageType: 'statistik-list',
-    pageTitle: 'Daftar Statistik Utama'
-  });
+  usePageView({ pageType: 'statistik-list', pageTitle: 'Data Explorer' });
 
-  // Map Statistic to Article format purely for UI compatibility with ArticleSidebar
-  const mappedToArticleFormat: Article[] = useMemo(() => {
-    return statistik.map(s => ({
-      id: s.id,
-      created_at: s.created_at,
-      title: s.title,
-      slug: s.id,
-      summary: stripMarkdown(s.summary || s.content).substring(0, 150) + '...',
-      content: s.content,
-      category: s.category || 'Statistik',
-      thumbnail_url: s.image_url,
-      author: s.author || 'Admin',
-      is_published: s.is_published,
-      views: (s as any).views,
-      chart_data: s.chart_data
-    } as any));
-  }, [statistik]);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const filterParam = params.get('filter');
+    const searchParam = params.get('search');
+    if (filterParam) setActiveFilter(filterParam);
+    if (searchParam) {
+      setSearchQuery(searchParam);
+      setLocalSearch(searchParam);
+    }
+  }, [window.location.search]);
 
-  const categories = useMemo(() => {
-    return ['All', ...Array.from(new Set(statistik.map(a => a.category).filter(Boolean)))];
-  }, [statistik]);
+  const categories = useMemo(() =>
+    ['All', ...Array.from(new Set(statistik.map(s => s.category).filter(Boolean)))],
+    [statistik]
+  );
 
-  const filteredStats = useMemo(() => {
-    return statistik.filter(a => {
-      const matchFilter = activeFilter === 'All' || a.category === activeFilter;
-      const matchSearch = a.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          a.content.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchFilter && matchSearch;
+  const filtered = useMemo(() => {
+    return statistik.filter(s => {
+      const matchCat = activeFilter === 'All' || s.category === activeFilter;
+      const q = searchQuery.toLowerCase();
+      const matchSearch = !q || s.title.toLowerCase().includes(q) || (s.summary || '').toLowerCase().includes(q);
+      return matchCat && matchSearch;
     });
-  }, [activeFilter, searchQuery, statistik]);
+  }, [statistik, activeFilter, searchQuery]);
 
-  const totalPages = Math.ceil(filteredStats.length / STATISTIK_PER_PAGE);
-  const paginatedStats = useMemo(() => {
-    const startIndex = (currentPage - 1) * STATISTIK_PER_PAGE;
-    return filteredStats.slice(startIndex, startIndex + STATISTIK_PER_PAGE);
-  }, [filteredStats, currentPage]);
+  const totalPages = Math.ceil(filtered.length / PER_PAGE);
+  const paginated = useMemo(() => {
+    const start = (currentPage - 1) * PER_PAGE;
+    return filtered.slice(start, start + PER_PAGE);
+  }, [filtered, currentPage]);
 
-  const handleArticleClick = (item: Article) => {
-    const found = statistik.find(s => s.id === item.id);
-    if (found) onStatClick(found);
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSearchQuery(localSearch);
+    setCurrentPage(1);
   };
 
-  const handleFilterChange = (cat: string) => {
+  const handleCat = (cat: string) => {
     setActiveFilter(cat);
     setCurrentPage(1);
   };
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    setCurrentPage(1);
-  };
-
   return (
-    <section className="pt-24 md:pt-32 pb-16 md:pb-24 px-6 bg-white dark:bg-[#020617] transition-colors duration-300" id="statistik">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-16">
-          <h1 className="text-5xl md:text-7xl font-black tracking-tighter dark:text-white mb-4">
-            Data <span className="text-primary italic">Statistik</span>
-          </h1>
-          <p className="text-slate-600 dark:text-slate-400 max-w-2xl text-lg md:text-xl leading-relaxed">
-            Daftar rincian data statistik terbaru yang diolah secara mendalam untuk kebutuhan analisis Anda.
-          </p>
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <div className="bg-white border-b border-slate-200 pt-28 pb-6 font-sans">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 mb-6">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-serif font-bold text-slate-900 tracking-tight mb-1">
+                Data Explorers
+              </h1>
+              <p className="text-sm text-slate-500 max-w-xl font-sans">
+                A curated collection of interactive data visualizations organized by topic — from health and economics to the environment.
+              </p>
+            </div>
+
+            {/* Search */}
+            <form onSubmit={handleSearch} className="flex items-center border border-slate-300 w-full md:w-72">
+              <input
+                type="text"
+                placeholder="Search a topic..."
+                value={localSearch}
+                onChange={e => setLocalSearch(e.target.value)}
+                className="flex-1 px-4 py-2.5 text-sm bg-white text-slate-900 focus:outline-none placeholder-slate-400 font-sans"
+              />
+              {localSearch && (
+                <button type="button" onClick={() => { setLocalSearch(''); setSearchQuery(''); }} className="px-2 text-slate-400 hover:text-slate-600">
+                  <X size={14} />
+                </button>
+              )}
+              <button type="submit" className="px-3 py-2.5 bg-[#0d2137] text-white hover:bg-[#1a3a5c] transition-colors">
+                <Search size={16} />
+              </button>
+            </form>
+          </div>
+
+          {/* Category filter */}
+          <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-hide font-sans">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => handleCat(cat)}
+                className={`shrink-0 text-xs font-semibold px-4 py-1.5 border transition-colors whitespace-nowrap ${
+                  activeFilter === cat || (cat === 'All' && activeFilter === '')
+                    ? 'bg-[#0d2137] text-white border-[#0d2137]'
+                    : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </div>
+      </div>
 
-        <div className="flex flex-col lg:flex-row gap-12">
-          {/* Main Content Column */}
-          <div className="flex-1 min-h-[600px]">
-            <div className="space-y-8">
-              <AnimatePresence mode="wait">
-                {paginatedStats.length > 0 ? (
-                  paginatedStats.map((item, idx) => {
-                    const flourishId = (item as any).media_url?.match(/visualisation\/(\d+)/)?.[1];
-                    
-                    return (
-                      <motion.div
-                        key={item.id || idx}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ duration: 0.3 }}
-                        onClick={() => onStatClick(item)}
-                        className="flex flex-col md:flex-row gap-6 border-b border-slate-100 dark:border-slate-800 pb-8 last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-900/50 p-4 -mx-4 rounded-xl transition-all cursor-pointer group"
-                      >
-                        <div className="w-full md:w-64 h-40 bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0 flex flex-col p-0 relative justify-end shadow-inner">
-                          {(() => {
-                            const mediaUrl = (item as any).media_url || item.image_url;
-                            if (!mediaUrl) return null;
+      {/* Grid */}
+      <div className="max-w-7xl mx-auto px-6 py-10 font-sans">
+        {filtered.length === 0 ? (
+          <div className="py-32 text-center text-slate-400">
+            <BarChart3 size={40} className="mx-auto mb-3 opacity-30" />
+            <p className="text-lg font-medium">No datasets match your search.</p>
+            <button onClick={() => { setActiveFilter('All'); setSearchQuery(''); setLocalSearch(''); }} className="mt-3 text-sm text-[#0d2137] underline font-bold font-sans">Reset filters</button>
+          </div>
+        ) : (
+          <>
+            {/* Results count */}
+            <p className="text-xs text-slate-400 mb-6 uppercase tracking-widest font-bold font-sans">
+              {filtered.length} datasets available · Page {currentPage}/{totalPages || 1}
+            </p>
 
-                            if (mediaUrl.trim().startsWith('<iframe')) {
-                              return (
-                                <div className="absolute inset-0 w-full h-full overflow-hidden">
-                                  <div className="absolute top-0 left-0 w-[400%] h-[400%] origin-top-left scale-[0.25] pointer-events-none [&>iframe]:w-full [&>iframe]:h-full" dangerouslySetInnerHTML={{ __html: mediaUrl }} />
-                                </div>
-                              );
-                            }
-
-                            const flourishId = mediaUrl.match(/visualisation\/(\d+)/)?.[1] || mediaUrl.match(/id=(\d+)/)?.[1];
-                            const isImage = /\.(jpg|jpeg|png|webp|gif|avif)$/i.test(mediaUrl);
-
-                            if (flourishId) {
-                              return (
-                                <div className="absolute inset-0 w-full h-full overflow-hidden">
-                                  <div className="absolute top-0 left-0 w-[400%] h-[400%] origin-top-left scale-[0.25] pointer-events-none">
-                                    <iframe src={`https://public.flourish.studio/visualisation/${flourishId}/embed?auto=1`} className="w-full h-full border-0" scrolling="no" />
-                                  </div>
-                                </div>
-                              );
-                            }
-
-                            if (isImage) {
-                              return (
-                                <SafeImage src={mediaUrl} alt={item.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                              );
-                            }
-
-                            if (mediaUrl.startsWith('http')) {
-                              return (
-                                <div className="absolute inset-0 w-full h-full overflow-hidden">
-                                  <div className="absolute top-0 left-0 w-[400%] h-[400%] origin-top-left scale-[0.25] pointer-events-none">
-                                    <iframe src={mediaUrl} className="w-full h-full border-0" scrolling="no" />
-                                  </div>
-                                </div>
-                              );
-                            }
-
-                            return null;
-                          })() || (item.chart_data && item.chart_data.data && item.chart_data.data.length > 0 ? (
-                            <>
-                              <div className="w-full h-32 mt-auto opacity-70 group-hover:opacity-100 transition-opacity p-4">
-                                <ResponsiveContainer width="100%" height="100%">
-                                  <BarChart data={item.chart_data.data.slice(0, 5)} margin={{ top: 15, right: 0, left: -25, bottom: -15 }}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
-                                    <XAxis dataKey="label" tick={{ fontSize: 9, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                                    <YAxis tick={{ fontSize: 9, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                                    <Bar dataKey="value" radius={[2, 2, 0, 0]} barSize={16}>
-                                      <LabelList dataKey="value" position="top" fill="#64748b" fontSize={9} />
-                                      {item.chart_data.data.slice(0, 5).map((entry: any, index: number) => (
-                                        <Cell key={`cell-${index}`} fill={entry.color || '#8b5cf6'} />
-                                      ))}
-                                    </Bar>
-                                  </BarChart>
-                                </ResponsiveContainer>
-                              </div>
-                              <div className="absolute inset-0 bg-linear-to-t from-white/10 dark:from-slate-900/10 to-transparent pointer-events-none" />
-                            </>
-                          ) : (
-                            <div className="flex flex-col items-center justify-center h-full text-slate-300 dark:text-slate-600">
-                              <BarChart3 size={32} />
-                            </div>
-                          ))}
-                        </div>
-                        <div className="flex-1 flex flex-col pt-1">
-                          <h2 className="text-xl font-bold dark:text-white leading-snug group-hover:text-primary transition-colors line-clamp-2 md:pr-10">
-                            {item.title}
-                          </h2>
-                          
-                          <div className="flex flex-wrap items-center gap-y-2 mt-3 mb-4">
-                             <span className="bg-primary/10 text-primary px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
-                               <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
-                               {item.category}
-                             </span>
-                             <span className="flex items-center gap-1.5 text-xs text-slate-500 font-medium ml-3 border-l border-slate-300 dark:border-slate-700 pl-3">
-                               <Calendar size={12} className="text-primary" /> {new Date(item.created_at).toLocaleDateString('id-ID')}
-                             </span>
-                              <button 
-                               onClick={(e) => {
-                                 e.stopPropagation();
-                                 const authorId = (item as any).user_id;
-                                 if (authorId) window.location.href = `/author/${authorId}`;
-                               }}
-                               className="flex items-center gap-1.5 text-xs text-slate-500 font-bold ml-3 border-l border-slate-300 dark:border-slate-700 pl-3 hover:text-primary transition-colors cursor-pointer"
-                             >
-                               <User size={12} className="text-primary" /> {item.author}
-                             </button>
-                          </div>
-                          
-                          <p className="text-sm text-slate-500 leading-relaxed line-clamp-2 mb-3">
-                            {stripMarkdown(item.summary || item.content || '')}
-                          </p>
-  
-                          <div className="mt-auto">
-                            <button 
-                              className="inline-flex items-center gap-2 text-xs font-black text-primary hover:gap-3 transition-all group-hover:translate-x-1 uppercase tracking-widest mt-2"
-                            >
-                              Lihat Detail <ArrowRight size={14} />
-                            </button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    );
-                  })
-                ) : (
-                  <div className="col-span-full py-24 text-center">
-                    <p className="text-slate-500 dark:text-slate-400 text-lg">Tidak ada data statistik yang ditemukan.</p>
+            {/* Card grid — OWID Data Explorer style */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {paginated.map((item, idx) => (
+                <motion.div
+                  key={item.id || idx}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: idx * 0.03 }}
+                  onClick={() => onStatClick(item)}
+                  className="group cursor-pointer flex flex-col border border-slate-200 hover:border-[#0d2137] transition-colors p-3 bg-white"
+                >
+                  {/* Chart thumbnail */}
+                  <div className="relative w-full aspect-4/3 overflow-hidden border border-slate-100 mb-3 bg-slate-50">
+                    <DataThumb item={item} />
+                    {/* OWID-style corner badge */}
+                    <div className="absolute top-2 right-2 bg-[#0d2137] text-white text-[8px] font-black uppercase px-1.5 py-0.5 tracking-wider font-sans">
+                      DATA
+                    </div>
                   </div>
-                )}
-              </AnimatePresence>
+
+                  {/* Info */}
+                  <div className="flex-1 font-sans">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-[#c0392b] block mb-1 font-sans">
+                      {item.category}
+                    </span>
+                    <h3 className="text-base font-bold font-serif text-slate-900 leading-snug group-hover:text-[#c0392b] transition-colors line-clamp-2 mb-1.5">
+                      {item.title}
+                    </h3>
+                    <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed font-sans">
+                      {item.summary || item.content?.replace(/<[^>]+>/g, '').slice(0, 100) || 'Explore this dataset →'}
+                    </p>
+                  </div>
+
+                  <button className="mt-4 flex items-center gap-1 text-[11px] font-bold text-[#0d2137] group-hover:underline transition-all font-sans">
+                    <ExternalLink size={11} /> Explore dataset
+                  </button>
+                </motion.div>
+              ))}
             </div>
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="mt-16 flex items-center justify-center lg:justify-start gap-2">
+              <div className="mt-10 flex items-center justify-center gap-1 font-sans">
                 <button
                   disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  className={`p-3 rounded-2xl border border-slate-200 dark:border-slate-800 transition-all ${
-                    currentPage === 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-primary/50'
-                  }`}
+                  onClick={() => { setCurrentPage(p => p - 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  className="p-2 border border-slate-200 disabled:opacity-30 hover:bg-slate-100 transition-colors"
                 >
-                  <ChevronLeft size={18} className="dark:text-white" />
+                  <ChevronLeft size={16} />
                 </button>
-                <div className="flex items-center gap-2">
-                  {[...Array(totalPages)].map((_, i) => (
-                    <button
-                      key={i + 1}
-                      onClick={() => setCurrentPage(i + 1)}
-                      className={`w-12 h-12 rounded-2xl text-sm font-black transition-all ${
-                        currentPage === i + 1
-                        ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                        : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:border-primary/50'
-                      }`}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
-                </div>
+                {[...Array(Math.min(totalPages, 7))].map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => { setCurrentPage(i + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    className={`w-9 h-9 text-sm font-bold border transition-colors ${
+                      currentPage === i + 1
+                        ? 'bg-[#0d2137] text-white border-[#0d2137]'
+                        : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
                 <button
                   disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                  className={`p-3 rounded-2xl border border-slate-200 dark:border-slate-800 transition-all ${
-                    currentPage === totalPages ? 'opacity-30 cursor-not-allowed' : 'hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-primary/50'
-                  }`}
+                  onClick={() => { setCurrentPage(p => p + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  className="p-2 border border-slate-200 disabled:opacity-30 hover:bg-slate-100 transition-colors"
                 >
-                  <ChevronRight size={18} className="dark:text-white" />
+                  <ChevronRight size={16} />
                 </button>
               </div>
             )}
-          </div>
-
-          {/* Sidebar Column */}
-          <ArticleSidebar 
-            articles={mappedToArticleFormat}
-            categories={categories}
-            activeFilter={activeFilter}
-            onFilterChange={handleFilterChange}
-            onArticleClick={handleArticleClick}
-            onSearch={handleSearch}
-            searchValue={searchQuery}
-          />
-        </div>
+          </>
+        )}
       </div>
-    </section>
+    </div>
   );
 };
 

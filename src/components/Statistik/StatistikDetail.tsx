@@ -115,7 +115,7 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
     
     const svgElement = chartRef.current.querySelector('svg');
     if (!svgElement) {
-        showToast('error', 'Gagal menemukan grafik untuk diunduh.');
+        showToast('error', 'Failed to find chart to download.');
         return;
     }
 
@@ -140,7 +140,7 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
                 downloadLink.download = `${item.title.replace(/\s+/g, '_')}.png`;
                 downloadLink.href = pngUrl;
                 downloadLink.click();
-                showToast('success', 'Gambar chart berhasil diunduh!');
+                showToast('success', 'Chart image downloaded successfully!');
             }
         };
 
@@ -148,7 +148,7 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
         img.src = 'data:image/svg+xml;base64,' + encodedData;
     } catch (err) {
         console.error('Download error:', err);
-        showToast('error', 'Gagal mengunduh gambar. Silakan coba lagi.');
+        showToast('error', 'Failed to download image. Please try again.');
     }
   };
 
@@ -174,25 +174,25 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
   };
 
   return (
-    <div className="pt-20 md:pt-24 pb-16 md:pb-24 min-h-screen bg-white dark:bg-[#020617] transition-colors duration-300">
+    <div className="pt-20 md:pt-24 pb-16 md:pb-24 min-h-screen bg-white dark:bg-slate-950">
       <div className="max-w-7xl mx-auto px-4 md:px-6">
-        <div className="mb-12">
+        <div className="mb-10">
           <button 
             onClick={onBack}
-            className="group w-fit flex items-center gap-2 text-slate-500 dark:text-slate-400 font-bold text-sm mb-8 hover:text-primary transition-colors"
+            className="flex items-center gap-1.5 text-slate-500 text-sm mb-6 hover:text-[#0d2137] transition-colors"
           >
-            <ArrowLeft size={18} /> Kembali ke Statistik
+            <ArrowLeft size={16} /> Back to Data
           </button>
           
-          <div className="flex flex-col gap-6">
-            <span className="px-3 py-1 w-fit rounded-lg bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest border border-primary/20">
+          <div className="flex flex-col gap-3 border-b-2 border-slate-900 dark:border-white pb-8">
+            <span className="text-[10px] font-black uppercase tracking-widest text-[#c0392b]">
               {item.category}
             </span>
-            <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-slate-900 dark:text-white leading-[1.2] max-w-4xl mt-4">
+            <h1 className="text-3xl md:text-5xl font-serif font-bold text-slate-900 dark:text-white leading-snug max-w-4xl">
               {item.title}
             </h1>
             
-            <div className="flex flex-wrap items-center gap-6 mt-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest border-y border-slate-100 dark:border-slate-800 py-6">
+            <div className="flex flex-wrap items-center gap-4 mt-2 text-xs text-slate-500 dark:text-slate-400">
               <div 
                 onClick={async (e) => {
                   e.preventDefault();
@@ -204,22 +204,17 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
                     if (data?.id) navigate(`/author/${data.id}`);
                   }
                 }}
-                className="flex items-center gap-2 hover:text-primary transition-all cursor-pointer pr-6 border-r border-slate-100 dark:border-slate-800 group"
+                className="flex items-center gap-2 hover:text-[#0d2137] dark:hover:text-white transition-all cursor-pointer"
               >
-                <div className="flex items-center gap-2">
-                  <ProfileAvatar 
-                    src={(item as any).profiles?.avatar_url} 
-                    className="w-8 h-8 rounded-full border-2 border-primary/20" 
-                    iconSize={16}
-                  />
-                  <div className="flex flex-col">
-                    <span className="text-[8px] text-slate-400">WRITTEN BY</span>
-                    <span className="text-slate-900 dark:text-white group-hover:text-primary transition-colors">{item.author || 'ADMIN'}</span>
-                  </div>
-                </div>
+                <ProfileAvatar 
+                  src={(item as any).profiles?.avatar_url} 
+                  className="w-6 h-6 rounded-full" 
+                  iconSize={12}
+                />
+                <span>{item.author || 'Admin'}</span>
               </div>
-
-              <span className="flex items-center gap-2"><Calendar size={14} className="text-primary" /> {new Date(item.created_at).toLocaleDateString()}</span>
+              <span className="text-slate-300">·</span>
+              <span className="flex items-center gap-1"><Calendar size={12} /> {new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
               
               <div className="ml-auto flex items-center gap-4 relative border-l border-slate-100 dark:border-slate-800 pl-6">
                 <button 
@@ -227,7 +222,7 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
                   className="p-2.5 rounded-full bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-primary transition-colors flex items-center gap-2 px-5 border border-transparent hover:border-primary/20 shadow-sm"
                 >
                   <Share2 size={16} />
-                  <span className="hidden md:inline font-black tracking-widest text-[10px]">BAGIKAN</span>
+                  <span className="hidden md:inline font-black tracking-widest text-[10px]">SHARE</span>
                 </button>
 
                 <AnimatePresence>
@@ -251,8 +246,8 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
                              <button
                                key={plat.id}
                                onClick={() => { handleShare(plat.id); setIsShareMenuOpen(false); }}
-                               className={`w-full aspect-square flex items-center justify-center rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800 ${plat.color} transition-all border border-transparent hover:border-slate-100 dark:hover:border-slate-700`}
-                               title={plat.id === 'copy' ? 'Salin Link' : plat.id}
+                               className={`w-full aspect-square flex items-center justify-center rounded-none hover:bg-slate-50 ${plat.color} transition-all border border-transparent hover:border-slate-200`}
+                               title={plat.id === 'copy' ? 'Copy Link' : plat.id}
                              >
                                {plat.id === 'copy' ? (
                                  plat.icon
@@ -277,7 +272,7 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
             
             {/* Featured Media (Flourish/Video/External) */}
             {(item as any).media_url && (
-              <div className="w-full rounded-4xl overflow-hidden border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 shadow-2xl relative min-h-[550px] md:min-h-[700px]">
+              <div className="w-full rounded-none overflow-hidden border border-slate-200 bg-slate-50 shadow-sm relative min-h-[550px] md:min-h-[700px]">
                 {(() => {
                   const mediaUrl = (item as any).media_url;
                   
@@ -299,7 +294,7 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
                   if (flourishId) {
                     return (
                       <iframe 
-                        src={`https://public.flourish.studio/visualisation/${flourishId}/embed?auto=1`} 
+                        src={`https://flo.uri.sh/visualisation/${flourishId}/embed?auto=1`} 
                         className="w-full h-full border-0 absolute inset-0 md:min-h-[650px]" 
                         scrolling="no" 
                       />
@@ -344,10 +339,10 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
 
               return (
                 <div className="mb-4">
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-                    {item.chart_data.title || 'Data Statistik'}
+                  <h3 className="text-xl font-serif font-bold text-slate-900 mb-2">
+                    {item.chart_data.title || 'Statistical Data'}
                   </h3>
-                  <div className="h-[350px] md:h-[600px] w-full mt-6 bg-white dark:bg-slate-900/50 p-4 md:p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm relative" ref={chartRef}>
+                  <div className="h-[350px] md:h-[600px] w-full mt-6 bg-white p-4 md:p-8 rounded-none border border-slate-200 shadow-sm relative font-sans" ref={chartRef}>
                     <ResponsiveContainer width="100%" height="100%">
                       <ChartComponent 
                         data={item.chart_data.data} 
@@ -450,16 +445,16 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
                   </div>
 
                   <div className="flex items-center justify-between mt-4">
-                    <p className="text-sm text-slate-500 font-medium pb-4">Sumber: {(item.chart_data as any)?.sourceText || item.author || 'Data Internal'}</p>
+                    <p className="text-xs text-slate-500 font-medium pb-4 font-sans">Source: {(item.chart_data as any)?.sourceText || item.author || 'Internal Data'}</p>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-4 mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
+                  <div className="flex flex-wrap items-center gap-4 mt-6 pt-6 border-t border-slate-200 font-sans">
                     <div className="relative">
                       <button 
                         onClick={() => setIsChartDropdownOpen(!isChartDropdownOpen)}
-                        className="px-6 py-2.5 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-xl text-sm font-black text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center gap-2 shadow-sm"
+                        className="px-6 py-2.5 bg-white border border-slate-300 text-sm font-bold text-slate-900 hover:bg-slate-50 transition-all flex items-center gap-2 shadow-xs"
                       >
-                        Unduh 
+                        Download 
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                       </button>
                       <AnimatePresence>
@@ -470,13 +465,13 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
                               initial={{ opacity: 0, y: 5 }}
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, y: 5 }}
-                              className="absolute left-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-2 z-40"
+                              className="absolute left-0 top-full mt-2 w-48 bg-white border border-slate-200 shadow-lg p-2 z-40"
                             >
-                              <button onClick={() => { downloadCSV(); setIsChartDropdownOpen(false); }} className="w-full text-left px-4 py-2 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg mb-1">
-                                Data CSV
+                              <button onClick={() => { downloadCSV(); setIsChartDropdownOpen(false); }} className="w-full text-left px-4 py-2 text-sm font-medium hover:bg-slate-50 rounded-none mb-1">
+                                CSV Data
                               </button>
-                              <button onClick={() => { downloadChartImage(); setIsChartDropdownOpen(false); }} className="w-full text-left px-4 py-2 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg">
-                                Gambar (PNG)
+                              <button onClick={() => { downloadChartImage(); setIsChartDropdownOpen(false); }} className="w-full text-left px-4 py-2 text-sm font-medium hover:bg-slate-50 rounded-none">
+                                Image (PNG)
                               </button>
                             </motion.div>
                           </>
@@ -486,7 +481,7 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
                     
                     <button 
                       onClick={() => setIsDonationModalOpen(true)}
-                      className="px-6 py-2.5 bg-rose-50 dark:bg-rose-500/10 border-2 border-rose-100 dark:border-rose-500/20 rounded-xl text-sm font-black text-rose-500 hover:bg-rose-500 hover:text-white transition-all flex items-center gap-2"
+                      className="px-6 py-2.5 bg-rose-50 border border-rose-200 text-sm font-bold text-rose-600 hover:bg-rose-600 hover:text-white transition-all flex items-center gap-2"
                     >
                       <Heart size={16} fill="currentColor" /> Support
                     </button>
@@ -499,7 +494,7 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
             <article className="flex-1 mt-6">
               {((item as any).intro_text || item.summary) && (
                 <div 
-                  className="text-xl md:text-2xl font-black text-slate-700 dark:text-slate-300 leading-relaxed mb-8 mt-2 italic border-l-4 border-primary pl-6 py-4 bg-slate-50 dark:bg-slate-900/50 rounded-r-2xl prose-p:mb-0"
+                  className="text-lg md:text-xl font-serif text-slate-800 leading-relaxed mb-8 mt-2 italic border-l-4 border-[#0d2137] pl-6 py-2 bg-slate-50 prose-p:mb-0"
                   dangerouslySetInnerHTML={{ __html: (item as any).intro_text || item.summary }}
                 />
               )}
@@ -527,45 +522,45 @@ const StatistikDetail: React.FC<StatistikDetailProps> = ({
       {/* Donation Modal */}
       <AnimatePresence>
         {isDonationModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 font-sans">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsDonationModalOpen(false)}
-              className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs"
             />
             <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden border border-white dark:border-slate-800"
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-white w-full max-w-md rounded-none shadow-2xl relative z-10 overflow-hidden border border-slate-200"
             >
-              <div className="p-8 pb-0 flex justify-end">
-                <button onClick={() => setIsDonationModalOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
-                  <CloseIcon size={20} className="text-slate-400" />
+              <div className="p-6 pb-0 flex justify-end">
+                <button onClick={() => setIsDonationModalOpen(false)} className="p-2 hover:bg-slate-100 transition-colors border border-slate-200">
+                  <CloseIcon size={16} className="text-slate-600" />
                 </button>
               </div>
               
               <div className="px-10 pb-12 flex flex-col items-center text-center">
-                <div className="w-20 h-20 bg-rose-100 dark:bg-rose-500/20 rounded-full flex items-center justify-center mb-6 text-rose-500 animate-bounce">
-                  <Heart size={40} fill="currentColor" />
+                <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mb-6 text-rose-600 border border-rose-200">
+                  <Heart size={32} fill="currentColor" />
                 </div>
                 
-                <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic">Dukung <span className="text-primary italic">KyyStats</span></h3>
-                <p className="text-slate-500 dark:text-slate-400 mt-4 leading-relaxed text-sm font-medium">Bantu kami untuk terus menyajikan data statistik berkualitas yang independen dan mudah dipahami.</p>
+                <h3 className="text-2xl font-serif font-bold text-slate-900 tracking-tight">Support KyyStats</h3>
+                <p className="text-slate-600 mt-3 leading-relaxed text-sm font-sans">Help us maintain independent, high-quality statistical datasets and interactive analysis.</p>
                 
-                <div className="grid grid-cols-1 w-full gap-4 mt-8">
+                <div className="grid grid-cols-1 w-full gap-4 mt-8 font-sans">
                   <button 
                     onClick={() => window.open('https://saweria.co/kyystats', '_blank')}
-                    className="w-full py-5 bg-primary text-white rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all"
+                    className="w-full py-4 bg-[#c0392b] text-white font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#a02d22] transition-colors border border-[#a02d22]"
                   >
-                    <DollarSign size={18} /> Donasi via Saweria
+                    <DollarSign size={16} /> Donate via Saweria
                   </button>
                   
-                  <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700 w-full">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Dukungan Anda Berarti</p>
-                    <p className="text-xs text-slate-600 dark:text-slate-300 font-bold">Setiap dukungan akan digunakan untuk biaya server dan riset data.</p>
+                  <div className="p-4 bg-slate-50 border border-slate-200 w-full text-left font-sans">
+                    <p className="text-[10px] font-black text-[#0d2137] uppercase tracking-widest mb-1">Your Support Matters</p>
+                    <p className="text-xs text-slate-600 leading-relaxed font-sans">All contributions directly fund open-access data research and server maintenance.</p>
                   </div>
                 </div>
               </div>

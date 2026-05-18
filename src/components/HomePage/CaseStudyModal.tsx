@@ -1,26 +1,73 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, TrendingUp } from 'lucide-react';
+import { X, TrendingUp, ArrowLeft } from 'lucide-react';
 import { Project } from '../../types';
 
 interface CaseStudyModalProps {
   project: Project | null;
   isOpen: boolean;
   onClose: () => void;
+  isPage?: boolean;
 }
 
-const CaseStudyModal: React.FC<CaseStudyModalProps> = ({ project, isOpen, onClose }) => {
+const CaseStudyModal: React.FC<CaseStudyModalProps> = ({ project, isOpen, onClose, isPage }) => {
   useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    if (isOpen) {
+    if (!isPage && isOpen) {
+      const handleEsc = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') onClose();
+      };
       window.addEventListener('keydown', handleEsc);
+      return () => window.removeEventListener('keydown', handleEsc);
     }
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, isPage]);
 
   if (!project) return null;
+
+  if (isPage) {
+    return (
+      <div className="pt-24 pb-20 min-h-screen bg-white">
+        <div className="max-w-5xl mx-auto px-6">
+          <button onClick={onClose} className="mb-8 flex items-center gap-1.5 text-slate-500 text-sm hover:text-[#0d2137] transition-colors">
+            <ArrowLeft size={16} /> Back to Portfolio
+          </button>
+
+          <div className="border-b-2 border-slate-900 pb-8 mb-10">
+            <span className="text-[10px] font-black tracking-widest uppercase text-[#c0392b] mb-2 block">{project.category}</span>
+            <h1 className="text-4xl md:text-5xl font-serif font-bold text-slate-900 tracking-tight leading-tight">{project.title}</h1>
+          </div>
+
+          <div className="aspect-video w-full mb-12 border border-slate-200 bg-slate-50">
+            <img src={project.image} alt={project.title} className="w-full h-full object-cover" />
+          </div>
+
+          <div className="space-y-12">
+            <div className="text-xl font-serif text-slate-800 leading-relaxed border-l-4 border-[#0d2137] pl-6 py-2">
+              {project.description}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+              <div className="md:col-span-2 space-y-10">
+                <section>
+                  <h2 className="text-xl font-serif font-bold text-slate-900 mb-3 pb-2 border-b border-slate-200">The Challenge</h2>
+                  <p className="text-slate-600 leading-relaxed">{project.details.challenge}</p>
+                </section>
+                <section>
+                  <h2 className="text-xl font-serif font-bold text-slate-900 mb-3 pb-2 border-b border-slate-200">The Solution</h2>
+                  <p className="text-slate-600 leading-relaxed">{project.details.solution}</p>
+                </section>
+              </div>
+              <div className="border-2 border-[#c0392b] bg-slate-50 p-6 h-fit">
+                <h3 className="text-xs font-black uppercase tracking-widest text-[#c0392b] mb-3 flex items-center gap-1.5">
+                  <TrendingUp size={16} /> Key Result
+                </h3>
+                <p className="text-slate-900 font-bold text-xl font-serif leading-snug">{project.details.result}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AnimatePresence>
@@ -31,64 +78,56 @@ const CaseStudyModal: React.FC<CaseStudyModalProps> = ({ project, isOpen, onClos
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs"
           />
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-3xl bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto"
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            className="relative w-full max-w-4xl bg-white border border-slate-200 rounded-none overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto"
           >
-            <button onClick={onClose} className="absolute top-6 right-6 z-10 text-white bg-slate-900/20 hover:bg-slate-900/40 p-2 rounded-full backdrop-blur-md transition-all">
-              <X size={24} />
+            <button onClick={onClose} className="absolute top-6 right-6 z-10 text-slate-900 bg-white hover:bg-slate-100 border border-slate-200 p-2.5 transition-all">
+              <X size={20} />
             </button>
 
-            <div className="aspect-video w-full relative">
+            <div className="aspect-video w-full relative bg-slate-50 border-b border-slate-200">
               <img src={project.image} alt={project.title} className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-linear-to-t from-slate-900/80 to-transparent flex items-end p-8 md:p-12">
+              <div className="absolute inset-0 bg-linear-to-t from-slate-900/90 via-slate-900/40 to-transparent flex items-end p-8 md:p-12">
                 <div className="text-white">
-                  <span className="text-xs font-bold tracking-[0.2em] uppercase opacity-80 mb-2 block">{project.category}</span>
-                  <h3 className="text-3xl md:text-4xl font-black tracking-tighter">{project.title}</h3>
+                  <span className="text-[10px] font-black tracking-widest uppercase text-[#c0392b] mb-2 block">{project.category}</span>
+                  <h3 className="text-3xl md:text-4xl font-serif font-bold tracking-tight">{project.title}</h3>
                 </div>
               </div>
             </div>
 
             <div className="p-8 md:p-12 space-y-10">
-              {/* Lead Text Style */}
-              <div className="text-xl font-black text-slate-700 dark:text-slate-300 leading-relaxed italic border-l-4 border-primary pl-6 py-4 bg-slate-50 dark:bg-slate-900/50 rounded-r-2xl mb-10">
+              <div className="text-lg font-serif text-slate-800 leading-relaxed border-l-4 border-[#0d2137] pl-6 py-2">
                 {project.description}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="md:col-span-2 space-y-8">
                   <section>
-                    <h4 className="text-lg font-black tracking-tight mb-3 flex items-center gap-2 dark:text-white">
-                      <div className="w-1.5 h-6 bg-primary rounded-full" />
-                      The Challenge
-                    </h4>
-                    <p className="text-slate-600 dark:text-slate-400 leading-relaxed">{project.details.challenge}</p>
+                    <h4 className="text-lg font-serif font-bold text-slate-900 mb-2 pb-2 border-b border-slate-200">The Challenge</h4>
+                    <p className="text-slate-600 leading-relaxed text-sm">{project.details.challenge}</p>
                   </section>
                   <section>
-                    <h4 className="text-lg font-black tracking-tight mb-3 flex items-center gap-2 dark:text-white">
-                      <div className="w-1.5 h-6 bg-primary rounded-full" />
-                      The Solution
-                    </h4>
-                    <p className="text-slate-600 dark:text-slate-400 leading-relaxed">{project.details.solution}</p>
+                    <h4 className="text-lg font-serif font-bold text-slate-900 mb-2 pb-2 border-b border-slate-200">The Solution</h4>
+                    <p className="text-slate-600 leading-relaxed text-sm">{project.details.solution}</p>
                   </section>
                 </div>
-                <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-6 h-fit">
-                  <h4 className="text-lg font-black tracking-tight mb-4 flex items-center gap-2 dark:text-white">
-                    <TrendingUp size={20} className="text-primary" />
-                    Key Result
+                <div className="border-2 border-[#c0392b] bg-slate-50 p-6 h-fit">
+                  <h4 className="text-xs font-black uppercase tracking-widest text-[#c0392b] mb-3 flex items-center gap-1.5">
+                    <TrendingUp size={16} /> Key Result
                   </h4>
-                  <p className="text-primary font-bold text-lg leading-snug">{project.details.result}</p>
+                  <p className="text-slate-900 font-bold text-lg font-serif leading-snug">{project.details.result}</p>
                 </div>
               </div>
               
-              <div className="pt-8 border-t border-slate-100 dark:border-slate-800 flex justify-center">
+              <div className="pt-8 border-t border-slate-200 flex justify-center">
                 <button
                   onClick={onClose}
-                  className="px-8 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full font-bold hover:opacity-90 transition-all"
+                  className="px-8 py-3 bg-[#0d2137] text-white font-bold hover:bg-[#0a1b32] transition-all text-sm"
                 >
                   Close Case Study
                 </button>

@@ -2,6 +2,19 @@ import { supabase } from '../lib/supabase';
 import { Project, FeaturedProject, Article, Statistic } from '../types';
 import { showToast } from '../components/Common/Toast';
 
+export const generateSlug = (text?: string): string => {
+  if (!text) return '';
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/\-\-+/g, '-')
+    .replace(/^-+/, '')
+    .replace(/-+$/, '');
+};
+
 export const fetchPortfolios = async (): Promise<Project[]> => {
   const { data, error } = await supabase
     .from('portfolios')
@@ -15,6 +28,7 @@ export const fetchPortfolios = async (): Promise<Project[]> => {
 
   return data.map((row: any) => ({
     id: row.id,
+    slug: row.slug || (row.title ? generateSlug(row.title) : row.id),
     category: row.category,
     title: row.title,
     description: row.short_desc,
@@ -38,6 +52,7 @@ export const fetchFeaturedProjects = async (): Promise<FeaturedProject[]> => {
 
   return data.map((row: any) => ({
     id: String(row.id),
+    slug: row.slug || (row.title ? generateSlug(row.title) : row.id),
     title: row.title || '',
     description: row.description || '',
     image_url: row.image_url || '',
@@ -58,6 +73,7 @@ export const fetchArticles = async (onlyPublished = true): Promise<Article[]> =>
   if (error) return (await supabase.from('articles').select('*').order('created_at', { ascending: false })).data as Article[] || [];
   return (data || []).map((row: any) => ({ 
     ...row, 
+    slug: row.slug || (row.title ? generateSlug(row.title) : row.id),
     image_url: row.thumbnail_url || '',
     author: row.profiles?.full_name || 'Admin' 
   })) as Article[];
@@ -158,7 +174,7 @@ export const fetchStatistics = async (onlyPublished = true): Promise<Statistic[]
     ...row,
     image_url: row.image_url || '',
     summary: row.short_desc || '',
-    slug: row.title?.toString().toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w-]+/g, '').replace(/--+/g, '-') || row.id,
+    slug: row.slug || (row.title ? generateSlug(row.title) : row.id),
     author: row.profiles?.full_name || 'Admin',
     chart_data: typeof row.chart_data === 'string' ? JSON.parse(row.chart_data) : row.chart_data
   })) as Statistic[];

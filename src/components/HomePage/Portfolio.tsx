@@ -53,84 +53,73 @@ const Portfolio: React.FC<PortfolioProps> = ({ projects, onProjectClick, onBackT
   };
 
   return (
-    <div className="pt-24 min-h-screen bg-white dark:bg-[#020617] transition-colors duration-300">
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        {/* Header Section */}
-        <div className="flex flex-col gap-6 mb-12">
+    <div className="pt-24 min-h-screen bg-white dark:bg-slate-950">
+      <div className="max-w-7xl mx-auto px-6 py-10">
+        <div className="flex flex-col gap-5 mb-10">
           <button 
             onClick={onBackToHome}
-            className="group w-fit flex items-center gap-2 text-primary font-bold text-sm hover:translate-x-[-4px] transition-transform"
+            className="w-fit flex items-center gap-1.5 text-slate-500 text-sm hover:text-[#0d2137] transition-colors"
           >
-            <ArrowLeft size={20} /> Back to Home
+            <ArrowLeft size={16} /> Back
           </button>
           
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-            <div className="space-y-4">
-              <h1 className="text-4xl md:text-6xl font-black tracking-tighter dark:text-white">Full Portfolio</h1>
-              <p className="text-slate-600 dark:text-slate-400 max-w-lg text-lg">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b-2 border-slate-900 dark:border-white pb-6">
+            <div className="space-y-2">
+              <h1 className="text-3xl md:text-4xl font-serif font-bold text-slate-900 tracking-tight">Full Portfolio</h1>
+              <p className="text-sm text-slate-500 max-w-lg">
                 A complete collection of analytical projects, experiments, and technical case studies.
               </p>
             </div>
             
-            <div className="flex flex-col gap-4 w-full md:w-auto">
-              {/* Search Bar */}
-              <div className="relative w-full md:w-80">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                <input 
-                  type="text" 
-                  placeholder="Search projects..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-11 pr-11 py-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:text-white transition-all"
-                />
-                {searchQuery && (
-                  <button 
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-400"
-                  >
-                    <X size={16} />
-                  </button>
-                )}
-              </div>
+            <div className="flex items-center border border-slate-300 dark:border-slate-700 w-full md:w-72">
+              <Search className="ml-4 text-slate-400 shrink-0" size={16} />
+              <input 
+                type="text" 
+                placeholder="Search projects..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 px-3 py-2.5 bg-white dark:bg-slate-900 focus:outline-none text-sm dark:text-white placeholder-slate-400"
+              />
+              {searchQuery && (
+                <button 
+                  onClick={() => setSearchQuery('')}
+                  className="px-3 text-slate-400 hover:text-slate-700"
+                >
+                  <X size={14} />
+                </button>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Filters Section - Improved Responsiveness */}
-        <div className="flex flex-col gap-4 mb-12">
-          <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 mb-2">
-            <Filter size={16} />
-            <span className="text-xs font-bold uppercase tracking-widest">Filter by Category</span>
-          </div>
-          
-          <div className="flex flex-wrap gap-2 md:gap-3">
-            {categories.map(cat => (
-              <button
-                key={cat}
-                onClick={() => setActiveFilter(cat)}
-                className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all border ${
-                  activeFilter === cat 
-                  ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20' 
-                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-primary/50'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
+        {/* Filters */}
+        <div className="flex items-center gap-1 mb-8 overflow-x-auto pb-1 scrollbar-hide">
+          {categories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setActiveFilter(cat)}
+              className={`shrink-0 text-xs font-semibold px-4 py-1.5 border transition-colors whitespace-nowrap ${
+                activeFilter === cat 
+                  ? 'bg-[#0d2137] text-white border-[#0d2137]' 
+                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-slate-400'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
         </div>
 
         {/* Results Info */}
         {(activeFilter !== 'All' || searchQuery) && (
           <div className="mb-8 flex items-center justify-between">
             <p className="text-sm text-slate-500">
-              Showing <span className="font-bold text-slate-900 dark:text-white">{filteredProjects.length}</span> projects
-              {activeFilter !== 'All' && <span> in <span className="text-primary">{activeFilter}</span></span>}
+              Showing <span className="font-bold text-slate-900">{filteredProjects.length}</span> projects
+              {activeFilter !== 'All' && <span> in <span className="text-[#0d2137]">{activeFilter}</span></span>}
               {searchQuery && <span> matching "<span className="italic">{searchQuery}</span>"</span>}
             </p>
             <button 
               onClick={clearFilters}
-              className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
+              className="text-xs font-bold text-[#0d2137] hover:underline flex items-center gap-1"
             >
               Reset All Filters
             </button>
@@ -144,37 +133,38 @@ const Portfolio: React.FC<PortfolioProps> = ({ projects, onProjectClick, onBackT
               <>
                 <motion.div 
                   layout
-                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                 >
                   {paginatedProjects.map((project) => (
                     <motion.div
                       key={project.id || project.title}
                       layout
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      whileHover={{ y: -8 }}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      whileHover={{ y: -4 }}
                       transition={{ duration: 0.3 }}
-                      className="group bg-white dark:bg-slate-900 rounded-4xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300"
+                      onClick={() => onProjectClick(project)}
+                      className="group bg-white dark:bg-slate-900 overflow-hidden border border-slate-200 dark:border-slate-800 hover:border-slate-400 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
                     >
-                      <div className="relative h-56 overflow-hidden">
+                      <div className="relative aspect-video overflow-hidden bg-slate-100 dark:bg-slate-800">
                         <img
                           src={project.image}
                           alt={project.title}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                          className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-700"
                         />
-                        <div className="absolute top-4 left-4">
-                          <span className="px-3 py-1 rounded-lg bg-white/90 dark:bg-slate-900/90 backdrop-blur-md text-[10px] font-black uppercase tracking-wider text-primary shadow-sm">
+                        <div className="absolute top-3 left-3">
+                          <span className="text-[9px] font-black uppercase tracking-widest text-[#c0392b] bg-white/90 dark:bg-slate-900/90 px-2 py-0.5">
                             {project.category}
                           </span>
                         </div>
                       </div>
                       
-                      <div className="p-8">
-                        <h3 className="text-xl font-black tracking-tight mb-4 dark:text-white group-hover:text-primary transition-colors">
+                      <div className="p-5">
+                        <h3 className="text-base font-bold text-slate-900 dark:text-white mb-2 leading-snug group-hover:text-[#0d2137] dark:group-hover:text-blue-300 transition-colors">
                           {project.title}
                         </h3>
-                        <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-8 line-clamp-3">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4 line-clamp-2">
                           {project.description}
                         </p>
                         <button 

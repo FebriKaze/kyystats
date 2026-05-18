@@ -1,5 +1,6 @@
 export interface Project {
   id?: string;
+  slug?: string;
   category: string;
   title: string;
   description: string;
@@ -14,6 +15,7 @@ export interface Project {
 
 export interface FeaturedProject {
   id: string;
+  slug?: string;
   title: string;
   description: string;
   image_url: string;

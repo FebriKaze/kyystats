@@ -25,7 +25,6 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const editorRef = useRef<any>(null);
   const valueRef = useRef(value);
 
-  // Sync the latest value to valueRef for init logic
   useEffect(() => {
     valueRef.current = value;
   }, [value]);
@@ -54,14 +53,13 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           padding: 20px;
         }
       `,
-      skin: document.documentElement.classList.contains('dark') ? 'oxide-dark' : 'oxide',
-      content_css: document.documentElement.classList.contains('dark') ? 'dark' : 'default',
+      skin: 'oxide',
+      content_css: 'default',
       placeholder: placeholder,
       setup: (editor: any) => {
         editorRef.current = editor;
         
         editor.on('init', () => {
-          // Force content set on init from valueRef
           editor.setContent(valueRef.current || '');
         });
 
@@ -83,12 +81,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         editorRef.current = null;
       }
     };
-  }, [editorId]); // Only re-init if ID changes
+  }, [editorId, minHeight, placeholder]);
 
-  // Sync external changes (like switching items)
   useEffect(() => {
     if (editorRef.current && value !== valueRef.current) {
-      // Small delay to ensure TinyMCE is stable if many events happen together
       const timeout = setTimeout(() => {
         if (editorRef.current && value !== editorRef.current.getContent()) {
           valueRef.current = value;
@@ -100,17 +96,13 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   }, [value]);
 
   return (
-    <div className="rich-text-editor-container rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900">
+    <div className="rich-text-editor-container rounded-none overflow-hidden border border-slate-200 shadow-sm bg-white font-sans">
       <textarea id={editorId} style={{ visibility: 'hidden' }} />
       
       <style>{`
         .tox-tinymce { border: none !important; }
-        .tox .tox-menubar { background-color: #f8fafc !important; border-bottom: 1px solid #f1f5f9 !important; }
-        .dark .tox .tox-menubar { background-color: #0f172a !important; border-bottom: 1px solid #1e293b !important; }
-        .tox .tox-toolbar__primary { background-color: #f8fafc !important; border-bottom: 1px solid #f1f5f9 !important; }
-        .dark .tox .tox-toolbar__primary { background-color: #0f172a !important; border-bottom: 1px solid #1e293b !important; }
-        .dark .tox .tox-mbtn, .dark .tox .tox-tbtn, .dark .tox .tox-edit-area__iframe { background-color: transparent !important; color: #94a3b8 !important; }
-        .dark .tox .tox-tbtn svg { fill: #94a3b8 !important; }
+        .tox .tox-menubar { background-color: #f8fafc !important; border-bottom: 1px solid #e2e8f0 !important; font-family: sans-serif; }
+        .tox .tox-toolbar__primary { background-color: #f8fafc !important; border-bottom: 1px solid #e2e8f0 !important; }
       `}</style>
     </div>
   );

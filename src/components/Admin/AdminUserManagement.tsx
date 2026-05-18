@@ -21,7 +21,6 @@ const AdminUserManagement: React.FC = () => {
   useEffect(() => {
     loadData();
     
-    // ESC key listener
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setSelectedContent(null);
     };
@@ -38,7 +37,6 @@ const AdminUserManagement: React.FC = () => {
         fetchStatistics()
       ]);
 
-      // Fetch Real View Counts from page_views table
       const { data: viewsData } = await supabase.from('page_views').select('page_id');
       const counts: Record<string, number> = {};
       viewsData?.forEach((v: any) => {
@@ -57,7 +55,7 @@ const AdminUserManagement: React.FC = () => {
   };
 
   const handleDeleteContent = async (type: 'article' | 'statistic', id: string, title: string) => {
-    if (!window.confirm(`Hapus ${type} "${title}"? (Moderasi Owner)`)) return;
+    if (!window.confirm(`Delete ${type} "${title}"? (Owner Moderation)`)) return;
     let success = type === 'article' ? await deleteArticle(id) : await deleteStatistic(id);
     if (success) {
       setSelectedContent(null);
@@ -81,25 +79,25 @@ const AdminUserManagement: React.FC = () => {
   const getChartData = (views: number) => {
     const base = Math.floor(views / 7);
     return [
-      { day: 'Sen', views: Math.floor(base * 0.8) },
-      { day: 'Sel', views: Math.floor(base * 1.2) },
-      { day: 'Rab', views: Math.floor(base * 0.9) },
-      { day: 'Kam', views: Math.floor(base * 1.5) },
-      { day: 'Jum', views: Math.floor(base * 1.1) },
-      { day: 'Sab', views: Math.floor(base * 2.0) },
-      { day: 'Min', views: views - (base * 7.5) < 0 ? base : Math.floor(views * 1.3) }
+      { day: 'Mon', views: Math.floor(base * 0.8) },
+      { day: 'Tue', views: Math.floor(base * 1.2) },
+      { day: 'Wed', views: Math.floor(base * 0.9) },
+      { day: 'Thu', views: Math.floor(base * 1.5) },
+      { day: 'Fri', views: Math.floor(base * 1.1) },
+      { day: 'Sat', views: Math.floor(base * 2.0) },
+      { day: 'Sun', views: views - (base * 7.5) < 0 ? base : Math.floor(views * 1.3) }
     ];
   };
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-2xl">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></div>
-            <p className="text-lg font-black dark:text-white uppercase tracking-tighter">
-              {payload[0].value} <span className="text-[10px] text-purple-500/70">Views</span>
+        <div className="bg-white p-4 border border-slate-200 shadow-md rounded-none font-sans">
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">{label}</p>
+          <div className="flex items-center gap-2 font-sans">
+            <div className="w-2 h-2 bg-[#0d2137] rounded-none"></div>
+            <p className="text-sm font-bold text-slate-900">
+              {payload[0].value} <span className="text-[10px] text-slate-500">Views</span>
             </p>
           </div>
         </div>
@@ -114,39 +112,39 @@ const AdminUserManagement: React.FC = () => {
   );
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 relative">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div className="space-y-8 animate-in fade-in duration-500 relative font-sans text-slate-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-200 pb-6 font-sans">
         <div>
-          <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic">
-            User <span className="text-primary italic">Management</span>
-          </h2>
-          <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mt-1">Sistem Pemantau Kontribusi & Pageviews Real-time</p>
+          <h1 className="text-3xl font-serif font-bold tracking-tight text-slate-900 uppercase">
+            User Management
+          </h1>
+          <p className="text-slate-500 text-xs mt-1">Real-time Contribution & Pageviews Monitoring System</p>
         </div>
 
-        <div className="relative group max-w-xs w-full">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={18} />
+        <div className="relative max-w-xs w-full font-sans">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
           <input 
             type="text"
             placeholder="Search contributors..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-6 py-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl text-sm focus:ring-4 focus:ring-primary/10 outline-none transition-all shadow-sm"
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-none text-xs focus:outline-none focus:border-[#0d2137] text-slate-900 transition-colors shadow-sm"
           />
         </div>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
-                <th className="px-8 py-5 text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Contributor</th>
-                <th className="px-8 py-5 text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">Stats</th>
-                <th className="px-8 py-5 text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">Exposure (Real)</th>
-                <th className="px-8 py-5 text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 text-right"></th>
+      <div className="bg-white rounded-none border border-slate-200 overflow-hidden shadow-sm font-sans">
+        <div className="overflow-x-auto font-sans">
+          <table className="w-full text-left border-collapse font-sans">
+            <thead className="bg-slate-50 border-b border-slate-200 font-sans">
+              <tr>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-wider text-slate-600">Contributor</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-wider text-slate-600 text-center">Stats</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-wider text-slate-600 text-center">Exposure (Real)</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-wider text-slate-600 text-right"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+            <tbody className="divide-y divide-slate-200 font-sans">
               {filteredUsers.map((u) => {
                 const uData = getUserStats(u.id);
                 const isOwner = u.role === 'owner';
@@ -155,55 +153,55 @@ const AdminUserManagement: React.FC = () => {
                 return (
                   <React.Fragment key={u.id}>
                     <tr 
-                      className={`transition-all cursor-pointer ${isExpanded ? 'bg-primary/5' : 'hover:bg-slate-50/50 dark:hover:bg-slate-800/30'}`}
+                      className={`transition-colors cursor-pointer ${isExpanded ? 'bg-slate-50' : 'hover:bg-slate-50'}`}
                       onClick={() => setExpandedUserId(isExpanded ? null : u.id)}
                     >
-                      <td className="px-8 py-6">
-                        <div className="flex items-center gap-4">
+                      <td className="px-6 py-5 font-sans">
+                        <div className="flex items-center gap-4 font-sans">
                           <ProfileAvatar
                             src={u.avatar_url}
-                            alt={u.full_name || 'Kontributor'}
-                            className="h-12 w-12 rounded-full border-2 border-white shadow-lg dark:border-slate-800"
+                            alt={u.full_name || 'Contributor'}
+                            className="h-12 w-12 rounded-none border border-slate-200 shadow-sm"
                             iconSize={24}
                           />
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-black text-slate-900 dark:text-white uppercase tracking-tighter">{u.full_name}</span>
-                              {isOwner && <ShieldCheck size={14} className="text-primary" />}
+                          <div className="font-sans">
+                            <div className="flex items-center gap-2 font-sans">
+                              <span className="text-sm font-bold text-slate-900 uppercase">{u.full_name}</span>
+                              {isOwner && <ShieldCheck size={14} className="text-[#0d2137]" />}
                             </div>
-                            <div className="text-[9px] font-bold text-slate-400 uppercase">{u.email}</div>
+                            <div className="text-xs text-slate-500 font-medium">{u.email}</div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-8 py-6 text-center text-xs font-black">
-                        <span className="text-primary">{uData.articlesCount}</span> Art | <span className="text-primary">{uData.statsCount}</span> Stat
+                      <td className="px-6 py-5 text-center text-xs text-slate-700 font-medium font-sans">
+                        <span className="font-bold text-[#0d2137]">{uData.articlesCount}</span> Articles | <span className="font-bold text-[#0d2137]">{uData.statsCount}</span> Statistics
                       </td>
-                      <td className="px-8 py-6 text-center">
-                         <div className="inline-flex flex-col items-center">
-                          <span className="text-sm font-black text-primary">{uData.totalViews.toLocaleString()}</span>
-                          <span className="text-[7px] font-black text-slate-400 uppercase">Total Views</span>
+                      <td className="px-6 py-5 text-center font-sans">
+                         <div className="inline-flex flex-col items-center font-sans">
+                          <span className="text-base font-bold text-[#0d2137]">{uData.totalViews.toLocaleString()}</span>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Views</span>
                         </div>
                       </td>
-                      <td className="px-8 py-6 text-right">
-                        {isExpanded ? <ChevronUp size={16} className="text-primary" /> : <ChevronDown size={16} className="text-slate-300" />}
+                      <td className="px-6 py-5 text-right font-sans">
+                        {isExpanded ? <ChevronUp size={16} className="text-[#0d2137]" /> : <ChevronDown size={16} className="text-slate-400" />}
                       </td>
                     </tr>
                     
                     {isExpanded && (
-                      <tr className="bg-slate-50/30 dark:bg-slate-900/40">
-                        <td colSpan={4} className="px-8 py-10">
-                          <div className="space-y-6 animate-in slide-in-from-top-2 duration-300">
-                            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
-                              <h4 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-[0.3em] flex items-center gap-2">
-                                <FileText size={14} className="text-primary" /> Monitoring Konten
+                      <tr className="bg-slate-50/80 font-sans">
+                        <td colSpan={4} className="px-6 py-8 font-sans">
+                          <div className="space-y-6 font-sans">
+                            <div className="flex items-center justify-between border-b border-slate-200 pb-4 font-sans">
+                              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 font-sans">
+                                <FileText size={16} className="text-[#0d2137]" /> Content Monitoring
                               </h4>
-                              <div className="flex items-center gap-2 bg-white dark:bg-slate-800 p-1 rounded-xl border border-slate-100 dark:border-slate-700">
-                                <button onClick={() => setContentSort('latest')} className={`px-4 py-2 text-[8px] font-black uppercase rounded-lg transition-all ${contentSort === 'latest' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-400'}`}>Terbaru</button>
-                                <button onClick={() => setContentSort('popular')} className={`px-4 py-2 text-[8px] font-black uppercase rounded-lg transition-all ${contentSort === 'popular' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-400'}`}>Populer</button>
+                              <div className="flex items-center gap-2 bg-white p-1 border border-slate-200 shadow-sm font-sans">
+                                <button onClick={() => setContentSort('latest')} className={`px-3 py-1.5 text-[10px] font-bold uppercase transition-colors ${contentSort === 'latest' ? 'bg-[#0d2137] text-white' : 'text-slate-600 hover:text-slate-900'}`}>Latest</button>
+                                <button onClick={() => setContentSort('popular')} className={`px-3 py-1.5 text-[10px] font-bold uppercase transition-colors ${contentSort === 'popular' ? 'bg-[#0d2137] text-white' : 'text-slate-600 hover:text-slate-900'}`}>Popular</button>
                               </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 font-sans">
                               {[
                                 ...uData.articles.map(a => ({ ...a, contentType: 'article' })),
                                 ...uData.stats.map(s => ({ ...s, contentType: 'statistic' }))
@@ -214,33 +212,33 @@ const AdminUserManagement: React.FC = () => {
                                 <div 
                                   key={item.id} 
                                   onClick={() => setSelectedContent(item)}
-                                  className="p-4 bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm group cursor-pointer hover:border-primary/30 transition-all flex items-center gap-4"
+                                  className="p-4 bg-white border border-slate-200 shadow-sm group cursor-pointer hover:border-[#0d2137] transition-colors flex items-center gap-4 font-sans"
                                 >
-                                  <div className="w-14 h-14 rounded-2xl overflow-hidden shrink-0 border border-slate-100 dark:border-slate-700 flex items-center justify-center bg-slate-50 dark:bg-slate-900 relative">
+                                  <div className="w-14 h-14 bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center relative font-sans">
                                     {item.thumbnail_url || item.image_url ? (
-                                      <SafeImage src={item.thumbnail_url || item.image_url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                      <SafeImage src={item.thumbnail_url || item.image_url} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                                     ) : item.chart_data && item.chart_data.data ? (
-                                      <div className="w-full h-full p-1 opacity-80 flex items-end justify-center group-hover:scale-110 transition-transform duration-500">
+                                      <div className="w-full h-full p-1 opacity-80 flex items-end justify-center font-sans">
                                         <ResponsiveContainer width="100%" height="80%">
                                           <BarChart data={item.chart_data.data.slice(0, 3)} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                                            <Bar dataKey="value" radius={[2, 2, 0, 0]} barSize={6}>
+                                            <Bar dataKey="value" barSize={6}>
                                               {item.chart_data.data.slice(0, 3).map((entry: any, i: number) => (
-                                                <Cell key={i} fill={entry.color || '#8b5cf6'} />
+                                                <Cell key={i} fill={entry.color || '#0d2137'} />
                                               ))}
                                             </Bar>
                                           </BarChart>
                                         </ResponsiveContainer>
                                       </div>
                                     ) : (
-                                      <BarChart3 className="text-slate-300 dark:text-slate-700" size={20} />
+                                      <BarChart3 className="text-slate-400" size={20} />
                                     )}
                                   </div>
-                                  <div className="flex-1 overflow-hidden">
-                                    <div className="flex items-center justify-between gap-2">
-                                      <span className={`text-[7px] font-black uppercase px-2 py-0.5 rounded-md ${item.contentType === 'article' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'}`}>{item.contentType}</span>
-                                      <span className="text-[8px] font-black text-primary flex items-center gap-1"><Eye size={10} /> {item.views || 0}</span>
+                                  <div className="flex-1 overflow-hidden font-sans">
+                                    <div className="flex items-center justify-between gap-2 font-sans">
+                                      <span className={`text-[10px] font-bold uppercase px-2 py-0.5 border ${item.contentType === 'article' ? 'bg-blue-50 border-blue-200 text-[#0d2137]' : 'bg-rose-50 border-rose-200 text-[#c0392b]'}`}>{item.contentType}</span>
+                                      <span className="text-xs font-bold text-[#0d2137] flex items-center gap-1 font-sans"><Eye size={12} /> {item.views || 0}</span>
                                     </div>
-                                    <h5 className="text-[10px] font-black text-slate-700 dark:text-slate-200 truncate mt-1 uppercase tracking-tight">{item.title}</h5>
+                                    <h5 className="text-xs font-bold text-slate-900 truncate mt-1 font-sans">{item.title}</h5>
                                   </div>
                                 </div>
                               ))}
@@ -259,82 +257,82 @@ const AdminUserManagement: React.FC = () => {
 
       {selectedContent && (
         <div 
-          className="fixed inset-0 z-60 flex items-center justify-center p-6 bg-black/70 backdrop-blur-md animate-in fade-in duration-300"
+          className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/70 animate-in fade-in duration-300 font-sans"
           onClick={() => setSelectedContent(null)}
         >
            <div 
-            className="bg-white dark:bg-slate-900 w-full max-w-5xl rounded-[3rem] shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-800 flex flex-col md:flex-row max-h-[90vh] relative"
+            className="bg-white w-full max-w-4xl rounded-none shadow-2xl overflow-hidden border border-slate-200 flex flex-col md:flex-row max-h-[90vh] relative font-sans"
             onClick={e => e.stopPropagation()}
            >
               <button 
                 onClick={() => setSelectedContent(null)}
-                className="absolute top-8 right-8 z-10 p-3 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-2xl text-white md:text-slate-400 md:bg-slate-100 md:hover:bg-slate-200 transition-all"
+                className="absolute top-6 right-6 z-20 p-2.5 bg-white text-slate-900 border border-slate-200 shadow-md hover:bg-slate-100 transition-colors rounded-none"
               >
                 <X size={20} />
               </button>
 
-              <div className="md:w-2/5 relative bg-slate-100 dark:bg-slate-900 min-h-75 flex items-center justify-center overflow-hidden">
+              <div className="md:w-2/5 relative bg-slate-900 min-h-[300px] flex items-center justify-center overflow-hidden font-sans">
                  {selectedContent.thumbnail_url || selectedContent.image_url ? (
                    <SafeImage src={selectedContent.thumbnail_url || selectedContent.image_url} className="w-full h-full object-cover absolute inset-0" />
                  ) : selectedContent.chart_data && selectedContent.chart_data.data ? (
-                   <div className="w-full h-full absolute inset-0 flex items-end justify-center opacity-60 pt-20 px-8 pb-8">
+                   <div className="w-full h-full absolute inset-0 flex items-end justify-center opacity-60 pt-20 px-8 pb-8 font-sans">
                      <ResponsiveContainer width="100%" height="60%">
                        <BarChart data={selectedContent.chart_data.data.slice(0, 5)} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                         <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={24}>
+                         <Bar dataKey="value" barSize={24}>
                            {selectedContent.chart_data.data.slice(0, 5).map((entry: any, i: number) => (
-                             <Cell key={i} fill={entry.color || '#8b5cf6'} />
+                             <Cell key={i} fill={entry.color || '#0d2137'} />
                            ))}
                          </Bar>
                        </BarChart>
                      </ResponsiveContainer>
                    </div>
                  ) : (
-                   <BarChart3 className="text-slate-200 dark:text-slate-800 absolute opacity-50" size={120} />
+                   <BarChart3 className="text-slate-700 absolute opacity-50" size={120} />
                  )}
-                 <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-10 z-10 pointer-events-none">
-                    <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-3">{selectedContent.category}</span>
-                    <h2 className="text-2xl font-black text-white tracking-tighter leading-tight italic uppercase">{selectedContent.title}</h2>
+                 <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-8 z-10 font-sans">
+                    <span className="text-[10px] font-bold text-rose-400 uppercase tracking-wider mb-2">{selectedContent.category || 'General'}</span>
+                    <h2 className="text-xl font-serif font-bold text-white leading-tight uppercase">{selectedContent.title}</h2>
                  </div>
               </div>
 
-              <div className="md:w-3/5 p-12 overflow-y-auto space-y-10">
-                 <div className="flex items-center justify-between">
-                    <div>
-                       <h4 className="text-xs font-black dark:text-white uppercase tracking-widest flex items-center gap-2">
-                          <TrendingUp size={16} className="text-primary" /> Statistik Performa Konten
+              <div className="md:w-3/5 p-8 overflow-y-auto space-y-8 font-sans">
+                 <div className="flex items-center justify-between font-sans">
+                    <div className="font-sans">
+                       <h4 className="text-base font-serif font-bold text-slate-900 uppercase tracking-tight flex items-center gap-2">
+                          <TrendingUp size={18} className="text-[#0d2137]" /> Content Performance Statistics
                        </h4>
-                       <p className="text-[10px] text-slate-500 font-bold uppercase mt-1">Laporan tayangan real-time</p>
+                       <p className="text-xs text-slate-500 font-medium mt-1">Real-time engagement exposure report</p>
                     </div>
                  </div>
 
-                 <div className="grid grid-cols-2 gap-6">
-                    <div className="p-8 bg-slate-50 dark:bg-slate-800/50 rounded-4xl border border-slate-100 dark:border-slate-700">
-                       <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Pageviews</p>
-                       <p className="text-4xl font-black dark:text-white tracking-tighter">{selectedContent.views || 0}</p>
+                 <div className="grid grid-cols-2 gap-6 font-sans">
+                    <div className="p-6 bg-slate-50 border border-slate-200 rounded-none font-sans">
+                       <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total Pageviews</p>
+                       <p className="text-3xl font-serif font-bold text-slate-900">{selectedContent.views || 0}</p>
                     </div>
-                    <div className="p-8 bg-slate-50 dark:bg-slate-800/50 rounded-4xl border border-slate-100 dark:border-slate-700 flex flex-col items-center justify-center gap-3">
+                    <div className="p-6 bg-slate-50 border border-slate-200 rounded-none flex flex-col items-center justify-center font-sans">
                        <button 
                         onClick={() => handleDeleteContent(selectedContent.contentType, selectedContent.id, selectedContent.title)}
-                        className="w-full py-4 flex items-center justify-center gap-3 bg-red-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-red-500/20 hover:bg-red-600 transition-all"
+                        className="w-full py-3 flex items-center justify-center gap-2 bg-[#c0392b] text-white rounded-none font-bold text-xs uppercase tracking-wider hover:bg-rose-900 transition-colors border border-[#c0392b] shadow-sm font-sans"
                        >
-                          <Trash2 size={16} /> Moderasi Konten
+                          <Trash2 size={16} /> Moderate Content
                        </button>
                     </div>
                  </div>
 
-                 <div className="h-64 w-full bg-slate-50 dark:bg-slate-800/30 rounded-4xl p-6 border border-slate-100 dark:border-slate-700">
+                 <div className="h-64 w-full bg-slate-50 border border-slate-200 p-6 rounded-none font-sans">
                     <ResponsiveContainer width="100%" height="100%">
                        <AreaChart data={getChartData(selectedContent.views || 0)}>
                           <defs>
                              <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
-                                <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                                <stop offset="5%" stopColor="#0d2137" stopOpacity={0.4}/>
+                                <stop offset="95%" stopColor="#0d2137" stopOpacity={0}/>
                              </linearGradient>
                           </defs>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" opacity={0.1} />
-                          <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{fontSize: 9, fontWeight: 900, fill: '#64748B'}} dy={10} />
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#CBD5E1" opacity={0.5} />
+                          <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 700, fill: '#64748B'}} dy={10} />
                           <Tooltip content={<CustomTooltip />} />
-                          <Area type="monotone" dataKey="views" stroke="#8b5cf6" strokeWidth={4} fillOpacity={1} fill="url(#colorViews)" />
+                          <Area type="monotone" dataKey="views" stroke="#0d2137" strokeWidth={3} fillOpacity={1} fill="url(#colorViews)" />
                        </AreaChart>
                     </ResponsiveContainer>
                  </div>

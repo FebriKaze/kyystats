@@ -14,11 +14,11 @@ const SafeImage: React.FC<SafeImageProps> = ({ src, alt, className, ...props }) 
     setHasError(false);
   }, [src]);
 
-  const isFlourish = src?.includes('flourish.studio');
+  const isFlourish = src?.includes('flourish.studio') || src?.includes('flo.uri.sh');
 
   if (!src || hasError || isFlourish) {
     return (
-      <div className={`flex items-center justify-center bg-slate-50 dark:bg-slate-900/50 text-slate-200 dark:text-slate-800 ${className}`}>
+      <div className={`flex items-center justify-center bg-slate-50 text-slate-300 ${className}`}>
         {isFlourish ? <BarChart3 size={20} /> : <ImageIcon size={20} />}
       </div>
     );

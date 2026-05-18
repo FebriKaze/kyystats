@@ -28,7 +28,7 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
       const dataToSave = { ...formData, chart_data: chartData };
       await onSave(dataToSave);
     } catch (err: any) {
-      showToast('error', 'Gagal menyimpan: ' + err.message);
+      showToast('error', 'Failed to save: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -48,7 +48,7 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
       if (type === 'articles') setFormData(prev => ({...prev, thumbnail_url: publicUrl}));
       else if (type === 'portfolio') setFormData(prev => ({...prev, image: publicUrl}));
       else setFormData(prev => ({...prev, image_url: publicUrl}));
-      showToast('success', 'Gambar berhasil diunggah!');
+      showToast('success', 'Image uploaded successfully!');
     } catch (err: any) { showToast('error', err.message); } finally { setUploading(false); }
   };
 
@@ -58,19 +58,19 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
   const isVideoMedia = /\.(mp4|webm|ogg|mov)$/i.test(formData.media_url || '');
 
   return (
-    <div className="space-y-8 pb-20">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button type="button" onClick={onCancel} className="p-2.5 rounded-2xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all border border-transparent hover:border-slate-200"><ArrowLeft size={24} /></button>
-          <h1 className="text-3xl font-black tracking-tighter dark:text-white uppercase">{item.id ? 'Edit' : 'Tambah'} {type}</h1>
+    <div className="space-y-8 pb-20 font-sans text-slate-800">
+      <div className="flex items-center justify-between border-b border-slate-200 pb-6 font-sans">
+        <div className="flex items-center gap-4 font-sans">
+          <button type="button" onClick={onCancel} className="p-2 border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors"><ArrowLeft size={20} /></button>
+          <h1 className="text-3xl font-serif font-bold tracking-tight text-slate-900 uppercase">{item.id ? 'Edit' : 'Add'} {type}</h1>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white dark:bg-slate-900 p-10 rounded-4xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-8">
-             <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Judul Konten *</label>
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8 font-sans">
+        <div className="lg:col-span-2 space-y-6 font-sans">
+          <div className="bg-white p-8 rounded-none border border-slate-200 shadow-sm space-y-8 font-sans">
+             <div className="space-y-2 font-sans">
+                <label className="text-xs font-bold uppercase text-slate-600 tracking-wider">Content Title *</label>
                 <input required value={formData.title || ''} onChange={(e) => {
                   const newTitle = e.target.value;
                   setFormData(prev => ({
@@ -78,51 +78,51 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
                     title: newTitle, 
                     slug: (!item.id || !prev.slug) ? slugify(newTitle) : prev.slug
                   }));
-                }} placeholder="Masukkan judul..." className="w-full bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 dark:border-slate-800 rounded-2xl py-5 px-8 text-base dark:text-white font-bold focus:border-primary transition-all" />
+                }} placeholder="Enter title..." className="w-full bg-slate-50 border border-slate-200 rounded-none py-3.5 px-4 text-base text-slate-900 font-bold focus:outline-none focus:border-[#0d2137] transition-colors" />
              </div>
 
-             <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Teks Intro (Di Atas Media)</label>
+             <div className="space-y-2 font-sans">
+                  <label className="text-xs font-bold uppercase text-slate-600 tracking-wider">Intro Text (Above Media)</label>
                   <RichTextEditor 
                      id={`intro-${item.id || 'new'}`}
                      value={formData.intro_text || ''} 
                      onChange={(val) => setFormData(prev => ({...prev, intro_text: val}))}
-                     placeholder="Teks pengantar..."
+                     placeholder="Intro text..."
                      minHeight={200}
                   />
               </div>
               
-              <div className="space-y-3">
-                 <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Badan Konten *</label>
+              <div className="space-y-2 font-sans">
+                 <label className="text-xs font-bold uppercase text-slate-600 tracking-wider">Content Body *</label>
                  <RichTextEditor 
                    id={`content-${item.id || 'new'}`}
                    value={formData.content || ''} 
                    onChange={(val) => setFormData(prev => ({...prev, content: val}))}
-                   placeholder="Tulis isi konten kamu di sini..."
+                   placeholder="Write your content here..."
                    minHeight={600}
                  />
               </div>
 
-             <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Ringkasan Eksekutif</label>
+             <div className="space-y-2 font-sans">
+                <label className="text-xs font-bold uppercase text-slate-600 tracking-wider">Executive Summary</label>
                 <textarea rows={3} value={formData.summary || ''} onChange={(e) => {
                   const val = e.target.value;
                   setFormData(prev => ({...prev, summary: val}));
-                }} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 rounded-2xl py-5 px-8 text-sm dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-inner" />
+                }} className="w-full bg-slate-50 border border-slate-200 rounded-none py-3 px-4 text-sm text-slate-800 focus:outline-none focus:border-[#0d2137] transition-colors" />
              </div>
           </div>
         </div>
 
-        <div className="space-y-8">
-          <div className="bg-white dark:bg-slate-900 p-8 rounded-4xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-8 sticky top-24">
-             <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Media Interaktif (Embed/Flourish/Video)</label>
+        <div className="space-y-8 font-sans">
+          <div className="bg-white p-8 rounded-none border border-slate-200 shadow-sm space-y-8 sticky top-24 font-sans">
+             <div className="space-y-2 font-sans">
+                <label className="text-xs font-bold uppercase text-slate-600 tracking-wider">Interactive Media (Embed/Flourish/Video)</label>
                 <input type="text" value={formData.media_url || ''} onChange={(e) => {
                   const val = e.target.value;
                   setFormData(prev => ({...prev, media_url: val}));
-                }} placeholder="Paste link Flourish/Video..." className="w-full bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 rounded-2xl py-4 px-6 text-xs font-bold" />
+                }} placeholder="Paste Flourish embed URL or video link..." className="w-full bg-slate-50 border border-slate-200 rounded-none py-3 px-4 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#0d2137]" />
                 {formData.media_url && (
-                  <div className={`rounded-2xl overflow-hidden relative border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 ${mediaId || isVideoMedia || formData.media_url.trim().startsWith('<iframe') || formData.media_url.startsWith('http') ? 'aspect-video' : 'aspect-video flex items-center justify-center'}`}>
+                  <div className={`rounded-none overflow-hidden relative border border-slate-200 bg-slate-50 ${mediaId || isVideoMedia || formData.media_url.trim().startsWith('<iframe') || formData.media_url.startsWith('http') ? 'aspect-video' : 'aspect-video flex items-center justify-center'}`}>
                     {(() => {
                       const url = formData.media_url.trim();
                       if (url.startsWith('<iframe')) {
@@ -130,10 +130,10 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
                       }
                       if (mediaId) {
                         return (
-                          <div className="absolute inset-0 w-full h-full overflow-hidden">
-                            <div className="absolute top-0 left-0 w-[400%] h-[400%] origin-top-left scale-[0.25] pointer-events-none">
+                          <div className="absolute inset-0 w-full h-full overflow-hidden bg-white font-sans">
+                            <div className="absolute top-0 left-0 w-[200%] h-[200%] origin-top-left scale-[0.5] pointer-events-none font-sans">
                               <iframe 
-                                src={`https://public.flourish.studio/visualisation/${mediaId}/embed?auto=1`} 
+                                src={`https://flo.uri.sh/visualisation/${mediaId}/embed?auto=1`} 
                                 className="w-full h-full border-0" 
                                 scrolling="no" 
                               />
@@ -153,26 +153,34 @@ const AdminEditor: React.FC<AdminEditorProps> = ({ type, item, onSave, onCancel 
                 )}
              </div>
 
-             <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Gambar Sampul *</label>
-                <div className="relative aspect-video rounded-2xl overflow-hidden border-2 border-dashed bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center border-slate-200 dark:border-slate-800">
+             <div className="space-y-2 font-sans">
+                <label className="text-xs font-bold uppercase text-slate-600 tracking-wider">Cover Image *</label>
+                <div className="relative aspect-video rounded-none overflow-hidden border border-dashed border-slate-300 bg-slate-50 flex flex-col items-center justify-center font-sans">
                    {formData.thumbnail_url || formData.image || formData.image_url ? (
                      <>
                         <SafeImage src={formData.thumbnail_url || formData.image || formData.image_url} className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
-                           <input type="file" onChange={uploadCoverImage} className="absolute inset-0 opacity-0 cursor-pointer" />
-                           <button type="button" className="p-3 bg-white rounded-xl text-[10px] font-black uppercase">Ganti Gambar</button>
+                        <div className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center font-sans">
+                           <input type="file" onChange={uploadCoverImage} className="absolute inset-0 opacity-0 cursor-pointer font-sans" />
+                           <button type="button" className="px-4 py-2 bg-white rounded-none text-xs font-bold uppercase text-slate-900 border border-slate-200 shadow-sm">Change Image</button>
                         </div>
                      </>
                    ) : (
-                     <div className="relative w-full h-full flex flex-col items-center justify-center"><input type="file" onChange={uploadCoverImage} className="absolute inset-0 opacity-0 cursor-pointer" /><ImageIcon size={30} className="text-slate-300 mb-1" /><p className="text-[9px] font-black text-slate-400 uppercase">{uploading ? 'MEMPROSES...' : 'UPLOAD GAMBAR'}</p></div>
+                     <div className="relative w-full h-full flex flex-col items-center justify-center font-sans">
+                       <input type="file" onChange={uploadCoverImage} className="absolute inset-0 opacity-0 cursor-pointer font-sans" />
+                       <ImageIcon size={32} className="text-slate-400 mb-2" />
+                       <p className="text-xs font-bold text-slate-600 uppercase tracking-wider">{uploading ? 'PROCESSING...' : 'UPLOAD IMAGE'}</p>
+                     </div>
                    )}
                 </div>
              </div>
 
-             <div className="pt-8 border-t dark:border-slate-800 flex flex-col gap-3">
-                <button type="submit" disabled={loading} className="w-full bg-primary text-white py-5 rounded-2xl font-black text-xs uppercase shadow-xl flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all">{loading ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />} SIMPAN KONTEN</button>
-                <button type="button" onClick={onCancel} className="w-full bg-slate-100 dark:bg-slate-800 text-slate-500 py-5 rounded-2xl font-black text-xs uppercase hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">BATAL</button>
+             <div className="pt-6 border-t border-slate-200 flex flex-col gap-3 font-sans">
+                <button type="submit" disabled={loading} className="w-full bg-[#0d2137] text-white py-3.5 rounded-none font-bold text-xs uppercase tracking-wider shadow-sm flex items-center justify-center gap-2 hover:bg-slate-900 transition-colors border border-[#0d2137]">
+                  {loading ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />} SAVE CONTENT
+                </button>
+                <button type="button" onClick={onCancel} className="w-full bg-slate-100 text-slate-700 py-3 rounded-none font-bold text-xs uppercase tracking-wider hover:bg-slate-200 transition-colors border border-slate-200">
+                  CANCEL
+                </button>
              </div>
           </div>
         </div>

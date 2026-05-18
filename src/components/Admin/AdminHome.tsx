@@ -6,15 +6,12 @@ import {
   Clock, 
   Eye, 
   Calendar as CalendarIcon,
-  ChevronRight,
-  ChevronLeft,
   ArrowUpRight,
   Filter,
   Image as ImageIcon
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import SafeImage from '../Common/SafeImage';
-
 
 interface AdminHomeProps {
   stats: {
@@ -35,12 +32,12 @@ interface AdminHomeProps {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-2xl">
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
+      <div className="bg-white/90 backdrop-blur-md p-4 rounded-none border border-slate-200 shadow-xl font-sans">
+        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">{label}</p>
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
-          <p className="text-lg font-black dark:text-white uppercase tracking-tighter">
-            {payload[0].value} <span className="text-[10px] text-primary/70">Views</span>
+          <div className="w-2 h-2 rounded-full bg-[#c0392b] animate-pulse"></div>
+          <p className="text-lg font-bold text-slate-900 tracking-tight">
+            {payload[0].value} <span className="text-[10px] text-slate-500 font-normal">Views</span>
           </p>
         </div>
       </div>
@@ -50,7 +47,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 const AdminHome: React.FC<AdminHomeProps> = ({ stats, popularArticles, items, profile, rawViews = [], currentUserId }) => {
-  const [popularFilter, setPopularFilter] = useState<'Semua' | 'Artikel' | 'Statistik'>('Semua');
+  const [popularFilter, setPopularFilter] = useState<'All' | 'Articles' | 'Statistics'>('All');
   const [startDate, setStartDate] = useState(() => {
     const d = new Date();
     d.setDate(d.getDate() - 7);
@@ -58,54 +55,48 @@ const AdminHome: React.FC<AdminHomeProps> = ({ stats, popularArticles, items, pr
   });
   const [endDate, setEndDate] = useState(() => new Date().toISOString().split('T')[0]);
 
-  // Combined and filtered popular content
   const filteredPopular = useMemo(() => {
     let combined = [];
     if (items) {
-      const artsWithBadge = items.articles.map(a => ({ ...a, type: 'Artikel' }));
-      const statsWithBadge = items.statistics.map(s => ({ ...s, type: 'Statistik' }));
+      const artsWithBadge = items.articles.map(a => ({ ...a, type: 'Articles' }));
+      const statsWithBadge = items.statistics.map(s => ({ ...s, type: 'Statistics' }));
       combined = [...artsWithBadge, ...statsWithBadge];
     } else {
-      combined = popularArticles;
+      combined = popularArticles.map(a => ({ ...a, type: 'Articles' }));
     }
 
     return combined
       .filter(item => {
-        if (popularFilter === 'Semua') return true;
+        if (popularFilter === 'All') return true;
         return item.type === popularFilter;
       })
       .sort((a, b) => (b.views || 0) - (a.views || 0))
       .slice(0, 5);
   }, [popularFilter, popularArticles, items]);
 
-  // POWERFUL REAL-TIME ANALYTICS LOGIC (SYNTAX FIXED)
   const chartData = useMemo(() => {
     if (!rawViews || !items) return [];
 
     const userContentIds = new Set<string>();
     
-    // 1. Identify relevant IDs/Slugs based on filter
-    if (popularFilter === 'Semua' || popularFilter === 'Artikel') {
+    if (popularFilter === 'All' || popularFilter === 'Articles') {
         items?.articles?.forEach(a => {
             if (a.id) userContentIds.add(String(a.id));
             if (a.slug) userContentIds.add(String(a.slug));
-            // Tambahkan numeric fallback jika ID artikel tertulis sebagai angka integer di page_views
             const numericId = String(a.id).split('-').length === 1 ? a.id : null;
             if (numericId) userContentIds.add(String(numericId));
         });
     }
     
-    if (popularFilter === 'Semua' || popularFilter === 'Statistik') {
+    if (popularFilter === 'All' || popularFilter === 'Statistics') {
         items?.statistics?.forEach(s => {
             if (s.id) userContentIds.add(String(s.id));
             if (s.slug) userContentIds.add(String(s.slug));
         });
     }
 
-    // 2. Filter views matching the content IDs (Pastikan tipe data sama-sama string)
     const myFilteredViews = rawViews.filter(v => userContentIds.has(String(v.page_id)));
 
-    // 3. Generate daily time-series data
     const start = new Date(startDate);
     const end = new Date(endDate);
     const diffTime = Math.abs(end.getTime() - start.getTime());
@@ -123,7 +114,7 @@ const AdminHome: React.FC<AdminHomeProps> = ({ stats, popularArticles, items, pr
       }).length;
 
       return {
-        name: d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }),
+        name: d.toLocaleDateString('en-US', { day: '2-digit', month: 'short' }),
         views: dailyCount,
         fullDate: dateStr
       };
@@ -131,73 +122,73 @@ const AdminHome: React.FC<AdminHomeProps> = ({ stats, popularArticles, items, pr
   }, [startDate, endDate, rawViews, items, popularFilter]);
 
   return (
-    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 max-w-full overflow-x-hidden">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 max-w-full overflow-x-hidden font-sans text-slate-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black tracking-tighter dark:text-white uppercase italic">Dashboard <span className="text-primary">Overview</span></h1>
-          <p className="text-slate-500 dark:text-slate-400 text-[10px] md:text-xs font-bold uppercase tracking-widest mt-1 italic">Analisis performa konten publikasi anda</p>
+          <h1 className="text-3xl font-serif font-bold tracking-tight text-slate-900">Dashboard Overview</h1>
+          <p className="text-slate-500 text-xs font-normal mt-1">Analytics and performance tracking for your published content</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        <div className="p-5 md:p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:border-primary/30 transition-all">
+        <div className="p-6 bg-white rounded-none border border-slate-200 shadow-sm relative overflow-hidden group hover:border-[#0d2137] transition-all">
           <div className="relative z-10 flex items-center justify-between">
             <div>
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 italic">Total Artikel</p>
-              <h3 className="text-2xl md:text-3xl font-black dark:text-white group-hover:text-primary transition-colors">{stats.articles}</h3>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Total Articles</p>
+              <h3 className="text-3xl font-serif font-bold text-slate-900 group-hover:text-[#c0392b] transition-colors">{stats.articles}</h3>
             </div>
-            <div className="p-2.5 md:p-3 bg-blue-50 dark:bg-blue-500/10 rounded-2xl text-blue-500"><FileText size={18} /></div>
+            <div className="p-3 bg-slate-50 rounded-none text-[#0d2137] border border-slate-200"><FileText size={20} /></div>
           </div>
         </div>
 
-        <div className="p-5 md:p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:border-primary/30 transition-all">
+        <div className="p-6 bg-white rounded-none border border-slate-200 shadow-sm relative overflow-hidden group hover:border-[#0d2137] transition-all">
           <div className="relative z-10 flex items-center justify-between">
             <div>
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 italic">Total Statistik</p>
-              <h3 className="text-2xl md:text-3xl font-black dark:text-white group-hover:text-primary transition-colors">{stats.statistics}</h3>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Total Statistics</p>
+              <h3 className="text-3xl font-serif font-bold text-slate-900 group-hover:text-[#c0392b] transition-colors">{stats.statistics}</h3>
             </div>
-            <div className="p-2.5 md:p-3 bg-purple-50 dark:bg-purple-500/10 rounded-2xl text-purple-500"><BarChart3 size={18} /></div>
+            <div className="p-3 bg-slate-50 rounded-none text-[#0d2137] border border-slate-200"><BarChart3 size={20} /></div>
           </div>
         </div>
 
-        <div className="p-5 md:p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:border-primary/30 transition-all">
+        <div className="p-6 bg-white rounded-none border border-slate-200 shadow-sm relative overflow-hidden group hover:border-[#0d2137] transition-all">
           <div className="relative z-10 flex items-center justify-between">
             <div>
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 italic">Total Portfolio</p>
-              <h3 className="text-2xl md:text-3xl font-black dark:text-white group-hover:text-primary transition-colors">{stats.portfolios}</h3>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Total Portfolio</p>
+              <h3 className="text-3xl font-serif font-bold text-slate-900 group-hover:text-[#c0392b] transition-colors">{stats.portfolios}</h3>
             </div>
-            <div className="p-2.5 md:p-3 bg-rose-50 dark:bg-rose-500/10 rounded-2xl text-rose-500"><ArrowUpRight size={18} /></div>
+            <div className="p-3 bg-slate-50 rounded-none text-[#0d2137] border border-slate-200"><ArrowUpRight size={20} /></div>
           </div>
         </div>
         
-        <div className="p-5 md:p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm col-span-1 lg:col-span-1 flex items-center justify-between bg-linear-to-r from-primary to-blue-600 font-black">
-           <div className="text-white">
-              <p className="text-[9px] uppercase tracking-widest opacity-70">Status Akun</p>
-              <h3 className="text-sm md:text-base uppercase italic tracking-widest truncate">
+        <div className="p-6 bg-[#0d2137] rounded-none border border-[#0d2137] shadow-sm flex items-center justify-between text-white font-sans">
+           <div>
+              <p className="text-xs uppercase tracking-widest text-slate-300 font-bold">Account Status</p>
+              <h3 className="text-base font-bold uppercase tracking-wider mt-1 truncate text-[#c0392b]">
                 {profile?.role === 'owner' ? 'OWNER ACCOUNT' : 'CONTRIBUTOR'}
               </h3>
            </div>
-           <Clock className="text-white/20 hidden sm:block" size={24} />
+           <Clock className="text-slate-400 hidden sm:block" size={28} />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-6 md:p-8 rounded-4xl border border-slate-100 dark:border-slate-800 shadow-sm">
-          <div className="flex flex-col space-y-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 font-sans">
+        <div className="lg:col-span-2 bg-white p-6 md:p-8 rounded-none border border-slate-200 shadow-sm font-sans">
+          <div className="flex flex-col space-y-4 mb-8 border-b border-slate-100 pb-6">
             <div className="flex items-center justify-between">
-              <h4 className="text-xs font-black uppercase tracking-widest dark:text-white italic flex items-center gap-2">
-                <TrendingUp size={16} className="text-primary" /> Performa {popularFilter} Anda
+              <h4 className="text-sm font-bold uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                <TrendingUp size={18} className="text-[#c0392b]" /> Performance Overview ({popularFilter})
               </h4>
             </div>
             
-            <div className="flex flex-wrap items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
+            <div className="flex flex-wrap items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-none w-fit">
                <div className="flex items-center gap-2">
-                  <CalendarIcon size={14} className="text-slate-400" />
+                  <CalendarIcon size={14} className="text-slate-500" />
                   <input 
                     type="date" 
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="bg-transparent text-[10px] font-black uppercase outline-none dark:text-white"
+                    className="bg-transparent text-xs font-bold uppercase outline-none text-slate-800 cursor-pointer"
                   />
                </div>
                <span className="text-slate-300">/</span>
@@ -206,7 +197,7 @@ const AdminHome: React.FC<AdminHomeProps> = ({ stats, popularArticles, items, pr
                     type="date" 
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="bg-transparent text-[10px] font-black uppercase outline-none dark:text-white"
+                    className="bg-transparent text-xs font-bold uppercase outline-none text-slate-800 cursor-pointer"
                   />
                </div>
             </div>
@@ -217,16 +208,16 @@ const AdminHome: React.FC<AdminHomeProps> = ({ stats, popularArticles, items, pr
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.1}/>
-                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#0d2137" stopOpacity={0.15}/>
+                    <stop offset="95%" stopColor="#0d2137" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" opacity={0.1} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                 <XAxis 
                   dataKey="name" 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{fontSize: 9, fontWeight: 900, fill: '#64748B'}} 
+                  tick={{fontSize: 11, fontWeight: 600, fill: '#64748B'}} 
                   dy={10}
                 />
                 <YAxis hide />
@@ -234,8 +225,8 @@ const AdminHome: React.FC<AdminHomeProps> = ({ stats, popularArticles, items, pr
                 <Area 
                   type="monotone" 
                   dataKey="views" 
-                  stroke="#8b5cf6" 
-                  strokeWidth={4} 
+                  stroke="#0d2137" 
+                  strokeWidth={3} 
                   fillOpacity={1} 
                   fill="url(#colorViews)" 
                 />
@@ -244,15 +235,15 @@ const AdminHome: React.FC<AdminHomeProps> = ({ stats, popularArticles, items, pr
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-4xl border border-slate-100 dark:border-slate-800 shadow-sm">
-          <div className="flex items-center justify-between mb-8">
-            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] dark:text-white">Terpopuler</h4>
-            <div className="flex items-center gap-1.5 p-1 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
-               {(['Semua', 'Artikel', 'Statistik'] as const).map(filter => (
+        <div className="bg-white p-6 md:p-8 rounded-none border border-slate-200 shadow-sm flex flex-col font-sans">
+          <div className="flex items-center justify-between mb-8 border-b border-slate-100 pb-4">
+            <h4 className="text-sm font-bold uppercase tracking-wider text-slate-900">Most Popular</h4>
+            <div className="flex items-center gap-1 p-1 bg-slate-50 border border-slate-200">
+               {(['All', 'Articles', 'Statistics'] as const).map(filter => (
                  <button 
                   key={filter}
                   onClick={() => setPopularFilter(filter)}
-                  className={`px-3 py-1.5 text-[8px] font-black uppercase rounded-lg transition-all ${popularFilter === filter ? 'bg-white dark:bg-slate-900 text-primary shadow-sm border border-slate-100 dark:border-slate-700' : 'text-slate-400'}`}
+                  className={`px-3 py-1 text-xs font-bold transition-colors ${popularFilter === filter ? 'bg-[#0d2137] text-white' : 'text-slate-600 hover:text-slate-900'}`}
                  >
                    {filter}
                  </button>
@@ -260,25 +251,24 @@ const AdminHome: React.FC<AdminHomeProps> = ({ stats, popularArticles, items, pr
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-6 flex-1 font-sans">
             {filteredPopular.length > 0 ? filteredPopular.map((item, idx) => (
               <div 
                 key={item.id} 
-                className="group cursor-pointer"
+                className="group cursor-pointer pb-4 border-b border-slate-100 last:border-b-0"
                 onClick={() => {
-                  // Open content in new tab
-                  if (item.type === 'Artikel') {
+                  if (item.type === 'Articles') {
                     window.open(`/articles/${item.slug}`, '_blank');
-                  } else if (item.type === 'Statistik') {
-                    window.open(`/statistik/${item.id}`, '_blank');
+                  } else if (item.type === 'Statistics') {
+                    window.open(`/data/${item.slug || item.id}`, '_blank');
                   }
                 }}
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0 border border-slate-100 dark:border-slate-800 shadow-sm relative flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+                  <div className="w-16 h-16 overflow-hidden shrink-0 border border-slate-200 shadow-xs relative flex items-center justify-center bg-slate-50">
                     {(() => {
                       const mediaUrl = (item as any).media_url || item.thumbnail_url || item.image_url;
-                      if (!mediaUrl) return <ImageIcon size={14} className="text-slate-400" />;
+                      if (!mediaUrl) return <ImageIcon size={20} className="text-slate-400" />;
 
                       const flourishId = mediaUrl.match(/visualisation\/(\d+)/)?.[1] || mediaUrl.match(/id=(\d+)/)?.[1];
                       const isImage = /\.(jpg|jpeg|png|webp|gif|avif)$/i.test(mediaUrl);
@@ -287,12 +277,12 @@ const AdminHome: React.FC<AdminHomeProps> = ({ stats, popularArticles, items, pr
                         const isRawIframe = mediaUrl.trim().startsWith('<iframe');
                         if (!isImage) {
                           return (
-                            <div className="absolute inset-0 w-full h-full overflow-hidden">
-                              <div className="absolute top-0 left-0 w-[400%] h-[400%] origin-top-left scale-[0.25] pointer-events-none">
+                            <div className="absolute inset-0 w-full h-full overflow-hidden bg-white">
+                              <div className="absolute top-0 left-0 w-[200%] h-[200%] origin-top-left scale-[0.5] pointer-events-none">
                                 {isRawIframe ? (
                                   <div className="w-full h-full [&>iframe]:w-full [&>iframe]:h-full" dangerouslySetInnerHTML={{ __html: mediaUrl }} />
                                 ) : (
-                                  <iframe src={flourishId ? `https://public.flourish.studio/visualisation/${flourishId}/embed?auto=1` : mediaUrl} className="w-full h-full border-0" scrolling="no" />
+                                  <iframe src={flourishId ? `https://flo.uri.sh/visualisation/${flourishId}/embed?auto=1` : mediaUrl} className="w-full h-full border-0" scrolling="no" />
                                 )}
                               </div>
                             </div>
@@ -300,40 +290,34 @@ const AdminHome: React.FC<AdminHomeProps> = ({ stats, popularArticles, items, pr
                         }
                       }
 
-                      return <SafeImage src={mediaUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />;
+                      return <SafeImage src={mediaUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />;
                     })()}
-                    <div className="absolute top-0 right-0 p-1 bg-primary text-white scale-0 group-hover:scale-100 transition-transform rounded-bl-lg z-10">
-                       <ArrowUpRight size={10} />
+                    <div className="absolute top-0 right-0 p-1 bg-[#c0392b] text-white opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                       <ArrowUpRight size={12} />
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-0.5">
-                       <span className={`text-[7px] font-black uppercase px-2 py-0.5 rounded-md ${item.type === 'Artikel' ? 'bg-blue-100 text-blue-600 dark:bg-blue-500/10' : 'bg-purple-100 text-purple-600 dark:bg-purple-500/10'}`}>
+                    <div className="flex items-center justify-between mb-1">
+                       <span className="text-[10px] font-bold uppercase tracking-wider text-[#c0392b]">
                          {item.type}
                        </span>
-                       <span className="text-[9px] font-black text-primary flex items-center gap-1">
-                         <Eye size={10} /> {item.views || 0}
+                       <span className="text-xs font-bold text-slate-500 flex items-center gap-1">
+                         <Eye size={12} /> {item.views || 0}
                        </span>
                     </div>
-                    <h5 className="text-[10px] md:text-xs font-black text-slate-800 dark:text-slate-200 truncate uppercase mt-0.5 tracking-tight group-hover:text-primary transition-colors">
+                    <h5 className="text-xs font-bold text-slate-900 truncate group-hover:text-[#c0392b] transition-colors">
                       {item.title}
                     </h5>
                   </div>
                 </div>
               </div>
             )) : (
-              <div className="py-20 text-center flex flex-col items-center gap-4">
-                 <div className="w-12 h-12 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center">
-                    <Filter className="text-slate-300" size={20} />
-                 </div>
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Belum ada konten</p>
+              <div className="py-16 text-center flex flex-col items-center gap-3 border border-slate-200 bg-slate-50">
+                 <Filter className="text-slate-400" size={24} />
+                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">No content available</p>
               </div>
             )}
           </div>
-          
-          <button className="w-full mt-10 py-4 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-2xl text-[10px] font-black text-slate-400 uppercase tracking-widest hover:border-primary/30 hover:text-primary transition-all">
-             Lihat Semua Konten
-          </button>
         </div>
       </div>
     </div>

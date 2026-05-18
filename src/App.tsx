@@ -1,12 +1,8 @@
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Send } from 'lucide-react';
 import Navbar from './components/HomePage/Navbar';
 import Hero from './components/HomePage/Hero';
 import Footer from './components/HomePage/Footer';
-import ContactModal from './components/HomePage/ContactModal';
-import CaseStudyModal from './components/HomePage/CaseStudyModal';
 import Login from './components/Admin/Login';
 import ResetPassword from './components/Admin/ResetPassword';
 import { SpeedInsights } from "@vercel/speed-insights/react";
@@ -25,6 +21,7 @@ const AdminDashboard = lazy(() => import('./components/Admin/AdminDashboard'));
 const Portfolio = lazy(() => import('./components/HomePage/Portfolio'));
 const ProjectArchive = lazy(() => import('./components/HomePage/ProjectArchive'));
 const ImpactSnapshot = lazy(() => import('./components/HomePage/ImpactSnapshot'));
+const CaseStudyModal = lazy(() => import('./components/HomePage/CaseStudyModal'));
 
 function App() {
   return (
@@ -37,8 +34,6 @@ function App() {
 function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [isContactOpen, setIsContactOpen] = useState(false);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [featuredProjects, setFeaturedProjects] = useState<FeaturedProject[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
@@ -52,26 +47,15 @@ function AppContent() {
   useEffect(() => {
     loadData();
     
-    // Initial Session Check
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user) fetchProfile(session.user.id);
     });
     
-    // Auth Listener for everything (Login, Recovery, Confirmation)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       if (session?.user) fetchProfile(session.user.id);
-
-      // Handle Password Recovery Event
-      if (event === 'PASSWORD_RECOVERY') {
-        navigate('/admin/reset');
-      }
-
-      // Handle Email Confirmation (SIGNED_IN but might be from link)
-      if (event === 'SIGNED_IN' && location.pathname.includes('error_description')) {
-         console.error('Auth error from link');
-      }
+      if (event === 'PASSWORD_RECOVERY') navigate('/admin/reset');
     });
 
     return () => subscription.unsubscribe();
@@ -98,17 +82,13 @@ function AppContent() {
     setFeaturedProjects(f);
     setArticles(a);
     setStatistics(s);
-    
-    // Fetch owner once
     await fetchOwnerProfile();
   };
 
-  // Filter logic for Public Pages
   const isOwner = userProfile?.role?.toLowerCase() === 'owner';
   const currentUid = session?.user?.id;
   const ownerId = ownerProfile?.id;
 
-  // Final filtered data for public view
   const filteredProjects = useMemo(() => {
     if (session) {
       if (isOwner) return projects;
@@ -125,21 +105,21 @@ function AppContent() {
     return featuredProjects.filter(f => f.user_id === ownerId);
   }, [featuredProjects, session, isOwner, currentUid, ownerId]);
 
-  const filteredArticles = useMemo(() => {
-    return articles; // Articles are always public
-  }, [articles]);
-
-  const filteredStats = useMemo(() => {
-    return statistics; // Stats are always public
-  }, [statistics]);
+  const filteredArticles = useMemo(() => articles, [articles]);
+  const filteredStats = useMemo(() => statistics, [statistics]);
 
   const isAdminPage = location.pathname.startsWith('/admin');
 
+  const LoadingSpinner = () => (
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="w-8 h-8 border-2 border-[#0d2137] border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#020617] transition-colors duration-500">
+    <div className="min-h-screen bg-white">
       {!isAdminPage && (
         <Navbar 
-          onContactClick={() => setIsContactOpen(true)} 
           onNavigate={(page) => navigate(page === 'home' ? '/' : `/${page}`)}
           currentPage={location.pathname === '/' ? 'home' : location.pathname.substring(1)}
           session={session}
@@ -148,24 +128,20 @@ function AppContent() {
       )}
       
       <main>
-        <Suspense fallback={
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-          </div>
-        }>
+        <Suspense fallback={<LoadingSpinner />}>
           <Routes>
             <Route path="/" element={
               <>
                 <Hero />
-                <ImpactSnapshot projects={filteredFeatured} />
+                <ImpactSnapshot projects={filteredFeatured} articles={filteredArticles} statistics={filteredStats} />
                 <Portfolio 
                   projects={filteredProjects} 
-                  onProjectClick={(p) => setSelectedProject(p)} 
+                  onProjectClick={(p) => navigate(`/portfolio/${(p as any).slug || (p as any).id}`)}
                   onBackToHome={() => navigate('/')}
                 />
                 <ProjectArchive 
                   projects={filteredProjects}
-                  onProjectClick={(p) => setSelectedProject(p)}
+                  onProjectClick={(p) => navigate(`/portfolio/${(p as any).slug || (p as any).id}`)}
                 />
               </>
             } />
@@ -182,18 +158,22 @@ function AppContent() {
             } />
 
             <Route path="/portfolio" element={
-              <div className="pt-20">
-                <ImpactSnapshot projects={filteredFeatured} />
+              <>
                 <Portfolio 
                   projects={filteredProjects} 
-                  onProjectClick={(p) => setSelectedProject(p)} 
+                  onProjectClick={(p) => navigate(`/portfolio/${(p as any).slug || (p as any).id}`)}
                   onBackToHome={() => navigate('/')}
                 />
                 <ProjectArchive 
                   projects={filteredProjects}
-                  onProjectClick={(p) => setSelectedProject(p)}
+                  onProjectClick={(p) => navigate(`/portfolio/${(p as any).slug || (p as any).id}`)}
                 />
-              </div>
+              </>
+            } />
+
+            {/* Project detail — replaces CaseStudy popup */}
+            <Route path="/portfolio/:id" element={
+              <ProjectDetailWrapper projects={filteredProjects} />
             } />
 
             <Route path="/articles/:slug" element={
@@ -202,28 +182,24 @@ function AppContent() {
 
             <Route path="/author/:id" element={<AuthorPage />} />
 
-            <Route path="/statistik" element={
+            <Route path="/data" element={
               <StatistikPage 
                 statistik={filteredStats} 
-                onStatClick={(item) => navigate(`/statistik/${item.slug || item.id}`)}
+                onStatClick={(item) => navigate(`/data/${item.slug || item.id}`)}
               />
             } />
-
-            <Route path="/statistik/:slug" element={
+            <Route path="/data/:slug" element={
               <StatistikDetailWrapper statistics={filteredStats} />
             } />
 
+            {/* Legacy routes */}
+            <Route path="/statistik" element={<Navigate to="/data" replace />} />
+            <Route path="/statistik/:slug" element={<StatistikDetailLegacyWrapper statistics={filteredStats} />} />
+
             <Route path="/admin" element={
-              session ? (
-                <AdminDashboard />
-              ) : (
-                <Login onLoginSuccess={(s) => setSession(s)} />
-              )
+              session ? <AdminDashboard /> : <Login onLoginSuccess={(s) => setSession(s)} />
             } />
-
-            {/* RESET PASSWORD ROUTE */}
             <Route path="/admin/reset" element={<ResetPassword />} />
-
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
@@ -231,25 +207,7 @@ function AppContent() {
 
       {!isAdminPage && <Footer />}
       <SpeedInsights />
-      <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
-      <CaseStudyModal 
-        project={selectedProject} 
-        isOpen={!!selectedProject} 
-        onClose={() => setSelectedProject(null)} 
-      />
       <ToastContainer />
-
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setIsContactOpen(true)}
-        className={`fixed bottom-8 right-8 z-40 bg-primary text-white pl-6 pr-5 py-4 rounded-full shadow-2xl shadow-primary/40 flex items-center gap-3 group transition-all ${
-          isAdminPage ? 'hidden' : location.pathname === '/' ? 'flex md:flex' : 'hidden md:flex'
-        }`}
-      >
-        <span className="text-sm font-bold tracking-tight">Let's Collaborate</span>
-        <Send size={18} className="group-hover:translate-x-1 transition-transform" />
-      </motion.button>
     </div>
   );
 }
@@ -263,8 +221,8 @@ function ArticleDetailWrapper({ articles, onBack, onArticleClick }: any) {
   if (!article) return (
     <div className="pt-32 flex justify-center items-center min-h-[50vh]">
       <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
-        <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Loading artikel...</p>
+        <div className="w-8 h-8 border-2 border-[#0d2137]/30 border-t-[#0d2137] rounded-full animate-spin" />
+        <p className="text-sm text-slate-500">Loading article...</p>
       </div>
     </div>
   );
@@ -283,14 +241,14 @@ function ArticleDetailWrapper({ articles, onBack, onArticleClick }: any) {
 
 function StatistikDetailWrapper({ statistics }: any) {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const decodedSlug = decodeURIComponent(slug || '');
   const statistic = statistics.find((s: any) => s.slug === decodedSlug || s.id === decodedSlug);
-  const navigate = useNavigate();
   if (!statistic) return (
     <div className="pt-32 flex justify-center items-center min-h-[50vh]">
       <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
-        <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Loading statistik...</p>
+        <div className="w-8 h-8 border-2 border-[#0d2137]/30 border-t-[#0d2137] rounded-full animate-spin" />
+        <p className="text-sm text-slate-500">Loading data...</p>
       </div>
     </div>
   );
@@ -298,12 +256,49 @@ function StatistikDetailWrapper({ statistics }: any) {
     <StatistikDetail 
       item={statistic} 
       allStats={statistics}
-      onBack={() => navigate('/statistik')} 
-      onStatClick={(s) => navigate(`/statistik/${s.slug || s.id}`)}
+      onBack={() => navigate('/data')} 
+      onStatClick={(s) => navigate(`/data/${s.slug || s.id}`)}
       onFilterChange={() => {}}
       onSearchChange={() => {}}
       searchQuery=""
     />
+  );
+}
+
+function StatistikDetailLegacyWrapper({ statistics }: any) {
+  const { slug } = useParams();
+  const navigate = useNavigate();
+  useEffect(() => {
+    navigate(`/data/${slug}`, { replace: true });
+  }, [slug]);
+  return null;
+}
+
+function ProjectDetailWrapper({ projects }: any) {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const project = projects.find((p: any) => p.slug === id || p.id === id || String(p.id) === id);
+
+  if (!project) return (
+    <div className="pt-32 flex justify-center items-center min-h-[50vh]">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-8 h-8 border-2 border-[#0d2137]/30 border-t-[#0d2137] rounded-full animate-spin" />
+        <p className="text-sm text-slate-500">Loading project...</p>
+      </div>
+    </div>
+  );
+
+  // Render CaseStudyModal content as a full page
+  const { default: CaseStudyPage } = { default: lazy(() => import('./components/HomePage/CaseStudyModal')) };
+  return (
+    <Suspense fallback={<div className="pt-32 flex justify-center items-center min-h-[50vh]"><div className="w-8 h-8 border-2 border-[#0d2137]/30 border-t-[#0d2137] rounded-full animate-spin" /></div>}>
+      <CaseStudyPage
+        project={project}
+        isOpen={true}
+        onClose={() => navigate('/portfolio')}
+        isPage={true}
+      />
+    </Suspense>
   );
 }
 

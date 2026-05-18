@@ -15,7 +15,7 @@ const ResetPassword: React.FC = () => {
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      setError('Kata sandi tidak cocok!');
+      setError('Passwords do not match!');
       return;
     }
 
@@ -36,18 +36,18 @@ const ResetPassword: React.FC = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-[#020617] flex items-center justify-center p-6">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans text-slate-800">
         <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-md bg-white dark:bg-slate-900 rounded-4xl p-10 text-center shadow-2xl border border-slate-100 dark:border-slate-800"
+          className="w-full max-w-md bg-white rounded-none p-10 text-center shadow-xl border border-slate-200 font-sans"
         >
-          <div className="w-20 h-20 bg-emerald-50 dark:bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle2 className="text-emerald-500" size={40} />
+          <div className="w-16 h-16 bg-emerald-50 rounded-none border border-emerald-200 flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 className="text-emerald-700" size={32} />
           </div>
-          <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase italic tracking-tighter mb-4">Sandi Diperbarui!</h2>
-          <p className="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-widest leading-relaxed">
-            Kata sandi Anda telah berhasil diubah. <br/> Mengalihkan Anda ke Dashboard...
+          <h2 className="text-xl font-serif font-bold text-slate-900 uppercase tracking-wide mb-3">Password Updated!</h2>
+          <p className="text-slate-600 text-xs font-medium uppercase tracking-wider leading-relaxed">
+            Your password has been successfully updated. <br/> Redirecting to Dashboard...
           </p>
         </motion.div>
       </div>
@@ -55,54 +55,52 @@ const ResetPassword: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#020617] flex items-center justify-center p-6 relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-full h-full -z-10 bg-grid-pattern opacity-10" />
-      
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 relative font-sans text-slate-800">
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
+        className="w-full max-w-md font-sans"
       >
-        <div className="bg-white dark:bg-slate-900 rounded-4xl shadow-2xl border border-slate-100 dark:border-slate-800 p-10 text-center">
-          <div className="w-16 h-16 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-8">
-            <Key className="text-primary" size={28} />
+        <div className="bg-white rounded-none shadow-xl border border-slate-200 p-10 text-center font-sans">
+          <div className="w-14 h-14 bg-slate-100 border border-slate-200 rounded-none flex items-center justify-center mx-auto mb-6">
+            <Key className="text-[#0d2137]" size={24} />
           </div>
           
-          <h1 className="text-3xl font-black tracking-tighter dark:text-white uppercase italic mb-2">Sandi <span className="text-primary">Baru</span></h1>
-          <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mb-10 italic">Masukkan kata sandi baru untuk akun Anda</p>
+          <h1 className="text-2xl font-serif font-bold text-slate-900 uppercase tracking-wide mb-2">New Password</h1>
+          <p className="text-slate-500 font-bold text-xs uppercase tracking-wider mb-8">Enter a new password for your account</p>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-50 dark:bg-red-500/10 text-red-600 rounded-2xl text-[10px] font-black uppercase tracking-wider">
+            <div className="mb-6 p-4 bg-rose-50 border border-rose-200 text-[#c0392b] rounded-none text-xs font-bold uppercase tracking-wider text-left">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleReset} className="space-y-6 text-left">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 italic">Kata Sandi Baru</label>
-              <div className="relative">
-                <span className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400"><Lock size={18} /></span>
+          <form onSubmit={handleReset} className="space-y-5 text-left font-sans">
+            <div className="space-y-1.5 font-sans">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-600 block">New Password</label>
+              <div className="relative font-sans">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"><Lock size={16} /></span>
                 <input 
                   required
                   type="password" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-14 pr-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border-none text-sm dark:text-white focus:ring-2 focus:ring-primary/20 transition-all font-bold"
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-none text-xs text-slate-900 focus:outline-none focus:border-[#0d2137] transition-colors font-medium"
                   placeholder="••••••••"
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 italic">Konfirmasi Sandi</label>
-              <div className="relative">
-                <span className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400"><Key size={18} /></span>
+            <div className="space-y-1.5 font-sans">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-600 block">Confirm Password</label>
+              <div className="relative font-sans">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"><Key size={16} /></span>
                 <input 
                   required
                   type="password" 
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full pl-14 pr-6 py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border-none text-sm dark:text-white focus:ring-2 focus:ring-primary/20 transition-all font-bold"
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-none text-xs text-slate-900 focus:outline-none focus:border-[#0d2137] transition-colors font-medium"
                   placeholder="••••••••"
                 />
               </div>
@@ -111,14 +109,14 @@ const ResetPassword: React.FC = () => {
             <button 
               disabled={loading}
               type="submit" 
-              className="w-full py-4 bg-primary text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 group"
+              className="w-full py-3.5 bg-[#0d2137] text-white rounded-none font-bold text-xs uppercase tracking-wider hover:bg-slate-900 active:bg-black transition-colors flex items-center justify-center gap-2 group border border-[#0d2137] shadow-sm font-sans mt-2"
             >
               {loading ? (
-                <Loader2 size={18} className="animate-spin" />
+                <Loader2 size={16} className="animate-spin" />
               ) : (
                 <>
-                  Perbarui Kata Sandi
-                  <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                  Update Password
+                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                 </>
               )}
             </button>

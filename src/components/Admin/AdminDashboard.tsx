@@ -228,9 +228,9 @@ const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#020617] transition-colors duration-500">
+    <div className="min-h-screen bg-slate-50 font-sans">
       <AdminHeader activeView={activeView} onNavigate={navigateTo} />
-      <div className="max-w-7xl mx-auto px-4 md:px-6 pt-24 pb-12 overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 pt-12 pb-12 overflow-hidden font-sans">
          {renderContent()}
       </div>
       
