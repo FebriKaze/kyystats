@@ -19,6 +19,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentPage, session, userP
 
   const navLinks = [
     { name: 'Home', href: '/' },
+    { name: 'About', href: '/about' },
     { name: 'Portfolio', href: '/portfolio' },
     { name: 'Articles', href: '/articles' },
     { name: 'Data', href: '/data' },

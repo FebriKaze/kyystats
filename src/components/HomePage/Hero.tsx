@@ -70,18 +70,18 @@ const Hero: React.FC = () => {
           transition={{ duration: 0.5 }}
           className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-white tracking-tight leading-snug md:leading-tight mb-4 max-w-3xl mx-auto"
         >
-          Research and data to make progress against the world's largest problems.
+          Unlocking complex global realities through rigorous data and analytical precision.
         </motion.h1>
 
-        <motion.a
+        <motion.button
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          href="/portfolio"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-[#e8a87c] hover:text-[#f0c090] mb-8 transition-colors"
+          onClick={() => navigate('/about')}
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-[#e8a87c] hover:text-[#f0c090] mb-8 transition-colors cursor-pointer"
         >
           Read about our mission <ArrowRight size={13} />
-        </motion.a>
+        </motion.button>
 
         <motion.div
           initial={{ opacity: 0, y: 15 }}

@@ -8,6 +8,7 @@ const Footer: React.FC = () => {
 
   const navLinks = [
     { name: 'Home', href: '/' },
+    { name: 'About', href: '/about' },
     { name: 'Articles', href: '/articles' },
     { name: 'Data', href: '/data' },
     { name: 'Portfolio', href: '/portfolio' },
@@ -28,7 +29,7 @@ const Footer: React.FC = () => {
           <div>
             <img src={logoDark} alt="KY Stat" className="h-9 w-auto mb-4" />
             <p className="text-sm text-white/60 leading-relaxed max-w-xs">
-              Research and data to make progress. Open access, freely available for everyone.
+              Empirical research and interactive intelligence. Open access, built for a more informed world.
             </p>
           </div>
 

@@ -13,6 +13,7 @@ import { fetchPortfolios, fetchFeaturedProjects, fetchArticles, fetchStatistics 
 import { supabase } from './lib/supabase';
 
 // Lazy load components
+const AboutPage = lazy(() => import('./components/About/AboutPage'));
 const ArticleList = lazy(() => import('./components/Articles/ArticleList'));
 const ArticleDetail = lazy(() => import('./components/Articles/ArticleDetail'));
 const StatistikPage = lazy(() => import('./components/Statistik/StatistikPage'));
@@ -144,6 +145,10 @@ function AppContent() {
                   onProjectClick={(p) => navigate(`/portfolio/${(p as any).slug || (p as any).id}`)}
                 />
               </>
+            } />
+
+            <Route path="/about" element={
+              <AboutPage onNavigate={(path) => navigate(path)} />
             } />
 
             <Route path="/articles" element={
